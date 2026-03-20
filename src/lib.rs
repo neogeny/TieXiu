@@ -1,5 +1,7 @@
 use pyo3::prelude::*;
 
+pub mod model;
+
 #[pymodule]
 mod _tiexiu {
     use pyo3::prelude::*;
