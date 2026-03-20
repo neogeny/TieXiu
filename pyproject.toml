@@ -1,13 +1,35 @@
 [build-system]
-requires = ["maturin>=1.12,<2.0"]
+requires = ["maturin>=1.5,<2.0"]
 build-backend = "maturin"
 
 [project]
 name = "tiexiu"
-requires-python = ">=3.8"
+description = "High-performance PEG parsing (a port of TatSu to Rust)"
+dynamic = ["version"]
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Juancarlo Añez", email = "apalala@gmail.com" }
+]
+license = { text = "AGPL-3.0-or-later" }
 classifiers = [
     "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Text Processing :: General",
 ]
-dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/neogeny/tiexiu"
+Repository = "https://github.com/neogeny/tiexiu"
+Issues = "https://github.com/neogeny/tiexiu/issues"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "tiexiu._tiexiu"
