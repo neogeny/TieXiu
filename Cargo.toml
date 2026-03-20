@@ -1,6 +1,6 @@
 [package]
 name = "tiexiu"
-version = "0.1.0"
+version = "0.1.1-alpha.1"
 edition = "2024"
 authors = ["Juancarlo Añez <apalala@gmail.com>"]
 description = "A port of the TatSu PEG parser generator to Rust"
@@ -12,9 +12,14 @@ exclude = [
     "__pycache__",
 ]
 
+#[features]
+#default = []
+#python = ["dep:pyo3"]
+
 [dependencies]
-pyo3 = { version = "0.28.2", features = ["extension-module"] }
+pyo3 = { version = "0.28.2", features = ["extension-module"]}
+#pyo3 = { version = "0.28.2", features = ["extension-module"], optional = true }
 
 [lib]
-name = "tiexiu"
+name = "_tiexiu"
 crate-type = ["cdylib", "rlib"]
