@@ -1,5 +1,47 @@
-[target.x86_64-apple-darwin]
-rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+# -----------------------------------------------------------------------------
+# 1. Platform-Specific Linker Flags
+# -----------------------------------------------------------------------------
 
+# macOS Apple Silicon (ava)
 [target.aarch64-apple-darwin]
-rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+rustflags = [
+    "-C", "link-arg=-undefined",
+    "-C", "link-arg=dynamic_lookup",
+]
+
+# macOS Intel (chappie)
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-undefined",
+    "-C", "link-arg=dynamic_lookup",
+]
+
+# Linux / Ubuntu (wall-e)
+# Standard GNU Linux usually doesn't need the dynamic_lookup hack,
+# but we ensure the architecture is recognized.
+[target.x86_64-unknown-linux-gnu]
+rustflags = []
+
+# -----------------------------------------------------------------------------
+# 2. Environment Persistence
+# -----------------------------------------------------------------------------
+
+[env]
+# This forces PyO3 to use the local virtual environment created by 'uv'.
+# It prevents PyO3 from recompiling when you accidentally invoke a
+# different system Python. 'relative = true' keeps it portable.
+PYO3_PYTHON = { value = ".venv/bin/python", relative = true }
+
+# -----------------------------------------------------------------------------
+# 3. Build Optimizations (Optional but Recommended)
+# -----------------------------------------------------------------------------
+
+[build]
+# If you are syncing this folder via a network or cloud drive,
+# uncomment the line below on EACH machine's GLOBAL config (~/.cargo/config.toml)
+# instead of here, to give them unique build folders:
+# target-dir = "target-local"
+
+[profile.dev]
+# Increase split-debuginfo for faster macOS incremental builds
+split-debuginfo = "unpacked"
