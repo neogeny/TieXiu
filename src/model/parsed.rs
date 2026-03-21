@@ -9,12 +9,13 @@ pub enum ParsedValue {
     Token(String),
     Cst(Cst),
     Ast(Ast),
+    Void, // Represents a successful parse with no associated data
 }
 
 /// The sovereign result of a parsing rule.
 /// 
 /// This struct replaces 'dyn Any' entirely. It carries both the 
-/// structural data (Kind) and the grammar-defined type label.
+/// structural data (Value) and the grammar-defined type label.
 pub struct Parsed {
     pub typename: Option<String>,
     pub value: ParsedValue,
@@ -22,11 +23,16 @@ pub struct Parsed {
 
 impl Parsed {
     /// Creates a new, unlabeled Parsed result.
-    pub fn new(kind: ParsedValue) -> Self {
+    pub fn new(value: ParsedValue) -> Self {
         Self {
             typename: None,
-            value: kind,
+            value,
         }
+    }
+
+    /// Convenience constructor for a Void result.
+    pub fn void() -> Self {
+        Self::new(ParsedValue::Void)
     }
 
     /// Sets the grammar-defined type for this result.
