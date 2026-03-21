@@ -14,6 +14,12 @@ pub struct ParseState<'a> {
     pub last_node: Option<Parsed>,
 }
 
+/// Manages the lifecycle of states during the parse.
+pub struct ParseStateStack<'a> {
+    pub states: Vec<ParseState<'a>>,
+    pub ruleinfo_stack: Vec<String>, // Placeholder for RuleInfo
+}
+
 impl<'a> ParseState<'a> {
     pub fn new(cursor: CursorBox<'a>) -> Self {
         Self {
@@ -28,8 +34,10 @@ impl<'a> ParseState<'a> {
     pub fn clone_state(&self) -> Self {
         Self {
             cursor: self.cursor.clone(),
-            ast: Ast { fields: self.ast.fields.clone() },
-            cst: None, 
+            ast: Ast {
+                fields: self.ast.fields.clone(),
+            },
+            cst: None,
             cutseen: self.cutseen,
             last_node: None,
         }
@@ -40,21 +48,16 @@ impl<'a> ParseState<'a> {
         if let Some(other_cst) = other.cst {
             self.extend(Parsed::new(ParsedValue::Cst(other_cst)));
         }
-        // Merge the other AST into our own
         for (key, value) in other.ast.fields {
             self.ast.fields.insert(key, value);
         }
     }
 
-    /// The final result of this state. Consumes the state's CST.
     pub fn node(&mut self) -> Parsed {
-        // 1. Check for the special override value
         if let Some(val) = self.ast.fields.get("__value__").and_then(|v| v.as_ref()) {
-            // We need to return a Parsed version of this CST item
             return Parsed::new(ParsedValue::Cst(val.clone()));
         }
 
-        // 2. Otherwise return the finalized CST or Void
         match self.cst.take() {
             Some(c) => Parsed::new(ParsedValue::Cst(cst::cst_final(c))),
             None => Parsed::void(),
@@ -67,7 +70,42 @@ impl<'a> ParseState<'a> {
     }
 
     pub fn extend(&mut self, node: Parsed) {
-        self.last_node = Some(node.clone()); 
+        self.last_node = Some(node.clone());
         self.cst = Some(cst::cst_merge(self.cst.take(), node));
+    }
+}
+
+impl<'a> ParseStateStack<'a> {
+    pub fn new(cursor: CursorBox<'a>) -> Self {
+        Self {
+            states: vec![ParseState::new(cursor)],
+            ruleinfo_stack: Vec::new(),
+        }
+    }
+
+    /// Access the current active state.
+    pub fn top(&mut self) -> &mut ParseState<'a> {
+        self.states.last_mut().expect("Empty state stack")
+    }
+
+    /// Pushes a fresh state (used when starting a new rule).
+    pub fn push(&mut self) {
+        let new_state = self.top().clone_state();
+        self.states.push(new_state);
+    }
+
+    /// Pops the top state. If pos is provided, moves the new top cursor to it.
+    pub fn pop(&mut self, pos: Option<usize>) -> ParseState<'a> {
+        let popped = self.states.pop().expect("State stack underflow");
+        if let Some(p) = pos {
+            self.top().cursor.goto(p);
+        }
+        popped
+    }
+
+    /// Merges the result of a successful rule into the parent state.
+    pub fn merge(&mut self) {
+        let child = self.states.pop().expect("State stack underflow");
+        self.top().merge(child);
     }
 }
