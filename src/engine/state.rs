@@ -1,17 +1,17 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::ast::Ast;
-use super::cst::{self, Cst};
-use super::parsed::{Parsed, ParsedValue};
+use super::ast::{Ast, __AT__};
+use super::cst::Cst;
+use super::parsed::ParsedValue;
 use crate::input::text::CursorBox;
 
 pub struct ParseState<'a> {
     pub cursor: CursorBox<'a>,
     pub ast: Ast,
-    pub cst: Option<Cst>,
+    pub cst: Cst,
     pub cutseen: bool,
-    pub last_node: Option<Parsed>,
+    pub last_node: Cst,  // FIXME: cannot keep a copy of a complet parse tree
 }
 
 /// Manages the lifecycle of states during the parse.
@@ -25,9 +25,9 @@ impl<'a> ParseState<'a> {
         Self {
             cursor,
             ast: Ast::new(),
-            cst: None,
+            cst: Cst::Void,
             cutseen: false,
-            last_node: None,
+            last_node: Cst::Void,
         }
     }
 
@@ -37,41 +37,42 @@ impl<'a> ParseState<'a> {
             ast: Ast {
                 fields: self.ast.fields.clone(),
             },
-            cst: None,
+            cst: Cst::Void,
             cutseen: self.cutseen,
-            last_node: None,
+            last_node: Cst::Void,
         }
     }
 
     pub fn merge(&mut self, other: ParseState<'a>) {
         self.cursor.goto(other.cursor.pos());
-        if let Some(other_cst) = other.cst {
-            self.extend(Parsed::new(ParsedValue::Cst(other_cst)));
-        }
+        self.extend(other.cst);
         for (key, value) in other.ast.fields {
             self.ast.fields.insert(key, value);
         }
     }
 
-    pub fn node(&mut self) -> Parsed {
-        if let Some(val) = self.ast.fields.get("__value__").and_then(|v| v.as_ref()) {
-            return Parsed::new(ParsedValue::Cst(val.clone()));
-        }
-
-        match self.cst.take() {
-            Some(c) => Parsed::new(ParsedValue::Cst(cst::cst_final(c))),
-            None => Parsed::void(),
-        }
+    pub fn append(&mut self, node: Cst) {
+        self.last_node = node.clone();
+        let prev = self.cst.clone();
+        self.cst = prev.add(node);
     }
 
-    pub fn append(&mut self, node: Parsed, as_list: bool) {
-        self.last_node = Some(node.clone());
-        self.cst = Some(cst::cst_add(self.cst.take(), node, as_list));
+    pub fn extend(&mut self, node: Cst) {
+        self.last_node = node.clone();
+        let prev = self.cst.clone();
+        self.cst = prev.merge(node);
     }
 
-    pub fn extend(&mut self, node: Parsed) {
-        self.last_node = Some(node.clone());
-        self.cst = Some(cst::cst_merge(self.cst.take(), node));
+    pub fn node(&mut self) -> ParsedValue {
+        if let Some(val) = self.ast.fields.get(__AT__) {
+            ParsedValue::Cst(val.clone())
+        }
+        else if self.ast.fields.len() >= 1 {
+            ParsedValue::Ast(self.ast.clone())
+        }
+        else{
+            ParsedValue::Cst(self.cst.clone())
+        }
     }
 }
 
@@ -96,7 +97,7 @@ impl<'a> ParseStateStack<'a> {
         let popped = self.states.pop().expect("State stack underflow");
         popped
     }
-    
+
     pub fn pop(&mut self) -> ParseState<'a> {
         let popped = self.states.pop().expect("State stack underflow");
         self.top().cursor.goto(popped.cursor.pos());

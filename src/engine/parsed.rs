@@ -7,10 +7,8 @@ use super::ast::Ast;
 /// The internal variants of parsed data.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParsedValue {
-    Token(String),
     Cst(Cst),
     Ast(Ast),
-    Void, // Represents a successful parse with no associated data
 }
 
 /// The sovereign result of a parsing rule.
@@ -31,7 +29,7 @@ impl Parsed {
 
     /// Convenience constructor for a Void result.
     pub fn void() -> Self {
-        Self::new(ParsedValue::Void)
+        Self::new(ParsedValue::Cst(Cst::Void))
     }
 
     /// Sets the grammar-defined type for this result.
@@ -46,18 +44,6 @@ impl Parsed {
 }
 
 // Ergonomic conversions to create Parsed from raw types
-impl From<String> for Parsed {
-    fn from(s: String) -> Self {
-        Parsed::new(ParsedValue::Token(s))
-    }
-}
-
-impl From<&str> for Parsed {
-    fn from(s: &str) -> Self {
-        Parsed::new(ParsedValue::Token(s.to_string()))
-    }
-}
-
 impl From<Cst> for Parsed {
     fn from(c: Cst) -> Self {
         Parsed::new(ParsedValue::Cst(c))

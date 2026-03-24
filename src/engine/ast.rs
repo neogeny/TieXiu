@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::collections::HashMap;
-use super::cst::{Cst, cst_add};
-use super::parsed::Parsed;
+use super::cst::Cst;
+
+pub const __AT__: &str = "&";
 
 /// A structured mapping for AST nodes.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Ast {
-    pub fields: HashMap<String, Option<Cst>>,
+    pub fields: HashMap<String, Cst>,
 }
 
 impl Ast {
@@ -16,33 +17,36 @@ impl Ast {
         Self::default()
     }
 
-    /// Pre-defines keys to ensure they exist in the resulting mapping.
     pub fn define(&mut self, keys: &[&str], list_keys: &[&str]) {
         for &k in keys {
             let key = self.safekey(k);
-            self.fields.entry(key).or_insert(None);
+            self.fields.entry(key).or_insert(Cst::Void);
         }
 
         for &k in list_keys {
             let key = self.safekey(k);
-            // Initialize list keys with an empty Cst::List
-            self.fields.entry(key).or_insert(Some(Cst::List(Vec::new())));
+            self.fields.entry(key).or_insert(Cst::List(Vec::new()));
         }
     }
 
-    /// Sets a value using our internal Parsed type.
-    pub fn set(&mut self, key: &str, item: Parsed, as_list: bool) {
+    pub fn set(&mut self, key: &str, item: Cst) {
         let key = self.safekey(key);
-
-        // Take ownership of the current value to process it via cst_add
-        // Note: .flatten() is useful here to collapse Option<Option<Cst>>
-        let current = self.fields.remove(&key).flatten();
-        let updated = cst_add(current, item, as_list);
-
-        self.fields.insert(key, Some(updated));
+        let mut new = item;
+        if let Some(current) = self.fields.remove(&key) {
+            new = current.add(new)
+        }
+        self.fields.insert(key, new);
+    }
+    
+    pub fn set_list(&mut self, key: &str, item: Cst) {
+        let key = self.safekey(key);
+        let mut new = item;
+        if let Some(current) = self.fields.remove(&key) {
+            new = current.addlist(new)
+        }
+        self.fields.insert(key, new);
     }
 
-    /// Protects the Python boundary by ensuring keys don't collide.
     fn safekey(&self, key: &str) -> String {
         let mut k = key.to_string();
         while self.is_unsafe(&k) {

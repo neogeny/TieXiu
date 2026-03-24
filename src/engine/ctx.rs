@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::state::ParseStateStack;
-use super::parsed::Parsed;
+use super::parsed::ParsedValue;
 
-pub type ParseResult = Result<Parsed, String>;
+pub type ParseResult = Result<ParsedValue, String>;
 
 pub struct RuleInfo {}
 
