@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::rc::Rc;
 use std::collections::HashMap;
 use super::cst::{Cst, CstRc};
 
@@ -28,19 +27,19 @@ impl Ast {
 
     pub fn update(&mut self, other: &Ast) {
         for (key, value) in &other.fields {
-            self.fields.insert(key.clone(), Rc::clone(value));
+            self.fields.insert(key.clone(), value.clone());
         }
     }
 
     pub fn define(&mut self, keys: &[&str], list_keys: &[&str]) {
         for &k in keys {
             let key = self.safekey(k);
-            self.fields.entry(key).or_insert(Rc::new(Cst::Void));
+            self.fields.entry(key).or_insert(Cst::Void.into());
         }
 
         for &k in list_keys {
             let key = self.safekey(k);
-            self.fields.entry(key).or_insert(Rc::new(Cst::List(Vec::new())));
+            self.fields.entry(key).or_insert(Cst::List(Vec::new()).into());
         }
     }
 
@@ -51,7 +50,7 @@ impl Ast {
             self.fields.insert(key, new);
         }
         else {
-            self.fields.insert(key, Rc::new(item));
+            self.fields.insert(key, item.into());
         }
     }
     
@@ -61,7 +60,7 @@ impl Ast {
             let new = (*current).clone().addlist(item);
             self.fields.insert(key, new);
         } else {
-            self.fields.insert(key, Rc::new(item));
+            self.fields.insert(key, item.into());
         }
 }
 

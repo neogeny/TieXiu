@@ -37,7 +37,7 @@ impl<'a> ParseState<'a> {
         Self {
             cursor: self.cursor.clone(),
             ast: self.ast.clone(),
-            cst: Rc::clone(&initial_cst),
+            cst: initial_cst.clone(),
             cutseen: self.cutseen,
             last_node: initial_cst,
         }
@@ -52,20 +52,21 @@ impl<'a> ParseState<'a> {
     pub fn append(&mut self, node: Cst) {
         let cst = std::mem::take(Rc::make_mut(&mut self.cst));
         self.cst = cst.add(node);
-        self.last_node = Rc::clone(&self.cst);
+        self.last_node = self.cst.clone();
     }
 
     pub fn extend(&mut self, node: Cst) {
         let cst = std::mem::take(Rc::make_mut(&mut self.cst));
         self.cst = cst.merge(node);
-        self.last_node = Rc::clone(&self.cst);
+        self.last_node = self.cst.clone();
     }
 
+    // this drops self
     pub fn node(self) -> CstRc {
         if let Some(val) = self.ast.get(__AT__) {
-            Rc::clone(val)
+            val.clone()
         } else if !self.ast.is_empty() {
-            Rc::new(Cst::Ast(self.ast))
+            Cst::Ast(self.ast).into()
         } else {
             self.cst
         }

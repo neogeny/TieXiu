@@ -44,20 +44,20 @@ impl Cst {
                 list.push(noderc);
                 Rc::new(Cst::List(list))
             },
-            _ => Rc::new(Cst::List(vec![Rc::new(self), noderc]))
+            _ => Rc::new(Cst::List(vec![self.into(), noderc]))
         }
     }
 
     pub fn addlist(self, node: Cst) -> CstRc {
         let noderc = Rc::new(node);
         match self {
-            Cst::Void => Rc::new(Cst::List(vec![noderc])),
+            Cst::Void => Cst::List(vec![noderc]).into(),
             Cst::List(mut list) => {
                 list.push(noderc);
-                Rc::new(Cst::List(list))
+                Cst::List(list).into()
             }
             _ => {
-                Rc::new(Cst::List(vec![Rc::new(self), noderc]))
+                Cst::List(vec![self.into(), noderc]).into()
             }
         }
     }
@@ -66,15 +66,15 @@ impl Cst {
         match (self, node) {
             (Cst::List(mut list), Cst::List(other_list)) => {
                 list.extend(other_list);
-                Rc::new(Cst::List(list))
+                Cst::List(list).into()
             }
             (Cst::List(mut list), other_node) => {
-                list.push(Rc::new(other_node));
-                Rc::new(Cst::List(list))
+                list.push(other_node.into());
+                Cst::List(list).into()
             }
             (some_node, Cst::List(mut other_list)) => {
-                other_list.insert(0, Rc::new(some_node));
-                Rc::new(Cst::List(other_list))
+                other_list.insert(0, some_node.into());
+                Cst::List(other_list).into()
             }
             (s, n) => s.add(n),
         }
@@ -87,9 +87,9 @@ impl Cst {
                 item
             }
             Cst::List(list) => {
-                Rc::new(Cst::Closed(list))
+                Cst::Closed(list).into()
             }
-            _ => Rc::new(self),
+            _ => self.into(),
         }
     }
 }
