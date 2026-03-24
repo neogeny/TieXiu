@@ -2,17 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::rc::Rc;
-
 use super::ast::{Ast, __AT__};
-use super::cst::Cst;
+use super::cst::{Cst, CstRc};
 use crate::input::text::CursorBox;
 
 pub struct ParseState<'a> {
     pub cursor: CursorBox<'a>,
     pub ast: Ast,
-    pub cst: Cst,
+    pub cst: CstRc,
     pub cutseen: bool,
-    pub last_node: Cst,  // FIXME: cannot keep a copy of a complet parse tree
+    pub last_node: CstRc,  // FIXME: cannot keep a copy of a complet parse tree
 }
 
 /// Manages the lifecycle of states during the parse.
@@ -23,45 +22,49 @@ pub struct ParseStateStack<'a> {
 
 impl<'a> ParseState<'a> {
     pub fn new(cursor: CursorBox<'a>) -> Self {
+        let initial_cst = Rc::new(Cst::Void);
         Self {
             cursor,
             ast: Ast::new(),
-            cst: Cst::Void,
+            cst: initial_cst.clone(),
             cutseen: false,
-            last_node: Cst::Void,
+            last_node: initial_cst,
         }
     }
 
     pub fn clone_state(&self) -> Self {
+        let initial_cst = Rc::new(Cst::Void);
         Self {
             cursor: self.cursor.clone(),
             ast: Ast {
                 fields: self.ast.fields.clone(),
             },
-            cst: Cst::Void,
+            cst: initial_cst.clone(),
             cutseen: self.cutseen,
-            last_node: Cst::Void,
+            last_node: initial_cst,
         }
     }
 
     pub fn merge(&mut self, other: ParseState<'a>) {
         self.cursor.goto(other.cursor.pos());
-        self.extend(other.cst);
+        self.extend((*other.cst).clone());
         for (key, value) in other.ast.fields {
             self.ast.fields.insert(key, value);
         }
     }
 
     pub fn append(&mut self, node: Cst) {
-        self.last_node = node.clone();
-        let prev = self.cst.clone();
-        self.cst = prev.add(node);
+        let noderc = Rc::new(node.clone());
+        self.last_node = noderc.clone();
+        let prev = (*self.cst).clone();
+        self.cst = Rc::new(prev.add(node));
     }
 
     pub fn extend(&mut self, node: Cst) {
-        self.last_node = node.clone();
-        let prev = self.cst.clone();
-        self.cst = prev.merge(node);
+        let noderc = Rc::new(node.clone());
+        self.last_node = noderc.clone();
+        let prev = (*self.cst).clone();
+        self.cst = Rc::new(prev.merge(node));
     }
 
     pub fn node(&mut self) -> Cst {
@@ -72,7 +75,7 @@ impl<'a> ParseState<'a> {
             Cst::Ast(self.ast.clone())
         }
         else{
-            self.cst.clone()
+            (*self.cst).clone()
         }
     }
 }
