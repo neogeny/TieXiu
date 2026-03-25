@@ -9,9 +9,11 @@ pub type CstRc = Rc<Cst>;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Cst {
     Token(String),
+    Item(CstRc),
     List(Vec<CstRc>),
     Closed(Vec<CstRc>),
     Ast(Ast),
+    Named(String, CstRc),
     Void
 }
 
@@ -89,6 +91,7 @@ impl Cst {
             Cst::List(list) => {
                 Cst::Closed(list).into()
             }
+            Cst::Item(cst) => cst,
             _ => self.into(),
         }
     }

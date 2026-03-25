@@ -1,4 +1,5 @@
-use crate::engine::ctx::{Ctx, ParseResult};
+use crate::engine::cst::Cst;
+use crate::engine::ctx::Ctx;
 use super::model::Model;
 
 pub struct ChoiceOption {
@@ -10,11 +11,10 @@ pub(crate) struct Choice {
 }
 
 impl Model for Choice {
-    fn parse(&self, ctx: &mut Ctx) -> ParseResult {
-        // Rust's version of with ctx.choice() as ch:
+    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), String> {
         for option in &self.options {
-            if let Ok(result) = option.parse(ctx) {
-                return Ok(result);
+            if let Ok((ctx, cst)) = option.parse(ctx) {
+                return Ok((ctx, cst));
             }
         }
         Err("No option matched".to_string())
@@ -28,7 +28,7 @@ impl ChoiceOption {
 }
 
 impl Model for ChoiceOption {
-    fn parse(&self, ctx: &mut Ctx) -> ParseResult {
+    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), String> {
         self.exp.parse(ctx)
     }
 }

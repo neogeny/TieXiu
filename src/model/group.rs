@@ -1,4 +1,5 @@
-use crate::engine::ctx::{Ctx, ParseResult};
+use crate::engine::cst::Cst;
+use crate::engine::ctx::Ctx;
 use super::model::Model;
 
 pub struct Group {
@@ -6,7 +7,7 @@ pub struct Group {
 }
 
 impl Model for Group {
-    fn parse(&self, ctx: &mut Ctx) -> ParseResult {
-        ctx.group(|c| self.exp.parse(c))
+    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), String> {
+        self.exp.parse(ctx)
     }
 }

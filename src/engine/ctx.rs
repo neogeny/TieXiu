@@ -2,34 +2,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::cst::Cst;
-use super::state::ParseStateStack;
+// use super::state::ParseStateStack;
 
-pub type ParseResult = Result<Cst, String>;
 
 pub struct RuleInfo {}
 
-pub struct Ctx<'c> {
-    states: ParseStateStack<'c>,
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Ctx {
 }
 
-impl<'c> Ctx<'c> {
-    pub fn group<F>(&mut self, body: F) -> ParseResult
-    where
-        F: FnOnce(&mut Self) -> ParseResult
-    {
-        self.states.push();
-        match body(self) {
-            Ok(parsed) => {
-                self.states.merge();
-                Ok(parsed)
-            }
-            Err(err) => {
-                self.states.undo();
-                Err(err)
-            }
-        }
-    }
-}
+pub type ParseResult = Result<(Ctx, Cst), String>;
+
+impl Ctx {}
+//     pub fn group<F>(&mut self, body: F) -> ParseResult
+//     where
+//         F: FnOnce(&mut Self) -> ParseResult
+//     {
+//         self.states.push();
+//         match body(self) {
+//             Ok(parsed) => {
+//                 self.states.merge();
+//                 Ok(parsed)
+//             }
+//             Err(err) => {
+//                 self.states.undo();
+//                 Err(err)
+//             }
+//         }
+//     }
+// }
 //
 //     // Parsing primitives
 //     fn dot(&mut self) -> ParseResult;
