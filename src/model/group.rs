@@ -6,7 +6,7 @@ pub struct Group {
 }
 
 impl Model for Group {
-    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), String> {
+    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), (bool, usize, String)> {
         self.exp.parse(ctx)
     }
 }

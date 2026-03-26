@@ -13,7 +13,7 @@ impl Sequence {
 }
 
 impl Model for Sequence {
-    fn parse(&self, mut ctx: Ctx) -> Result<(Ctx, Cst), String> {
+    fn parse(&self, mut ctx: Ctx) -> Result<(Ctx, Cst), (bool, usize, String)> {
         let mut results = Vec::new();
         for exp in &self.exps {
             let (new_ctx, cst) = exp.parse(ctx)?;

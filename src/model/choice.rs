@@ -7,13 +7,27 @@ pub struct Choice {
 }
 
 impl Model for Choice {
-    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), String> {
+    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), (bool, usize, String)> {
+        let mut furthest_err: (bool, usize, String) = (false, 0, String::new());
+
         for option in &self.options {
-            // Because Ctx is Copy/Value, 'ctx' here is the same for every iteration
-            if let Ok((next_ctx, cst)) = option.parse(ctx) {
-                return Ok((next_ctx, cst));
+            match option.parse(ctx) {
+                Ok(res) => return Ok(res),
+                Err((cut, offset, msg)) => {
+                    // 1. If we hit a CUT, we stop everything and bubble up.
+                    if cut {
+                        // We reset 'cut' to false here because this Choice
+                        // has now "consumed" the cut signal for its parent.
+                        return Err((false, offset, msg));
+                    }
+
+                    // 2. Otherwise, we track the furthest error for reporting.
+                    if offset >= furthest_err.1 {
+                        furthest_err = (false, offset, msg);
+                    }
+                }
             }
         }
-        Err("No option matched".to_string())
+        Err(furthest_err)
     }
 }
