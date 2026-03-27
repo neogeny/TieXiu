@@ -60,8 +60,7 @@ impl<'a> ParseState<'a> {
             // to return a plain Cst
             val.clone()
         } else if !self.ast.is_empty() {
-            // Cst::Ast(self.ast)
-            Cst::Nil
+            Cst::Ast(Box::new(self.ast.clone()))
         } else {
             self.cst
         }

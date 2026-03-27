@@ -1,13 +1,16 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use super::ast::Ast;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Cst {
     Token(String),
     Item(Box<Cst>),
     List(Vec<Box<Cst>>),
-    Closed(Vec<Box<Cst>>),
+    Closure(Vec<Box<Cst>>),
     Named(String, Box<Cst>),
+    Ast(Box<Ast>),
     Nil,
 }
 
@@ -77,9 +80,49 @@ impl Cst {
     pub fn closed(self) -> Cst {
         match self {
             Cst::List(mut list) if list.len() == 1 => *list.pop().unwrap(),
-            Cst::List(list) => Cst::Closed(list),
+            Cst::List(list) => Cst::Closure(list),
             Cst::Item(cst) => *cst,
             _ => self,
+        }
+    }
+
+    pub fn distill(self) -> Self {
+        match self {
+            Cst::List(elements) => {
+                let mut new_list = Vec::new();
+                let mut ast = Ast::new();
+
+                for node in elements {
+                    // Recurse to handle nested structures
+                    let child = node.distill();
+                    
+                    match child {
+                        Cst::Nil => continue,
+                        
+                        // Labels are extracted to the current rule's AST
+                        Cst::Named(name, value) => {
+                            ast.set(&name, *value);
+                        }
+                        
+                        // An Ast from a sub-rule is just another positional item
+                        // unless it was Named (handled above).
+                        other => new_list.push(Box::new(other)),
+                    }
+                }
+
+                if !ast.is_empty() {
+                    Cst::Ast(Box::new(ast))
+                } else {
+                    Cst::List(new_list)
+                }
+            }
+            // A standalone Named node always promotes to an Ast
+            Cst::Named(name, value) => {
+                let mut ast = Ast::new();
+                ast.set(&name, *value);
+                Cst::Ast(Box::new(ast))
+            }
+            other => other,
         }
     }
 }
