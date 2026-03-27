@@ -1,114 +1,101 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::rc::Rc;
-use super::ast::Ast;
-
-pub type CstRc = Rc<Cst>;
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Cst {
     Token(String),
-    Item(CstRc),
-    List(Vec<CstRc>),
-    Closed(Vec<CstRc>),
-    Ast(Ast),
-    Named(String, CstRc),
-    Void
+    Item(Box<Cst>),
+    List(Vec<Box<Cst>>),
+    Closed(Vec<Box<Cst>>),
+    Named(String, Box<Cst>),
+    Nil,
 }
 
 impl Default for Cst {
     fn default() -> Self {
-        Cst::Void
+        Cst::Nil
     }
 }
 
 impl From<Vec<Cst>> for Cst {
     fn from(v: Vec<Cst>) -> Self {
-        let rcvec = v.into_iter().map(|c| Rc::new(c)).collect();
-        Cst::List(rcvec)
+        let boxed = v.into_iter().map(Box::new).collect();
+        Cst::List(boxed)
     }
 }
 
 impl<const N: usize> From<[Cst; N]> for Cst {
     fn from(arr: [Cst; N]) -> Self {
-        let rcvec = arr.into_iter().map(|c| Rc::new(c)).collect();
-        Cst::List(rcvec)
+        let boxed = arr.into_iter().map(Box::new).collect();
+        Cst::List(boxed)
     }
 }
 
 impl Cst {
-    pub fn add(self, node: Cst) -> CstRc {
-        let noderc = Rc::new(node);
+    pub fn add(self, node: Cst) -> Cst {
+        let node_box = Box::new(node);
         match self {
-            Cst::Void => noderc,
+            Cst::Nil => *node_box,
             Cst::List(mut list) => {
-                list.push(noderc);
-                Rc::new(Cst::List(list))
-            },
-            _ => Rc::new(Cst::List(vec![self.into(), noderc]))
+                list.push(node_box);
+                Cst::List(list)
+            }
+            _ => Cst::List(vec![Box::new(self), node_box]),
         }
     }
 
-    pub fn addlist(self, node: Cst) -> CstRc {
-        let noderc = Rc::new(node);
+    pub fn addlist(self, node: Cst) -> Cst {
+        let node_box = Box::new(node);
         match self {
-            Cst::Void => Cst::List(vec![noderc]).into(),
+            Cst::Nil => Cst::List(vec![node_box]),
             Cst::List(mut list) => {
-                list.push(noderc);
-                Cst::List(list).into()
+                list.push(node_box);
+                Cst::List(list)
             }
-            _ => {
-                Cst::List(vec![self.into(), noderc]).into()
-            }
+            _ => Cst::List(vec![Box::new(self), node_box]),
         }
     }
 
-    pub fn merge(self, node: Cst) -> CstRc {
+    pub fn merge(self, node: Cst) -> Cst {
         match (self, node) {
             (Cst::List(mut list), Cst::List(other_list)) => {
                 list.extend(other_list);
-                Cst::List(list).into()
+                Cst::List(list)
             }
             (Cst::List(mut list), other_node) => {
-                list.push(other_node.into());
-                Cst::List(list).into()
+                list.push(Box::new(other_node));
+                Cst::List(list)
             }
             (some_node, Cst::List(mut other_list)) => {
-                other_list.insert(0, some_node.into());
-                Cst::List(other_list).into()
+                other_list.insert(0, Box::new(some_node));
+                Cst::List(other_list)
             }
             (s, n) => s.add(n),
         }
     }
 
-    pub fn closed(self) -> CstRc {
+    pub fn closed(self) -> Cst {
         match self {
-            Cst::List(list) if list.len() == 1 => {
-                let item = list.into_iter().next().unwrap();
-                item
-            }
-            Cst::List(list) => {
-                Cst::Closed(list).into()
-            }
-            Cst::Item(cst) => cst,
-            _ => self.into(),
+            Cst::List(mut list) if list.len() == 1 => *list.pop().unwrap(),
+            Cst::List(list) => Cst::Closed(list),
+            Cst::Item(cst) => *cst,
+            _ => self,
         }
     }
 }
 
-pub fn cst_add(prev: Cst, node: Cst) -> CstRc {
+pub fn cst_add(prev: Cst, node: Cst) -> Cst {
     prev.add(node)
 }
 
-pub fn cst_addlist(prev: Cst, node: Cst) -> CstRc {
+pub fn cst_addlist(prev: Cst, node: Cst) -> Cst {
     prev.addlist(node)
 }
 
-pub fn cst_merge(prev: Cst, node: Cst) -> CstRc {
+pub fn cst_merge(prev: Cst, node: Cst) -> Cst {
     prev.merge(node)
 }
 
-pub fn cst_closed(cst: Cst) -> CstRc {
+pub fn cst_closed(cst: Cst) -> Cst {
     cst.closed()
 }

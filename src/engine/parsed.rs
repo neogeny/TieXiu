@@ -29,7 +29,7 @@ impl Parsed {
 
     /// Convenience constructor for a Void result.
     pub fn void() -> Self {
-        Self::new(ParsedValue::Cst(Cst::Void))
+        Self::new(ParsedValue::Cst(Cst::Nil))
     }
 
     /// Sets the grammar-defined type for this result.

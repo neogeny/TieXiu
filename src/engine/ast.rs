@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::collections::HashMap;
-use super::cst::{Cst, CstRc};
+use super::cst::Cst;
 
 pub const __AT__: &str = "&";
 
 /// A structured mapping for AST nodes.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Ast {
-    pub fields: HashMap<String, CstRc>,
+    pub fields: HashMap<String, Cst>,
 }
 
 impl Ast {
@@ -21,7 +21,7 @@ impl Ast {
         self.fields.is_empty()
     }
 
-    pub fn get(&self, key: &str) -> Option<&CstRc> {
+    pub fn get(&self, key: &str) -> Option<&Cst> {
         self.fields.get(key)
     }
 
@@ -34,7 +34,7 @@ impl Ast {
     pub fn define(&mut self, keys: &[&str], list_keys: &[&str]) {
         for &k in keys {
             let key = self.safekey(k);
-            self.fields.entry(key).or_insert(Cst::Void.into());
+            self.fields.entry(key).or_insert(Cst::Nil.into());
         }
 
         for &k in list_keys {
@@ -46,7 +46,7 @@ impl Ast {
     pub fn set(&mut self, key: &str, item: Cst) {
         let key = self.safekey(key);
         if let Some(current) = self.fields.remove(&key) {
-            let new = (*current).clone().add(item);
+            let new = current.add(item);
             self.fields.insert(key, new);
         }
         else {
@@ -57,7 +57,7 @@ impl Ast {
     pub fn set_list(&mut self, key: &str, item: Cst) {
         let key = self.safekey(key);
         if let Some(current) = self.fields.remove(&key) {
-            let new = (*current).clone().addlist(item);
+            let new = current.addlist(item);
             self.fields.insert(key, new);
         } else {
             self.fields.insert(key, item.into());

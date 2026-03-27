@@ -1,15 +1,14 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::rc::Rc;
 use super::ast::{Ast, __AT__};
-use super::cst::{Cst, CstRc};
+use super::cst::Cst;
 use crate::input::text::CursorBox;
 
 pub struct ParseState<'a> {
     pub cursor: CursorBox<'a>,
     pub ast: Ast,
-    pub cst: CstRc,
+    pub cst: Cst,
     pub cutseen: bool,
 }
 
@@ -24,7 +23,7 @@ impl<'a> ParseState<'a> {
         Self {
             cursor,
             ast: Ast::new(),
-            cst: Rc::new(Cst::Void),
+            cst: Cst::Nil,
             cutseen: false,
         }
     }
@@ -33,33 +32,36 @@ impl<'a> ParseState<'a> {
         Self {
             cursor: self.cursor.clone(),
             ast: self.ast.clone(),
-            cst: Rc::new(Cst::Void),
+            cst: Cst::Nil,
             cutseen: self.cutseen,
         }
     }
 
     pub fn merge(&mut self, other: ParseState<'a>) {
         self.cursor.goto(other.cursor.pos());
-        self.extend((*other.cst).clone());
+        self.extend(other.cst);
         self.ast.update(&other.ast);
     }
 
     pub fn append(&mut self, node: Cst) {
-        let cst = std::mem::take(Rc::make_mut(&mut self.cst));
+        let cst = std::mem::take(&mut self.cst);
         self.cst = cst.add(node);
     }
 
     pub fn extend(&mut self, node: Cst) {
-        let cst = std::mem::take(Rc::make_mut(&mut self.cst));
+        let cst = std::mem::take(&mut self.cst);
         self.cst = cst.merge(node);
     }
 
     /// Consumes the state and returns the resulting CST node.
-    pub fn node(self) -> CstRc {
+    pub fn node(self) -> Cst {
         if let Some(val) = self.ast.get(__AT__) {
+            // Since we moved to Box, we unbox the Ast value if needed
+            // to return a plain Cst
             val.clone()
         } else if !self.ast.is_empty() {
-            Cst::Ast(self.ast).into()
+            // Cst::Ast(self.ast)
+            Cst::Nil
         } else {
             self.cst
         }
@@ -99,7 +101,7 @@ impl<'a> ParseStateStack<'a> {
         self.top().merge(child);
     }
 
-    pub fn node(&mut self) -> CstRc {
+    pub fn node(&mut self) -> Cst {
         let state = self.states.pop().expect("Stack underflow");
         state.node()
     }
