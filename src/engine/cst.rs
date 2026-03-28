@@ -6,6 +6,7 @@ use super::ast::Ast;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Cst {
     Token(String),
+    Literal(String),
     Item(Box<Cst>),
     List(Vec<Box<Cst>>),
     Closure(Vec<Box<Cst>>),

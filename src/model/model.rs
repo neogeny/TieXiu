@@ -10,8 +10,16 @@ pub trait CanParse<C: Cursor> {
     }
 }
 
-pub enum Model<M>
+pub enum Model<'m, M>
 {
+    Cut(Cut),
+    Void(Void),
+    Fail(Fail),
+    Dot(Dot),
+    Eof(Eof),
+    Token(Token<'m>),
+    Constant(Constant<'m>),
+    Alert(Alert<'m>),
     Group(Group<M>),
     Sequence(Sequence<M>),
     Choice(Choice<M>),
@@ -24,13 +32,22 @@ pub enum Model<M>
     PositiveGather(PositiveGather<M>),
 }
 
-impl<M, C> CanParse<C> for Model<M>
+impl<'m, M, C> CanParse<C> for Model<'m, M>
 where
     M: CanParse<C>,
     C: Cursor
 {
     fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
         match self {
+            Self::Cut(m) => m.parse(ctx),
+            Self::Void(m) => m.parse(ctx),
+            Self::Fail(m) => m.parse(ctx),
+            Self::Dot(m) => m.parse(ctx),
+            Self::Eof(m) => m.parse(ctx),
+            Self::Token(m) => m.parse(ctx),
+            Self::Constant(m) => m.parse(ctx),
+            Self::Alert(m) => m.parse(ctx),
+
             Self::Group(m) => m.parse(ctx),
             Self::Sequence(m) => m.parse(ctx),
             Self::Choice(m) => m.parse(ctx),
@@ -41,8 +58,6 @@ where
             Self::PositiveJoin(m) => m.parse(ctx),
             Self::Gather(m) => m.parse(ctx),
             Self::PositiveGather(m) => m.parse(ctx),
-            // Self::Token(m) => m.parse(ctx),
-            // ...
         }
     }
 }

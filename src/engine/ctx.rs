@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::input::Cursor;
+use crate::model::ParseResult;
+
 
 
 #[derive(Debug, Clone)]
@@ -23,8 +25,21 @@ impl<C: Cursor> Ctx<C> {
     pub fn cut(&mut self) {
         self.cut_seen = true;
     }
+    
+    pub fn dot(&mut self) -> ParseResult<C> {
+        unimplemented!()
+    }
+    pub fn eof_check(&mut self) -> ParseResult<C> {
+        unimplemented!()
+    }
+    
+    pub fn token(&mut self, _token: &str) -> ParseResult<C> {
+        unimplemented!()
+    }
+    pub fn pattern(&mut self, _pattern: &str) -> ParseResult<C> {
+        unimplemented!()
+    }
 }
-//     fn dot(&mut self) -> ParseResult;
 //     fn token(&mut self, token: &str) -> Result<String, String>;
 //     fn pattern(&mut self, pattern: &str) -> ParseResult;
 //
@@ -42,5 +57,4 @@ impl<C: Cursor> Ctx<C> {
 //     fn last_node(&self) -> ParseResult;
 //
 //     // Errors and Guards
-//     fn eof_check(&mut self) -> Result<(), String>;
 //     fn fail(&mut self) -> ParseResult;
