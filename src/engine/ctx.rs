@@ -1,23 +1,37 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::collections::HashMap;
+use std::sync::Arc;
 use crate::input::Cursor;
-use crate::model::ParseResult;
+use crate::model::{CanParse, ParseResult};
 
+/// The rule registry. Using Arc allows the Ctx to own it without copying the data.
+pub type RuleMap<C> = Arc<HashMap<&'static str, Arc<dyn CanParse<C>>>>;
 
-
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Ctx<C: Cursor> {
     pub cursor: C,
     pub cut_seen : bool,
     pub error_msg: Option<String>,
+    pub rules: RuleMap<C>,
 }
 
 impl<C: Cursor> Ctx<C> {
     pub fn new(cursor: C) -> Self {
-        Self { cursor, cut_seen: false, error_msg: None }
+        Self {
+            cursor,
+            cut_seen: false,
+            error_msg: None,
+            rules: RuleMap::new(HashMap::new())}
     }
 
+    pub fn resolve(&self, name: &str) -> Arc<dyn CanParse<C>> {
+        self.rules.get(name)
+            .cloned()
+            .unwrap_or_else(|| panic!("Rule {} not found", name))
+    }
+    
     pub fn mark(&self) -> usize {
         self.cursor.mark()
     }

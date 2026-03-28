@@ -7,6 +7,7 @@ mod closure;
 mod basic;
 mod named;
 mod syntax;
+mod call;
 
 pub use model::{CanParse, ParseResult};
 pub use optional::Optional;
@@ -17,3 +18,4 @@ pub use closure::*;
 pub use basic::*;
 pub use named::*;
 pub use syntax::*;
+pub use call::Call;
