@@ -17,7 +17,11 @@ pub enum Model<M>
     Choice(Choice<M>),
     Optional(Optional<M>),
     Closure(Closure<M>),
-    PositiveClosure(PositiveClosure<M>)
+    PositiveClosure(PositiveClosure<M>),
+    Join(Join<M>),
+    PositiveJoin(PositiveJoin<M>),
+    Gather(Gather<M>),
+    PositiveGather(PositiveGather<M>),
 }
 
 impl<M, C> CanParse<C> for Model<M>
@@ -33,6 +37,10 @@ where
             Self::Optional(m) => m.parse(ctx),
             Self::Closure(m) => m.parse(ctx),
             Self::PositiveClosure(m) => m.parse(ctx),
+            Self::Join(m) => m.parse(ctx),
+            Self::PositiveJoin(m) => m.parse(ctx),
+            Self::Gather(m) => m.parse(ctx),
+            Self::PositiveGather(m) => m.parse(ctx),
             // Self::Token(m) => m.parse(ctx),
             // ...
         }

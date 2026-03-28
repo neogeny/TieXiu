@@ -4,7 +4,7 @@
 use crate::input::Cursor;
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Ctx<C: Cursor> {
     pub cursor: C,
     pub cut_seen : bool,
@@ -19,30 +19,14 @@ impl<C: Cursor> Ctx<C> {
     pub fn mark(&self) -> usize {
         self.cursor.mark()
     }
+    
+    pub fn cut(&mut self) {
+        self.cut_seen = true;
+    }
 }
-//     pub fn group<F>(&mut self, body: F) -> ParseResult
-//     where
-//         F: FnOnce(&mut Self) -> ParseResult
-//     {
-//         self.states.push();
-//         match body(self) {
-//             Ok(parsed) => {
-//                 self.states.merge();
-//                 Ok(parsed)
-//             }
-//             Err(err) => {
-//                 self.states.undo();
-//                 Err(err)
-//             }
-//         }
-//     }
-// }
-//
-//     // Parsing primitives
 //     fn dot(&mut self) -> ParseResult;
 //     fn token(&mut self, token: &str) -> Result<String, String>;
 //     fn pattern(&mut self, pattern: &str) -> ParseResult;
-//     fn constant(&mut self, literal: &str) -> ParseResult;
 //
 //     // Rule and Dispatch
 //     fn call(&mut self, ri: &RuleInfo) -> ParseResult;
@@ -60,4 +44,3 @@ impl<C: Cursor> Ctx<C> {
 //     // Errors and Guards
 //     fn eof_check(&mut self) -> Result<(), String>;
 //     fn fail(&mut self) -> ParseResult;
-//     fn cut(&mut self);

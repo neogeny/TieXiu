@@ -19,16 +19,44 @@ pub struct Join<M> {
     pub sep: Box<M>,
 }
 
+pub struct PositiveJoin<M> {
+    pub exp: Box<M>,
+    pub sep: Box<M>,
+}
+
+pub struct Gather<M> {
+    pub exp: Box<M>,
+    pub sep: Box<M>,
+}
+
+pub struct PositiveGather<M> {
+    pub exp: Box<M>,
+    pub sep: Box<M>,
+}
 
 
-fn add_result<M, C>(results: &mut Vec<Cst>, exp: &M, ctx: Ctx<C>) -> Result<Ctx<C>, Ctx<C>>
+fn skip_exp<M, C>(exp: &M, ctx: Ctx<C>) -> Result<Ctx<C>, Ctx<C>>
+where
+    M: CanParse<C>,
+    C: Cursor,
+{
+    match exp.parse(ctx) {
+        Ok((new_ctx, _)) => {
+            Ok(new_ctx)
+        }
+        Err(err) => Err(err)
+    }
+}
+
+
+fn add_exp<M, C>(exp: &M, ctx: Ctx<C>, res: &mut Vec<Cst>) -> Result<Ctx<C>, Ctx<C>>
 where
     M: CanParse<C>,
     C: Cursor,
 {
         match exp.parse(ctx) {
             Ok((new_ctx, cst)) => {
-                results.push(cst);
+                res.push(cst);
                 Ok(new_ctx)
             }
             Err(err) => Err(err)
@@ -36,13 +64,13 @@ where
 }
 
 
-fn repeat<M, C>(results: &mut Vec<Cst>, exp: &M, mut ctx: Ctx<C>) -> Ctx<C>
+fn repeat<M, C>(res: &mut Vec<Cst>, mut ctx: Ctx<C>, exp: &M) -> Ctx<C>
 where
     M: CanParse<C>,
     C: Cursor,
 {
     loop {
-        match add_result(results, exp, ctx) {
+        match add_exp(exp, ctx, res) {
             Ok(new_ctx) => ctx = new_ctx,
             Err(err_ctx) => return err_ctx
         }
@@ -50,30 +78,37 @@ where
 }
 
 
-// fn repeat_with_prefix<M, C>(results: &mut Vec<Cst>, pre: &M, exp: &M, mut
-// ctx: Ctx<C>) -> ParseResult<C>
-// where
-//     M: CanParse<C>,
-//     C: Cursor,
-// {
-//     loop {
-//         match pre.parse(ctx.clone()) {
-//             Ok((new_ctx, _)) => {
-//                 ctx = new_ctx;
-//             },
-//             Err(_) => {
-//                 return Ok((ctx, Cst::from(results)))
-//             }
-//         };
-//
-//         match add_result(&mut results, exp, ctx) {
-//             Ok(new_ctx) => ctx = new_ctx,
-//             Err(new_ctx) => return Ok((new_ctx, Cst::from(results)))
-//         }
-//     }
-// }
-//
-//
+fn repeat_with_pre<M, C>(
+    res: &mut Vec<Cst>, 
+    mut ctx: Ctx<C>, 
+    exp: &M, 
+    pre: &M,
+    keep_pre: bool,
+) -> Ctx<C>
+where
+    M: CanParse<C>,
+    C: Cursor,
+{
+    loop {
+        match pre.parse(ctx) {
+            Err(err_ctx) => return err_ctx,
+            Ok((new_ctx, pre_cst)) => {
+                ctx = new_ctx;
+                match exp.parse(ctx) {
+                    Err(err_ctx) => return err_ctx,
+                    Ok((new_ctx, exp_cst)) => {
+                        ctx = new_ctx;
+                        if keep_pre {
+                            res.push(pre_cst);
+                        }
+                        res.push(exp_cst);
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 impl<M, C> CanParse<C> for Closure<M>
 where
@@ -81,9 +116,9 @@ where
     C: Cursor,
 {
     fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
-        let mut results = Vec::new();
-        let new_ctx = repeat(&mut results, &*self.exp, ctx);
-        Ok((new_ctx, Cst::from(results)))
+        let mut res = Vec::new();
+        let new_ctx = repeat(&mut res, ctx, &*self.exp);
+        Ok((new_ctx, Cst::from(res)))
     }
 }
 
@@ -93,27 +128,99 @@ where
     C: Cursor,
 {
     fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
-        let mut results: Vec<Cst> = Vec::new();
+        let mut res: Vec<Cst> = Vec::new();
 
-        match self.exp.parse(ctx.clone()) {
+        match self.exp.parse(ctx) {
             Ok((new_ctx, cst)) => {
                 ctx = new_ctx;
-                results.push(cst);
+                res.push(cst);
             },
             err => return err
         };
 
-        let new_ctx = repeat(&mut results, &*self.exp, ctx.clone());
-        Ok((new_ctx, Cst::from(results)))
+        let new_ctx = repeat(&mut res, ctx, &*self.exp);
+        Ok((new_ctx, Cst::from(res)))
     }
 }
 
-// impl<M, C> CanParse<C> for Join<M>
-// where
-//     M: CanParse<C>,
-//     C: Cursor,
-// {
-//     fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
-//         repeat(&*self.exp, ctx)
-//     }
-// }
+impl<M, C> CanParse<C> for Join<M>
+where
+    M: CanParse<C>,
+    C: Cursor,
+{
+    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+        let mut res: Vec<Cst> = Vec::new();
+
+        match add_exp(&*self.exp, ctx, &mut res) {
+            Ok(new_ctx) => {
+                let ctx = repeat_with_pre(&mut res, new_ctx, &*self.exp, &*self.sep, true);
+                Ok((ctx, Cst::from(res)))
+            },
+            Err(err_ctx) => Ok((err_ctx, Cst::from(res)))
+        }
+    }
+}
+
+impl<M, C> CanParse<C> for PositiveJoin<M>
+where
+    M: CanParse<C>,
+    C: Cursor,
+{
+    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+        let mut res: Vec<Cst> = Vec::new();
+
+        match self.exp.parse(ctx) {
+            Ok((new_ctx, cst)) => {
+                ctx = new_ctx;
+                res.push(cst);
+            },
+            err => return err
+        };
+
+        let new_ctx = repeat_with_pre(&mut res, ctx, &*self.exp, &*self.sep, true);
+        Ok((new_ctx, Cst::from(res)))
+    }
+}
+
+impl<M, C> CanParse<C> for Gather<M>
+where
+    M: CanParse<C>,
+    C: Cursor,
+{
+    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+        let mut res: Vec<Cst> = Vec::new();
+
+        match add_exp(&*self.exp, ctx, &mut res) {
+            Ok(new_ctx) => {
+                let ctx = repeat_with_pre(
+                    &mut res, new_ctx, &*self.exp, &*self.sep, false
+                );
+                Ok((ctx, Cst::from(res)))
+            },
+            Err(err_ctx) => Ok((err_ctx, Cst::from(res)))
+        }
+    }
+}
+
+impl<M, C> CanParse<C> for PositiveGather<M>
+where
+    M: CanParse<C>,
+    C: Cursor,
+{
+    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+        let mut res: Vec<Cst> = Vec::new();
+
+        match self.exp.parse(ctx) {
+            Ok((new_ctx, cst)) => {
+                ctx = new_ctx;
+                res.push(cst);
+            },
+            err => return err
+        };
+
+        let new_ctx = repeat_with_pre(
+            &mut res, ctx, &*self.exp, &*self.sep, false
+        );
+        Ok((new_ctx, Cst::from(res)))
+    }
+}
