@@ -1,17 +1,19 @@
-use crate::engine::{Cst, Ctx};
-use super::model::CanParse;
+use crate::input::Cursor;
+use super::model::{CanParse, ParseResult};
+use crate::engine::Ctx;
 
 
-pub struct Choice<M: CanParse> {
+pub struct Choice<M> {
     pub options: Vec<Box<M>>,
 }
 
-impl<M: CanParse> CanParse for Choice<M> {
-    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), (Ctx, String)> {
-        let mut furthest_err: (Ctx, String) = (
-            Ctx{offset: 0, cut_seen: false}, 
-           String::new()
-        );
+impl<M, C> CanParse<C> for Choice<M>
+where
+    M: CanParse<C>,
+    C: Cursor
+{
+    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+        let mut furthest_err = (Ctx::new(C::new()), String::new());
 
         for option in &self.options {
             match option.parse(ctx) {
@@ -21,9 +23,12 @@ impl<M: CanParse> CanParse for Choice<M> {
                     if err_ctx.cut_seen {
                         return Err((err_ctx, msg));
                     }
-
-                    if err_ctx.offset >= furthest_err.0.offset {
+                    if err_ctx.mark() >= furthest_err.0.mark() {
+                        ctx = err_ctx.clone();
                         furthest_err = (err_ctx, msg);
+                    }
+                    else {
+                        ctx = err_ctx;
                     }
                 }
             }

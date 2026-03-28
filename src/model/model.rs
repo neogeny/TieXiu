@@ -1,13 +1,17 @@
+use crate::input::Cursor;
 use crate::engine::{Cst, Ctx};
 use super::*;
 
-pub trait CanParse {
-    fn parse(&self, _ctx: Ctx) -> Result<(Ctx, Cst), (Ctx, String)> {
+pub type ParseResult<C> = Result<(Ctx<C>, Cst), (Ctx<C>, String)>;
+
+pub trait CanParse<C: Cursor> {
+    fn parse(&self, _ctx: Ctx<C>) -> ParseResult<C> {
         unimplemented!()
     }
 }
 
-pub enum Model<M: CanParse> {
+pub enum Model<M>
+{
     Group(Group<M>),
     Sequence(Sequence<M>),
     Choice(Choice<M>),

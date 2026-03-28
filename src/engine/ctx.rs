@@ -1,21 +1,27 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::input::Cursor;
 use super::cst::Cst;
-// use super::state::ParseStateStack;
 
-
-pub struct RuleInfo {}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Ctx {
-    pub offset: usize,
+pub struct Ctx<C: Cursor> {
+    pub cursor: C,
     pub cut_seen : bool
 }
 
-pub type ParseResult = Result<(Ctx, Cst), String>;
+pub type ParseResult<C> = Result<(Ctx<C>, Cst), String>;
 
-impl Ctx {}
+impl<C: Cursor> Ctx<C> {
+    pub fn new(cursor: C) -> Self {
+        Self { cursor, cut_seen: false }
+    }
+    
+    pub fn mark(&self) -> usize {
+        self.cursor.mark()
+    }
+}
 //     pub fn group<F>(&mut self, body: F) -> ParseResult
 //     where
 //         F: FnOnce(&mut Self) -> ParseResult
