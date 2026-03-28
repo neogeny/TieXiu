@@ -17,3 +17,18 @@ pub enum Model<M>
     Choice(Choice<M>),
 }
 
+impl<M, C> CanParse<C> for Model<M>
+where
+    M: CanParse<C>,
+    C: Cursor
+{
+    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+        match self {
+            Self::Group(m) => m.parse(ctx),
+            Self::Sequence(m) => m.parse(ctx),
+            Self::Choice(m) => m.parse(ctx),
+            // Self::Token(m) => m.parse(ctx),
+            // ...
+        }
+    }
+}
