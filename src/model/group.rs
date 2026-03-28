@@ -1,12 +1,12 @@
 use crate::engine::{Cst, Ctx};
-use super::model::Model;
+use super::model::CanParse;
 
-pub struct Group {
-    pub exp: Box<dyn Model>,
+pub struct Group<M: CanParse> {
+    pub exp: Box<M>,
 }
 
-impl Model for Group {
-    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), (bool, usize, String)> {
-        self.exp.parse(ctx)
+impl<M: CanParse> CanParse for Group<M> {
+    fn parse(&self, _ctx: Ctx) -> Result<(Ctx, Cst), (Ctx, String)> {
+        self.exp.parse(_ctx)
     }
 }

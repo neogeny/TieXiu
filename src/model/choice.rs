@@ -1,29 +1,29 @@
 use crate::engine::{Cst, Ctx};
-use super::model::Model;
+use super::model::CanParse;
 
 
-pub struct Choice {
-    pub options: Vec<Box<dyn Model>>,
+pub struct Choice<M: CanParse> {
+    pub options: Vec<Box<M>>,
 }
 
-impl Model for Choice {
-    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), (bool, usize, String)> {
-        let mut furthest_err: (bool, usize, String) = (false, 0, String::new());
+impl<M: CanParse> CanParse for Choice<M> {
+    fn parse(&self, ctx: Ctx) -> Result<(Ctx, Cst), (Ctx, String)> {
+        let mut furthest_err: (Ctx, String) = (
+            Ctx{offset: 0, cut_seen: false}, 
+           String::new()
+        );
 
         for option in &self.options {
             match option.parse(ctx) {
                 Ok(res) => return Ok(res),
-                Err((cut, offset, msg)) => {
-                    // 1. If we hit a CUT, we stop everything and bubble up.
-                    if cut {
-                        // We reset 'cut' to false here because this Choice
-                        // has now "consumed" the cut signal for its parent.
-                        return Err((false, offset, msg));
+                Err((mut err_ctx, msg)) => {
+                    err_ctx.cut_seen = false;
+                    if err_ctx.cut_seen {
+                        return Err((err_ctx, msg));
                     }
 
-                    // 2. Otherwise, we track the furthest error for reporting.
-                    if offset >= furthest_err.1 {
-                        furthest_err = (false, offset, msg);
+                    if err_ctx.offset >= furthest_err.0.offset {
+                        furthest_err = (err_ctx, msg);
                     }
                 }
             }

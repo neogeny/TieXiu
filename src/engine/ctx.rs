@@ -9,6 +9,8 @@ pub struct RuleInfo {}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ctx {
+    pub offset: usize,
+    pub cut_seen : bool
 }
 
 pub type ParseResult = Result<(Ctx, Cst), String>;

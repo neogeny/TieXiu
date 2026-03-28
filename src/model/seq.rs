@@ -1,19 +1,19 @@
 use crate::engine::{Cst, Ctx};
-use super::model::Model;
+use super::model::CanParse;
 
-pub struct Sequence {
-    pub exps: Vec<Box<dyn Model>>,
+pub struct Sequence<M: CanParse> {
+    pub exps: Vec<Box<M>>,
 }
 
-impl Sequence {
-    pub fn new(exps: Vec<Box<dyn Model>>) -> Self {
+impl<M: CanParse> Sequence<M> {
+    pub fn new(exps: Vec<Box<M>>) -> Self {
         Self { exps }
     }
     
 }
 
-impl Model for Sequence {
-    fn parse(&self, mut ctx: Ctx) -> Result<(Ctx, Cst), (bool, usize, String)> {
+impl<M: CanParse> CanParse for Sequence<M> {
+    fn parse(&self, mut ctx: Ctx) -> Result<(Ctx, Cst), (Ctx, String)> {
         let mut results = Vec::new();
         for exp in &self.exps {
             let (new_ctx, cst) = exp.parse(ctx)?;
