@@ -2,7 +2,7 @@ use crate::input::Cursor;
 use crate::engine::{Cst, Ctx};
 use super::*;
 
-pub type ParseResult<C> = Result<(Ctx<C>, Cst), (Ctx<C>, String)>;
+pub type ParseResult<C> = Result<(Ctx<C>, Cst), Ctx<C>>;
 
 pub trait CanParse<C: Cursor> {
     fn parse(&self, _ctx: Ctx<C>) -> ParseResult<C> {

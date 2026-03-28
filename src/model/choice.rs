@@ -16,19 +16,19 @@ where
     C: Cursor
 {
     fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
-        let mut furthest_err = (Ctx::new(C::new()), String::new());
+        let mut furthest_err = Ctx::new(C::new());
 
         for option in &self.options {
             match option.parse(ctx) {
                 Ok(res) => return Ok(res),
-                Err((mut err_ctx, msg)) => {
+                Err(mut err_ctx) => {
                     err_ctx.cut_seen = false;
                     if err_ctx.cut_seen {
-                        return Err((err_ctx, msg));
+                        return Err(err_ctx);
                     }
-                    if err_ctx.mark() >= furthest_err.0.mark() {
+                    if err_ctx.mark() >= furthest_err.mark() {
                         ctx = err_ctx.clone();
-                        furthest_err = (err_ctx, msg);
+                        furthest_err = err_ctx;
                     }
                     else {
                         ctx = err_ctx;

@@ -21,7 +21,7 @@ pub struct Join<M> {
 
 
 
-fn add_result<M, C>(results: &mut Vec<Cst>, exp: &M, ctx: Ctx<C>) -> Result<Ctx<C>, (Ctx<C>, String)>
+fn add_result<M, C>(results: &mut Vec<Cst>, exp: &M, ctx: Ctx<C>) -> Result<Ctx<C>, Ctx<C>>
 where
     M: CanParse<C>,
     C: Cursor,
@@ -44,7 +44,7 @@ where
     loop {
         match add_result(results, exp, ctx) {
             Ok(new_ctx) => ctx = new_ctx,
-            Err((new_ctx, _)) => return new_ctx
+            Err(err_ctx) => return err_ctx
         }
     }
 }

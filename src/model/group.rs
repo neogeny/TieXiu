@@ -1,6 +1,6 @@
 use crate::input::Cursor;
-use crate::engine::{Cst, Ctx};
-use super::model::CanParse;
+use crate::engine::Ctx;
+use super::model::{CanParse, ParseResult};
 
 pub struct Group<M> {
     pub exp: Box<M>,
@@ -11,7 +11,7 @@ where
     M: CanParse<C>,
     C: Cursor
 {
-    fn parse(&self, _ctx: Ctx<C>) -> Result<(Ctx<C>, Cst), (Ctx<C>, String)> {
-        self.exp.parse(_ctx)
+    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+        self.exp.parse(ctx)
     }
 }

@@ -2,22 +2,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::input::Cursor;
-use super::cst::Cst;
 
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Ctx<C: Cursor> {
     pub cursor: C,
-    pub cut_seen : bool
+    pub cut_seen : bool,
+    pub error_msg: Option<String>,
 }
-
-pub type ParseResult<C> = Result<(Ctx<C>, Cst), String>;
 
 impl<C: Cursor> Ctx<C> {
     pub fn new(cursor: C) -> Self {
-        Self { cursor, cut_seen: false }
+        Self { cursor, cut_seen: false, error_msg: None }
     }
-    
+
     pub fn mark(&self) -> usize {
         self.cursor.mark()
     }
