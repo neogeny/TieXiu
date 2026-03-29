@@ -8,10 +8,15 @@ use crate::engine::{Cst, Ctx};
 pub struct Dot {
 }
 
-impl CanParse for Dot
+impl<C: Ctx> CanParse<C> for Dot
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
-        ctx.dot()
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        if ctx.dot() {
+            Ok((ctx, Cst::Nil))
+        }
+        else {
+            Err(ctx)
+        }
     }
 }
 
@@ -20,9 +25,9 @@ impl CanParse for Dot
 pub struct Void {
 }
 
-impl CanParse for Void
+impl<C: Ctx> CanParse<C> for Void
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         Ok((ctx, Cst::Nil))
     }
 }

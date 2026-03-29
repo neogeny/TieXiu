@@ -4,11 +4,11 @@
 use std::fmt::Debug;
 use crate::engine::{Cst, Ctx};
 
-pub type ParseResult<'c> = Result<(Ctx<'c>, Cst<'c>), Ctx<'c>>;
+pub type ParseResult<C: Ctx> = Result<(C, Cst), C>;
 
 
-pub trait CanParse: Debug {
-    fn parse<'a>(&self, _ctx: Ctx<'a>) -> ParseResult<'a>;
+pub trait CanParse<C: Ctx>: Debug {
+    fn parse(&self, ctx: C) -> ParseResult;
 }
 
 pub enum ModelImpl
@@ -22,12 +22,12 @@ pub enum ModelImpl
 }
 //     Constant(Constant),
 //     Alert(Alert),
-// 
+//
 //     Named(Named<ModelImpl>),
 //     NamedList(NamedList<ModelImpl>),
 //     Override(Override<ModelImpl>),
 //     OverrideList(OverrideList<ModelImpl>),
-// 
+//
 //     Group(Group<ModelImpl>),
 //     SkipGroup(SkipGroup<ModelImpl>),
 //     Sequence(Sequence<ModelImpl>),
@@ -39,12 +39,12 @@ pub enum ModelImpl
 //     PositiveJoin(PositiveJoin<ModelImpl>),
 //     Gather(Gather<ModelImpl>),
 //     PositiveGather(PositiveGather<ModelImpl>),
-// 
+//
 //     Lookahead(Lookahead<ModelImpl>),
 //     NegativeLookahead(NegativeLookahead<ModelImpl>),
 //     SkipTo(SkipTo<ModelImpl>)
 // }
-// 
+//
 // impl<C> CanParse< C> for ModelImpl
 // where
 //     C: Cursor
@@ -59,12 +59,12 @@ pub enum ModelImpl
 //             Self::Token(m) => m.parse(ctx),
 //             Self::Constant(m) => m.parse(ctx),
 //             Self::Alert(m) => m.parse(ctx),
-//             
+//
 //             Self::Named(m) => m.parse(ctx),
 //             Self::NamedList(m) => m.parse(ctx),
 //             Self::Override(m) => m.parse(ctx),
 //             Self::OverrideList(m) => m.parse(ctx),
-// 
+//
 //             Self::Group(m) => m.parse(ctx),
 //             Self::SkipGroup(m) => m.parse(ctx),
 //             Self::Sequence(m) => m.parse(ctx),
@@ -76,7 +76,7 @@ pub enum ModelImpl
 //             Self::PositiveJoin(m) => m.parse(ctx),
 //             Self::Gather(m) => m.parse(ctx),
 //             Self::PositiveGather(m) => m.parse(ctx),
-// 
+//
 //             Self::Lookahead(m) => m.parse(ctx),
 //             Self::NegativeLookahead(m) => m.parse(ctx),
 //             Self::SkipTo(m) => m.parse(ctx),

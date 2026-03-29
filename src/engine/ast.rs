@@ -8,11 +8,11 @@ pub const __AT__: &str = "&";
 
 /// A structured mapping for AST nodes.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct Ast<'a> {
-    pub fields: HashMap<String, Cst<'a>>,
+pub struct Ast {
+    pub fields: HashMap<String, Cst>,
 }
 
-impl<'a> Ast<'a> {
+impl Ast {
     pub fn new() -> Self {
         Self::default()
     }
@@ -21,11 +21,11 @@ impl<'a> Ast<'a> {
         self.fields.is_empty()
     }
 
-    pub fn get(&self, key: &str) -> Option<&Cst<'a>> {
+    pub fn get(&self, key: &str) -> Option<&Cst> {
         self.fields.get(key)
     }
 
-    pub fn update(&mut self, other: &Ast<'a>) {
+    pub fn update(&mut self, other: &Ast) {
         for (key, value) in &other.fields {
             self.fields.insert(key.clone(), value.clone());
         }
@@ -43,7 +43,7 @@ impl<'a> Ast<'a> {
         }
     }
 
-    pub fn set(&mut self, key: &str, item: Cst<'a>) {
+    pub fn set(&mut self, key: &str, item: Cst) {
         let key = self.safekey(key);
         if let Some(current) = self.fields.remove(&key) {
             let new = current.add(item);
@@ -54,7 +54,7 @@ impl<'a> Ast<'a> {
         }
     }
     
-    pub fn set_list(&mut self, key: &str, item: Cst<'a>) {
+    pub fn set_list(&mut self, key: &str, item: Cst) {
         let key = self.safekey(key);
         if let Some(current) = self.fields.remove(&key) {
             let new = current.addlist(item);

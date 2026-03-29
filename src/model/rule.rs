@@ -5,14 +5,14 @@ use super::model::{CanParse, ParseResult};
 use crate::engine::Ctx;
 
 #[derive(Clone, Debug)]
-pub struct Rule<'r> {
-    pub name: &'static str,
-    pub exp: &'r dyn CanParse,
+pub struct Rule<'r, C: Ctx<C>> {
+    pub name: &'r str,
+    pub exp: &'r dyn CanParse<C>,
 }
 
-impl<'r> CanParse for Rule<'r>
+impl<'r, C: Ctx<C>> CanParse<C> for Rule<'r, C>
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         match self.exp.parse(ctx) {
             Ok((new_ctx, cst)) => Ok((new_ctx, cst.distill())),
             err => err,

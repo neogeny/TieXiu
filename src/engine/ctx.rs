@@ -2,20 +2,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::rc::Rc;
 use crate::input::Cursor;
-use crate::model::{ParseResult, Rule};
+use crate::model::Rule;
 
+
+pub trait Ctx: Clone + Debug 
+{
+    // fn resolve(&self, name: &str) -> &Rule;
+    fn mark(&self) -> usize;
+    fn cut(&mut self);
+    fn dot(&self) -> bool;
+    fn eof_check<'a>(&self) -> bool;
+    fn next(&self) -> bool;
+    fn token(&self, token: &str) -> bool;
+    fn pattern(&self, pattern: &str) -> bool;
+    fn search(&self, pattern: &str) -> bool;
+}
 
 #[derive(Clone, Debug)]
-pub struct Ctx<'c> {
+pub struct CtxImpl<'c> 
+where CtxImpl<'c>: Ctx
+{
     pub cursor: &'c dyn Cursor,
     pub cut_seen : bool,
     pub error_msg: Option<String>,
-    pub rules: Rc<HashMap<&'c str, Rule<'c>>>,
+    pub rules: Rc<HashMap<&'c str, &'c Rule<'c, CtxImpl>>>,
 }
 
-impl<'c> Ctx<'c> {
+impl<'c> CtxImpl<'c> {
     pub fn new(cursor: &'c dyn Cursor) -> Self {
         Self {
             cursor,
@@ -45,7 +61,7 @@ impl<'c> Ctx<'c> {
         unimplemented!()
     }
 
-    pub fn next(self) -> Result<Ctx<'c>, Ctx<'c>> {
+    pub fn next(self) -> Result<CtxImpl<'c>, CtxImpl<'c>> {
         // do it with cursor goto(+1)?
         Err(self)
     }
@@ -75,12 +91,12 @@ impl<'c> Ctx<'c> {
 //
 //     // Rule and Dispatch
 //     fn call(&mut self, ri: &RuleInfo) -> ParseResult;
-//     fn find_rule(&self, name: &str) -> Box<dyn Fn(&mut dyn Ctx) -> ParseResult>;
+//     fn find_rule(&self, name: &str) -> Box<dyn Fn(&mut dyn CtxImpl) -> ParseResult>;
 //
 //     // High-level combinators (taking closures to match Python's Func)
-//     fn closure(&mut self, exp: &dyn Fn(&mut dyn Ctx) -> ParseResult) -> ParseResult;
-//     fn positive_closure(&mut self, exp: &dyn Fn(&mut dyn Ctx) -> ParseResult) -> ParseResult;
-//     fn choice(&mut self, options: Vec<Box<dyn Fn(&mut dyn Ctx) -> ParseResult>>) -> ParseResult;
+//     fn closure(&mut self, exp: &dyn Fn(&mut dyn CtxImpl) -> ParseResult) -> ParseResult;
+//     fn positive_closure(&mut self, exp: &dyn Fn(&mut dyn CtxImpl) -> ParseResult) -> ParseResult;
+//     fn choice(&mut self, options: Vec<Box<dyn Fn(&mut dyn CtxImpl) -> ParseResult>>) -> ParseResult;
 //
 //     // AST / Result management
 //     fn define(&mut self, keys: Vec<String>, add_keys: Option<Vec<String>>);
