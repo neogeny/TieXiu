@@ -40,7 +40,7 @@ pub struct PositiveGather<'c, C> {
 }
 
 
-fn skip_exp<'c, C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
+pub fn skip_exp<'c, C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
 {
     match exp.parse(ctx) {
         Ok((new_ctx, _)) => {
@@ -51,7 +51,7 @@ fn skip_exp<'c, C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
 }
 
 
-fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C>
+pub fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C>
 {
         match exp.parse(ctx) {
             Ok((new_ctx, cst)) => {
@@ -63,7 +63,7 @@ fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<
 }
 
 
-fn repeat<C: Ctx>(res: &mut Vec<Cst>, mut ctx: C, exp: &dyn CanParse<C>) -> C
+pub fn repeat<C: Ctx>(res: &mut Vec<Cst>, mut ctx: C, exp: &dyn CanParse<C>) -> C
 {
     loop {
         match add_exp(exp, ctx, res) {
@@ -74,7 +74,7 @@ fn repeat<C: Ctx>(res: &mut Vec<Cst>, mut ctx: C, exp: &dyn CanParse<C>) -> C
 }
 
 
-fn repeat_with_pre<C: Ctx>(
+pub fn repeat_with_pre<C: Ctx>(
     res: &mut Vec<Cst>,
     mut ctx: C, 
     exp: &dyn CanParse<C>, 
