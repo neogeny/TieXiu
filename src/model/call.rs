@@ -16,9 +16,9 @@ impl Call {
     }
 }
 
-impl CanParse for Call
+impl<C: Ctx> CanParse<C> for Call
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         let rctx = ctx.clone();
         let rule = rctx.resolve(self.name);
         match rule.parse(ctx) {

@@ -4,11 +4,11 @@
 use std::fmt::Debug;
 use crate::engine::{Cst, Ctx};
 
-pub type ParseResult<C: Ctx> = Result<(C, Cst), C>;
+pub type ParseResult<C > = Result<(C, Cst), C>;
 
 
 pub trait CanParse<C: Ctx>: Debug {
-    fn parse(&self, ctx: C) -> ParseResult;
+    fn parse(&self, ctx: C) -> ParseResult<C>;
 }
 
 pub enum ModelImpl

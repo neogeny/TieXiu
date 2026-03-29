@@ -2,17 +2,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::model::{CanParse, ParseResult};
-use crate::engine::Ctx;
+use crate::engine::{Cst, Ctx};
 
 #[derive(Debug, Clone)]
 pub struct Pattern {
     pub pattern: String
 }
 
-impl CanParse for Pattern
+impl<C: Ctx> CanParse<C> for Pattern
 {
-    fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
-        ctx.pattern(&self.pattern)
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        if ctx.pattern(&self.pattern) {
+            Ok((ctx, Cst::Nil))
+        }
+        else {
+            Err(ctx)
+        }
     }
 }
 

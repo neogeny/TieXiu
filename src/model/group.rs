@@ -5,34 +5,34 @@ use crate::engine::{Cst, Ctx};
 use super::model::{CanParse, ParseResult};
 
 #[derive(Debug, Clone)]
-pub struct Group<'g> {
-    pub exp: Box<&'g dyn CanParse>,
+pub struct Group<'g, C> {
+    pub exp: Box<&'g dyn CanParse<C>>,
 }
 
-impl<'g> Group<'g> {
-    fn new(exp: &'g dyn CanParse) -> Self {
+impl<'g, C: Ctx> Group<'g, C> {
+    fn new(exp: &'g dyn CanParse<C>) -> Self {
         Self {
             exp: Box::new(exp),
         }
     }
 }
 
-impl<'g> CanParse for Group<'g>
+impl<'g, C: Ctx> CanParse<C> for Group<'g, C>
 {
-    fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         self.exp.parse(ctx)
     }
 }
 
 
 #[derive(Debug, Clone)]
-pub struct SkipGroup<'g> {
-    pub exp: Box<&'g dyn CanParse>,
+pub struct SkipGroup<'g, C> {
+    pub exp: Box<&'g dyn CanParse<C>>,
 }
 
-impl<'g> CanParse for SkipGroup<'g>
+impl<'g, C: Ctx> CanParse<C> for SkipGroup<'g, C>
 {
-    fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         let (new_ctx, _) = self.exp.parse(ctx)?;
         Ok((new_ctx, Cst::Nil))
     }

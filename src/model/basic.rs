@@ -36,9 +36,9 @@ impl<C: Ctx> CanParse<C> for Void
 pub struct Fail {
 }
 
-impl CanParse for Fail
+impl<C: Ctx> CanParse<C> for Fail
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         Err(ctx)
     }
 }
@@ -48,37 +48,42 @@ impl CanParse for Fail
 pub struct Eof {
 }
 
-impl CanParse for Eof
+impl<C: Ctx> CanParse<C> for Eof
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
-        ctx.eof_check()
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        if ctx.eof_check() {
+            Ok((ctx, Cst::Nil))
+        }
+        else {
+            Err(ctx)
+        }
     }
 }
 
 
 #[derive(Debug, Clone)]
 pub struct Constant {
-    pub literal: &'static str,
+    pub literal: String
 }
 
-impl CanParse for Constant
+impl<C: Ctx> CanParse<C> for Constant
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
-        Ok((ctx, Cst::Literal(self.literal)))
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        Ok((ctx, Cst::Literal(self.literal.clone().into())))
     }
 }
 
 
 #[derive(Debug, Clone)]
 pub struct Alert {
-    pub literal: &'static str,
+    pub literal: String,
     pub level: u8
 }
 
-impl CanParse for Alert
+impl<C: Ctx> CanParse<C> for Alert
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
-        Ok((ctx, Cst::Literal(self.literal)))
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        Ok((ctx, Cst::Literal(self.literal.clone().into())))
     }
 }
 
@@ -86,9 +91,9 @@ impl CanParse for Alert
 #[derive(Debug, Clone)]
 pub struct Cut {}
 
-impl CanParse for Cut
+impl<C: Ctx> CanParse<C> for Cut
 {
-    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, mut ctx: C) -> ParseResult<C> {
         ctx.cut();
         Ok((ctx, Cst::Nil))
     }

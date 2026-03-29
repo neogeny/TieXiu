@@ -5,14 +5,14 @@ use crate::engine::Ctx;
 use super::{CanParse, ParseResult, Rule};
 
 #[derive(Debug, Clone)]
-pub struct Grammar<'g> {
-    pub rules: &'g [Rule<'g>],
-    pub start: &'g Rule<'g>
+pub struct Grammar<'g, C> {
+    pub rules: &'g [Rule<'g, C>],
+    pub start: &'g Rule<'g, C>
 }
 
-impl<'g> CanParse for Grammar<'g>
+impl<'g, C: Ctx> CanParse<C> for Grammar<'g, C>
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         self.start.parse(ctx)
     }
 }

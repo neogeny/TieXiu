@@ -6,41 +6,41 @@ use crate::engine::{Cst, Ctx};
 
 
 #[derive(Debug, Clone)]
-pub struct Closure<'c> {
-    pub exp: &'c dyn CanParse,
+pub struct Closure<'c, C> {
+    pub exp: &'c dyn CanParse<C>,
 }
 
 #[derive(Debug, Clone)]
-pub struct PositiveClosure<'c> {
-    pub exp: &'c dyn CanParse,
+pub struct PositiveClosure<'c, C> {
+    pub exp: &'c dyn CanParse<C>,
 }
 
 #[derive(Debug, Clone)]
-pub struct Join<'c> {
-    pub exp: &'c dyn CanParse,
-    pub sep: &'c dyn CanParse,
+pub struct Join<'c, C> {
+    pub exp: &'c dyn CanParse<C>,
+    pub sep: &'c dyn CanParse<C>,
 }
 
 #[derive(Debug, Clone)]
-pub struct PositiveJoin<'c> {
-    pub exp: &'c dyn CanParse,
-    pub sep: &'c dyn CanParse,
+pub struct PositiveJoin<'c, C> {
+    pub exp: &'c dyn CanParse<C>,
+    pub sep: &'c dyn CanParse<C>,
 }
 
 #[derive(Debug, Clone)]
-pub struct Gather<'c> {
-    pub exp: &'c dyn CanParse,
-    pub sep: &'c dyn CanParse,
+pub struct Gather<'c, C> {
+    pub exp: &'c dyn CanParse<C>,
+    pub sep: &'c dyn CanParse<C>,
 }
 
 #[derive(Debug, Clone)]
-pub struct PositiveGather<'c> {
-    pub exp: &'c dyn CanParse,
-    pub sep: &'c dyn CanParse,
+pub struct PositiveGather<'c, C> {
+    pub exp: &'c dyn CanParse<C>,
+    pub sep: &'c dyn CanParse<C>,
 }
 
 
-fn skip_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>) -> Result<Ctx<'c>, Ctx<'c>>
+fn skip_exp<'c, C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
 {
     match exp.parse(ctx) {
         Ok((new_ctx, _)) => {
@@ -51,7 +51,7 @@ fn skip_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>) -> Result<Ctx<'c>, Ctx<'c>>
 }
 
 
-fn add_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>, res: &mut Vec<Cst<'c>>) -> Result<Ctx<'c>, Ctx<'c>>
+fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C>
 {
         match exp.parse(ctx) {
             Ok((new_ctx, cst)) => {
@@ -63,7 +63,7 @@ fn add_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>, res: &mut Vec<Cst<'c>>) -> Resu
 }
 
 
-fn repeat<'c>(res: &mut Vec<Cst<'c>>, mut ctx: Ctx<'c>, exp: &dyn CanParse) -> Ctx<'c>
+fn repeat<C: Ctx>(res: &mut Vec<Cst>, mut ctx: C, exp: &dyn CanParse<C>) -> C
 {
     loop {
         match add_exp(exp, ctx, res) {
@@ -74,13 +74,13 @@ fn repeat<'c>(res: &mut Vec<Cst<'c>>, mut ctx: Ctx<'c>, exp: &dyn CanParse) -> C
 }
 
 
-fn repeat_with_pre<'c>(
-    res: &mut Vec<Cst<'c>>, 
-    mut ctx: Ctx<'c>, 
-    exp: &dyn CanParse, 
-    pre: &dyn CanParse,
+fn repeat_with_pre<C: Ctx>(
+    res: &mut Vec<Cst>,
+    mut ctx: C, 
+    exp: &dyn CanParse<C>, 
+    pre: &dyn CanParse<C>,
     keep_pre: bool,
-) -> Ctx<'c>
+) -> C
 {
     loop {
         match pre.parse(ctx) {
@@ -103,18 +103,18 @@ fn repeat_with_pre<'c>(
 }
 
 
-impl<'c> CanParse for Closure<'c>
+impl<'c, C: Ctx> CanParse<C> for Closure<'c, C>
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res = Vec::new();
         let new_ctx = repeat(&mut res, ctx, &*self.exp);
         Ok((new_ctx, Cst::from(res)))
     }
 }
 
-impl<'c> CanParse for PositiveClosure<'c>
+impl<'c, C: Ctx> CanParse<C> for PositiveClosure<'c, C>
 {
-    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
         match self.exp.parse(ctx) {
@@ -130,9 +130,9 @@ impl<'c> CanParse for PositiveClosure<'c>
     }
 }
 
-impl<'c> CanParse for Join<'c>
+impl<'c, C: Ctx> CanParse<C> for Join<'c, C>
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
         match add_exp(&*self.exp, ctx, &mut res) {
@@ -145,9 +145,9 @@ impl<'c> CanParse for Join<'c>
     }
 }
 
-impl<'c> CanParse for PositiveJoin<'c>
+impl<'c, C: Ctx> CanParse<C> for PositiveJoin<'c, C>
 {
-    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
         match self.exp.parse(ctx) {
@@ -163,9 +163,9 @@ impl<'c> CanParse for PositiveJoin<'c>
     }
 }
 
-impl<'c> CanParse for Gather<'c>
+impl<'c, C: Ctx> CanParse<C> for Gather<'c, C>
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
         match add_exp(&*self.exp, ctx, &mut res) {
@@ -180,9 +180,9 @@ impl<'c> CanParse for Gather<'c>
     }
 }
 
-impl<'c> CanParse for PositiveGather<'c>
+impl<'c, C: Ctx> CanParse<C> for PositiveGather<'c, C>
 {
-    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
         match self.exp.parse(ctx) {

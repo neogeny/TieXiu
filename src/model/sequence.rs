@@ -5,20 +5,20 @@ use crate::engine::{Cst, Ctx};
 use super::model::{CanParse, ParseResult};
 
 #[derive(Debug, Clone)]
-pub struct Sequence<'s> {
-    pub exps: Vec<&'s dyn CanParse>,
+pub struct Sequence<'s, C> {
+    pub exps: Vec<&'s dyn CanParse<C>>,
 }
 
-impl<'s> Sequence<'s> {
-    pub fn new(exps: Vec<&'s dyn CanParse>) -> Self {
+impl<'s, C: Ctx> Sequence<'s, C> {
+    pub fn new(exps: Vec<&'s dyn CanParse<C>>) -> Self {
         Self { exps }
     }
 }
 
 
-impl<'s> CanParse for Sequence<'s>
+impl<'s, C: Ctx> CanParse<C> for Sequence<'s, C>
 {
-    fn parse<'a>(&self, mut ctx: Ctx<'a>) -> ParseResult<'a> {
+    fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let mut results = Vec::new();
 
         for exp in &self.exps {

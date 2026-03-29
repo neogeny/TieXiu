@@ -3,13 +3,13 @@
 
 use tiexiu::model::{Token, Sequence, Void, CanParse};
 use tiexiu::input::StrCursor;
-use tiexiu::engine::Ctx;
+use tiexiu::engine::StrCtx;
 
 
 fn scope() -> (Token, Token) {
     let a = Token::new("a");
     let b = Token::new("b");
-    return (a, b)
+    (a, b)
 }
 
 fn test_build() {
@@ -20,7 +20,7 @@ fn test_build() {
     let seq = Sequence::new(vec![&a, &b, &c, &v]);
 
     let cur = StrCursor::new("a b c", 0);
-    let ctx = Ctx::new(&cur);
+    let ctx = StrCtx::new(cur);
 
     let cst = seq.parse(ctx);
     print!("{:?}", cst);

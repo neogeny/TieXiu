@@ -1,5 +1,5 @@
 use crate::model::{CanParse, ParseResult};
-use crate::engine::Ctx;
+use crate::engine::{Cst, Ctx};
 
 
 #[derive(Debug, Clone)]
@@ -15,10 +15,15 @@ impl Token {
     }
 }
 
-impl CanParse for Token
+impl<C: Ctx> CanParse<C> for Token
 {
-    fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
-        ctx.token(&self.token)
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        if ctx.token(&self.token) {
+            Ok((ctx, Cst::Token(self.token.clone().into())))
+        }
+        else { 
+            Err(ctx)
+        }
     }
 }
 

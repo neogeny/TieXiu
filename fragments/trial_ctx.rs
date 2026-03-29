@@ -1,4 +1,4 @@
-impl<'c> Ctx<'c> {
+impl<'c, C: Ctx> Ctx<'c> {
     pub fn group<F, T>(&mut self, body: F) -> Result<T, String>
     where
         F: FnOnce(&mut Self) -> Result<T, String>,

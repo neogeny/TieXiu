@@ -6,14 +6,14 @@ use crate::engine::{Cst, Ctx};
 
 
 #[derive(Debug, Clone)]
-pub struct Optional<'o> {
-    pub exp: &'o dyn CanParse
+pub struct Optional<'o, C> {
+    pub exp: &'o dyn CanParse<C>
 }
 
 
-impl<'o> CanParse for Optional<'o>
+impl<'o, C: Ctx> CanParse<C> for Optional<'o, C>
 {
-    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         match self.exp.parse(ctx.clone()) {
             Ok(success) => Ok(success),
             Err(_) => Ok((ctx, Cst::Nil))

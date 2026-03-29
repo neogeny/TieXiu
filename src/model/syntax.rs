@@ -5,13 +5,13 @@ use super::model::{CanParse, ParseResult};
 use crate::engine::{Cst, Ctx};
 
 #[derive(Debug, Clone)]
-pub struct Lookahead<'k> {
-    pub exp: &'k dyn CanParse,
+pub struct Lookahead<'k, C> {
+    pub exp: &'k dyn CanParse<C>,
 }
 
-impl<'k> CanParse for Lookahead<'k>
+impl<'k, C: Ctx> CanParse<C> for Lookahead<'k, C>
 {
-    fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         let _ = self.exp.parse(ctx.clone())?;
         Ok((ctx, Cst::Nil))
     }
@@ -19,13 +19,13 @@ impl<'k> CanParse for Lookahead<'k>
 
 
 #[derive(Debug, Clone)]
-pub struct NegativeLookahead<'k> {
-    pub exp: &'k dyn CanParse,
+pub struct NegativeLookahead<'k, C> {
+    pub exp: &'k dyn CanParse<C>,
 }
 
-impl<'k> CanParse for NegativeLookahead<'k>
+impl<'k, C: Ctx> CanParse<C> for NegativeLookahead<'k, C>
 {
-    fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
         if let Ok((_, _)) = self.exp.parse(ctx.clone()) {
             return Err(ctx)
         }
@@ -35,21 +35,21 @@ impl<'k> CanParse for NegativeLookahead<'k>
 
 
 #[derive(Debug, Clone)]
-pub struct SkipTo<'s> {
-    pub exp: &'s dyn CanParse,
+pub struct SkipTo<'s, C> {
+    pub exp: &'s dyn CanParse<C>,
 }
 
-impl<'s> CanParse for SkipTo<'s>
+impl<'s, C: Ctx> CanParse<C> for SkipTo<'s, C>
 {
-    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
+    fn parse(&self, mut ctx: C) -> ParseResult<C> {
         loop {
             match self.exp.parse(ctx) {
                 Err(err_ctx) => {
                     match err_ctx.next() {
-                        Ok(next_cxt) => {
-                            ctx = next_cxt;
+                        Some(_) => {
+                            ctx = err_ctx;
                         },
-                        Err(e) => return Err(e)
+                        None => return Err(err_ctx)
                     }
                 }
                 ok => return ok,
