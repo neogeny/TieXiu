@@ -51,7 +51,7 @@ fn skip_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>) -> Result<Ctx<'c>, Ctx<'c>>
 }
 
 
-fn add_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>, res: &mut Vec<Cst>) -> Result<Ctx<'c>, Ctx<'c>>
+fn add_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>, res: &mut Vec<Cst<'c>>) -> Result<Ctx<'c>, Ctx<'c>>
 {
         match exp.parse(ctx) {
             Ok((new_ctx, cst)) => {
@@ -63,7 +63,7 @@ fn add_exp<'c>(exp: &dyn CanParse, ctx: Ctx<'c>, res: &mut Vec<Cst>) -> Result<C
 }
 
 
-fn repeat<'c>(res: &mut Vec<Cst>, mut ctx: Ctx<'c>, exp: &dyn CanParse) -> Ctx<'c>
+fn repeat<'c>(res: &mut Vec<Cst<'c>>, mut ctx: Ctx<'c>, exp: &dyn CanParse) -> Ctx<'c>
 {
     loop {
         match add_exp(exp, ctx, res) {
@@ -75,7 +75,7 @@ fn repeat<'c>(res: &mut Vec<Cst>, mut ctx: Ctx<'c>, exp: &dyn CanParse) -> Ctx<'
 
 
 fn repeat_with_pre<'c>(
-    res: &mut Vec<Cst>, 
+    res: &mut Vec<Cst<'c>>, 
     mut ctx: Ctx<'c>, 
     exp: &dyn CanParse, 
     pre: &dyn CanParse,

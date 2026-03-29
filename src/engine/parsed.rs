@@ -6,21 +6,21 @@ use super::ast::Ast;
 
 /// The internal variants of parsed data.
 #[derive(Debug, Clone)]
-pub enum ParsedValue {
-    Cst(Cst),
-    Ast(Ast),
+pub enum ParsedValue<'p> {
+    Cst(Cst<'p>),
+    Ast(Ast<'p>),
 }
 
 /// The sovereign result of a parsing rule.
 #[derive(Debug, Clone)]
-pub struct Parsed {
+pub struct Parsed<'p> {
     pub typename: Option<String>,
-    pub value: ParsedValue,
+    pub value: ParsedValue<'p>,
 }
 
-impl Parsed {
+impl<'p> Parsed<'p> {
     /// Creates a new, unlabeled Parsed result.
-    pub fn new(value: ParsedValue) -> Self {
+    pub fn new(value: ParsedValue<'p>) -> Self {
         Self {
             typename: None,
             value,
@@ -44,14 +44,14 @@ impl Parsed {
 }
 
 // Ergonomic conversions to create Parsed from raw types
-impl From<Cst> for Parsed {
-    fn from(c: Cst) -> Self {
+impl<'p> From<Cst<'p>> for Parsed<'p> {
+    fn from(c: Cst<'p>) -> Self {
         Parsed::new(ParsedValue::Cst(c))
     }
 }
 
-impl From<Ast> for Parsed {
-    fn from(a: Ast) -> Self {
+impl<'p> From<Ast<'p>> for Parsed<'p> {
+    fn from(a: Ast<'p>) -> Self {
         Parsed::new(ParsedValue::Ast(a))
     }
 }

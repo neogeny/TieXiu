@@ -2,14 +2,19 @@ use super::Cursor;
 
 #[derive(Debug, Clone, Copy)]
 pub struct StrCursor<'a> {
-    buffer: &'a str,
+    text: &'a str,
     offset: usize,
 }
 
 impl<'a> StrCursor<'a> {
-    pub fn new(buffer: &'a str) -> Self {
-        Self { buffer, offset: 0 }
+    pub fn new(text: &'a str, offset: usize) -> Self {
+        Self { text, offset }
     }
+    
+    pub fn clone(&self) -> Self {
+        Self { text: &self.text, offset: self.offset }
+    }
+
 }
 
 impl<'a> Cursor for StrCursor<'a> {
@@ -22,7 +27,16 @@ impl<'a> Cursor for StrCursor<'a> {
     }
     
     fn textstr(&self) -> &str {
-        self.buffer
+        self.text
+    }
+
+    fn token(&mut self, token: &str) -> bool {
+        if self.text[self.offset..].starts_with(token) {
+            self.offset += token.len();
+            true
+        } else {
+            false
+        }
     }
 }
     // #[inline]

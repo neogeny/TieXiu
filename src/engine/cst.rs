@@ -4,43 +4,43 @@
 use super::ast::Ast;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Cst {
-    Token(&'static str),
-    Literal(&'static str),
-    Item(Box<Cst>),
-    List(Vec<Box<Cst>>),
-    Closure(Vec<Box<Cst>>),
-    Named(&'static str, Box<Cst>),
-    NamedList(&'static str, Box<Cst>),
-    OverrideValue(Box<Cst>),
-    OverrideList(Box<Cst>),
-    Ast(Box<Ast>),
+pub enum Cst<'c> {
+    Token(&'c str),
+    Literal(&'c str),
+    Item(Box<Cst<'c>>),
+    List(Vec<Box<Cst<'c>>>),
+    Closure(Vec<Box<Cst<'c>>>),
+    Named(&'c str, Box<Cst<'c>>),
+    NamedList(&'c str, Box<Cst<'c>>),
+    OverrideValue(Box<Cst<'c>>),
+    OverrideList(Box<Cst<'c>>),
+    Ast(Box<Ast<'c>>),
     Nil,
 }
 
-impl Default for Cst {
+impl<'c> Default for Cst<'c> {
     fn default() -> Self {
         Cst::Nil
     }
 }
 
-impl From<Vec<Cst>> for Cst {
-    fn from(v: Vec<Cst>) -> Self {
+impl<'c> From<Vec<Cst<'c>>> for Cst<'c> {
+    fn from(v: Vec<Cst<'c>>) -> Self {
         let boxed = v.into_iter().map(Box::new).collect();
         Cst::List(boxed)
     }
 }
 
 
-impl<const N: usize> From<[Cst; N]> for Cst {
-    fn from(arr: [Cst; N]) -> Self {
+impl<'c, const N: usize> From<[Cst<'c>; N]> for Cst<'c> {
+    fn from(arr: [Cst<'c>; N]) -> Self {
         let boxed = arr.into_iter().map(Box::new).collect();
         Cst::List(boxed)
     }
 }
 
-impl Cst {
-    pub fn add(self, node: Cst) -> Cst {
+impl<'c> Cst<'c> {
+    pub fn add(self, node: Cst<'c>) -> Cst<'c> {
         let node_box = Box::new(node);
         match self {
             Cst::Nil => *node_box,
@@ -52,7 +52,7 @@ impl Cst {
         }
     }
 
-    pub fn addlist(self, node: Cst) -> Cst {
+    pub fn addlist(self, node: Cst<'c>) -> Cst<'c> {
         let node_box = Box::new(node);
         match self {
             Cst::Nil => Cst::List(vec![node_box]),
@@ -64,7 +64,7 @@ impl Cst {
         }
     }
 
-    pub fn merge(self, node: Cst) -> Cst {
+    pub fn merge(self, node: Cst<'c>) -> Cst<'c> {
         match (self, node) {
             (Cst::List(mut list), Cst::List(other_list)) => {
                 list.extend(other_list);
@@ -82,7 +82,7 @@ impl Cst {
         }
     }
 
-    pub fn closed(self) -> Cst {
+    pub fn closed(self) -> Cst<'c> {
         match self {
             Cst::List(mut list) if list.len() == 1 => *list.pop().unwrap(),
             Cst::List(list) => Cst::Closure(list),
@@ -91,7 +91,7 @@ impl Cst {
         }
     }
 
-    pub fn distill(self) -> Cst {
+    pub fn distill(self) -> Cst<'c> {
         match self {
             Cst::List(elements) => {
                 let mut new_list = Vec::new();
@@ -132,15 +132,15 @@ impl Cst {
     }
 }
 
-pub fn cst_add(prev: Cst, node: Cst) -> Cst {
+pub fn cst_add<'c>(prev: Cst<'c>, node: Cst<'c>) -> Cst<'c> {
     prev.add(node)
 }
 
-pub fn cst_addlist(prev: Cst, node: Cst) -> Cst {
+pub fn cst_addlist<'c>(prev: Cst<'c>, node: Cst<'c>) -> Cst<'c> {
     prev.addlist(node)
 }
 
-pub fn cst_merge(prev: Cst, node: Cst) -> Cst {
+pub fn cst_merge<'c>(prev: Cst<'c>, node: Cst<'c>) -> Cst<'c> {
     prev.merge(node)
 }
 

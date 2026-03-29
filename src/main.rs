@@ -19,7 +19,7 @@ fn test_build() {
     // let cl = Call::new("test");
     let seq = Sequence::new(vec![&a, &b, &c, &v]);
 
-    let cur = StrCursor::new("a b c");
+    let cur = StrCursor::new("a b c", 0);
     let ctx = Ctx::new(&cur);
 
     let cst = seq.parse(ctx);

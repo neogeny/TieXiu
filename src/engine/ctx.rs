@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::collections::HashMap;
+use std::rc::Rc;
 use crate::input::Cursor;
 use crate::model::{ParseResult, Rule};
 
@@ -11,16 +12,16 @@ pub struct Ctx<'c> {
     pub cursor: &'c dyn Cursor,
     pub cut_seen : bool,
     pub error_msg: Option<String>,
-    pub rules: HashMap<&'c str, Rule<'c>>,
+    pub rules: Rc<HashMap<&'c str, Rule<'c>>>,
 }
 
 impl<'c> Ctx<'c> {
     pub fn new(cursor: &'c dyn Cursor) -> Self {
         Self {
-            cursor: cursor,
+            cursor,
             cut_seen: false,
             error_msg: None,
-            rules: HashMap::new(),
+            rules: Rc::new(HashMap::new()),
         }
     }
 
@@ -49,12 +50,22 @@ impl<'c> Ctx<'c> {
         Err(self)
     }
 
-    pub fn token(self, _token: &str) -> ParseResult<'_> {
+    pub fn token<'p>(self, _token: &str) -> ParseResult<'p> {
+        // if self.cursor.token(token) {
+        //     Ok(
+        //         (self, Cst::Token(token.into()))
+        //     )
+        // }
+        // else {
+        //     Err(self)
+        // }
         unimplemented!()
     }
-    pub fn pattern(&self, _pattern: &str) -> ParseResult<'_> {
+
+    pub fn pattern<'p>(self, _pattern: &str) -> ParseResult<'p> {
         unimplemented!()
     }
+
     pub fn search(&self, _pattern: &str) -> ParseResult<'_> {
         unimplemented!()
     }

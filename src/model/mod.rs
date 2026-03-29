@@ -14,6 +14,8 @@ mod syntax;
 mod call;
 mod rule;
 mod token;
+mod pattern;
+mod grammar;
 
 pub use model::{CanParse, ParseResult};
 pub use optional::Optional;
@@ -27,3 +29,5 @@ pub use syntax::*;
 pub use call::Call;
 pub use rule::Rule;
 pub use token::Token;
+pub use pattern::Pattern;
+pub use grammar::Grammar;

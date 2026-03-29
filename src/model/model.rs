@@ -4,7 +4,7 @@
 use std::fmt::Debug;
 use crate::engine::{Cst, Ctx};
 
-pub type ParseResult<'c> = Result<(Ctx<'c>, Cst), Ctx<'c>>;
+pub type ParseResult<'c> = Result<(Ctx<'c>, Cst<'c>), Ctx<'c>>;
 
 
 pub trait CanParse: Debug {

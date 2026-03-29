@@ -7,7 +7,6 @@ mod cst;
 mod ctx;
 mod parsed;
 mod ruleinfo;
-mod state;
 
 pub use ast::*;
 pub use cst::*;

@@ -2,15 +2,15 @@ use crate::model::{CanParse, ParseResult};
 use crate::engine::Ctx;
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Token {
-    pub token: &'static str,
+    pub token: String
 }
 
 impl Token {
-    pub fn new(token: &'static str) -> Self {
+    pub fn new(token: &str) -> Self {
         Self {
-            token,
+            token: token.to_string(),
         }
     }
 }

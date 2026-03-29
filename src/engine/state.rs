@@ -3,7 +3,7 @@
 
 use super::ast::Ast;
 use super::cst::Cst;
-use crate::input::text::Cursor;
+use crate::input::Cursor;
 
 pub struct ParseState<C: Cursor> {
     pub cursor: C,
