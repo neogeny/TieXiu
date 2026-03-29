@@ -5,28 +5,26 @@ use std::collections::HashMap;
 use crate::input::Cursor;
 use crate::model::{ParseResult, Rule};
 
-/// The rule registry. Using Arc allows the Ctx to own it without copying the data.
-pub type RuleMap<'g> = HashMap<&'g str, Rule<'g>>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Ctx<'c> {
-    pub cursor: Box<&'c dyn Cursor>,
+    pub cursor: &'c dyn Cursor,
     pub cut_seen : bool,
     pub error_msg: Option<String>,
-    pub rules: RuleMap<'c>,
+    pub rules: HashMap<&'c str, Rule<'c>>,
 }
 
 impl<'c> Ctx<'c> {
     pub fn new(cursor: &'c dyn Cursor) -> Self {
         Self {
-            cursor: Box::new(cursor),
+            cursor: cursor,
             cut_seen: false,
             error_msg: None,
-            rules: RuleMap::new(),
+            rules: HashMap::new(),
         }
     }
 
-    pub fn resolve(&self, name: &str) -> &Rule {
+    pub fn resolve(&self, name: &str) -> &Rule<'_> {
         self.rules.get(name).unwrap()
     }
 
@@ -38,10 +36,11 @@ impl<'c> Ctx<'c> {
         self.cut_seen = true;
     }
     
-    pub fn dot(&mut self) -> ParseResult {
+    pub fn dot<'a>(&self) -> ParseResult<'a> {
         unimplemented!()
     }
-    pub fn eof_check(&mut self) -> ParseResult {
+    
+    pub fn eof_check<'a>(&self) -> ParseResult<'a> {
         unimplemented!()
     }
 
@@ -50,13 +49,13 @@ impl<'c> Ctx<'c> {
         Err(self)
     }
 
-    pub fn token(self, _token: &str) -> ParseResult {
+    pub fn token(self, _token: &str) -> ParseResult<'_> {
         unimplemented!()
     }
-    pub fn pattern(&mut self, _pattern: &str) -> ParseResult {
+    pub fn pattern(&self, _pattern: &str) -> ParseResult<'_> {
         unimplemented!()
     }
-    pub fn search(&mut self, _pattern: &str) -> ParseResult {
+    pub fn search(&self, _pattern: &str) -> ParseResult<'_> {
         unimplemented!()
     }
 }

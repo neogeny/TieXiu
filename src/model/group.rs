@@ -4,6 +4,7 @@
 use crate::engine::{Cst, Ctx};
 use super::model::{CanParse, ParseResult};
 
+#[derive(Debug, Clone)]
 pub struct Group<'g> {
     pub exp: Box<&'g dyn CanParse>,
 }
@@ -24,6 +25,7 @@ impl<'g> CanParse for Group<'g>
 }
 
 
+#[derive(Debug, Clone)]
 pub struct SkipGroup<'g> {
     pub exp: Box<&'g dyn CanParse>,
 }

@@ -1,22 +1,25 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::fmt::Debug;
 use crate::engine::{Cst, Ctx};
 
 pub type ParseResult<'c> = Result<(Ctx<'c>, Cst), Ctx<'c>>;
 
-pub trait CanParse {
+
+pub trait CanParse: Debug {
     fn parse<'a>(&self, _ctx: Ctx<'a>) -> ParseResult<'a>;
 }
 
-// pub enum ModelImpl
-// {
-//     Cut(Cut),
-//     Void(Void),
-//     Fail(Fail),
-//     Dot(Dot),
-//     Eof(Eof),
-//     Token(Token),
+pub enum ModelImpl
+{
+    Cut,
+    Void,
+    Fail,
+    Dot,
+    Eof,
+    Token(&'static str),
+}
 //     Constant(Constant),
 //     Alert(Alert),
 // 

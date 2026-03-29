@@ -5,11 +5,12 @@ use super::model::{CanParse, ParseResult};
 use crate::engine::Ctx;
 
 
-pub struct Choice {
-    pub options: Vec<Box<dyn CanParse>>
+#[derive(Debug, Clone)]
+pub struct Choice<'c> {
+    pub options: Vec<&'c dyn CanParse>
 }
 
-impl CanParse for Choice
+impl<'c> CanParse for Choice<'c>
 {
     fn parse<'a>(&self, mut ctx: Ctx<'a>) -> ParseResult<'a> {
         for option in &self.options {

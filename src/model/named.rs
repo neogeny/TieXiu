@@ -1,22 +1,18 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::input::Cursor;
 use super::model::{CanParse, ParseResult};
 use crate::engine::{Cst, Ctx};
 
-// #22
-pub struct Named<M> {
-    pub exp: Box<M>,
-    pub name: &'static str
+#[derive(Debug, Clone)]
+pub struct Named<'n> {
+    pub name: &'static str,
+    pub exp: &'n dyn CanParse
 }
 
-impl<M, C> CanParse<C> for Named<M>
-where
-    M: CanParse<C>,
-    C: Cursor,
+impl<'n> CanParse for Named<'n>
 {
-    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         match self.exp.parse(ctx) {
             Ok((ctx, cst)) => {
                 Ok((ctx, Cst::Named(self.name, Box::new(cst))))
@@ -27,19 +23,16 @@ where
 }
 
 
-// #23
-pub struct NamedList<M> {
-    pub exp: Box<M>,
-    pub name: &'static str
+#[derive(Debug, Clone)]
+pub struct NamedList<'n> {
+    pub name: &'static str,
+    pub exp: &'n dyn CanParse
 }
 
 
-impl<M, C> CanParse<C> for NamedList<M>
-where
-    M: CanParse<C>,
-    C: Cursor,
+impl<'n> CanParse for NamedList<'n>
 {
-    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         match self.exp.parse(ctx) {
             Ok((ctx, cst)) => {
                 Ok((ctx, Cst::NamedList(self.name, Box::new(cst))))
@@ -50,34 +43,39 @@ where
 }
 
 
-// #24
-pub struct Override<M> {
-    pub exp: Box<M>,
+#[derive(Debug, Clone)]
+pub struct Override<'o> {
+    pub exp: &'o dyn CanParse
 }
 
-impl<M, C> CanParse<C> for Override<M>
-where
-    M: CanParse<C>,
-    C: Cursor,
+impl<'o> CanParse for Override<'o>
 {
-    fn parse(&self, mut _ctx: Ctx<C>) -> ParseResult<C> {
-        unimplemented!()
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+        match self.exp.parse(ctx) {
+            Ok((ctx, cst)) => {
+                let boxed = Box::new(cst);
+                Ok((ctx, Cst::OverrideValue(boxed)))
+            },
+            err => err
+        }
     }
 }
 
 
-// #25
-pub struct OverrideList<M> {
-    pub exp: Box<M>,
+#[derive(Debug, Clone)]
+pub struct OverrideList<'o> {
+    pub exp: &'o dyn CanParse
 }
 
-impl<M, C> CanParse<C> for OverrideList<M>
-where
-    M: CanParse<C>,
-    C: Cursor,
+impl<'o> CanParse for OverrideList<'o>
 {
-    fn parse(&self, __ctx: Ctx<C>) -> ParseResult<C> {
-        unimplemented!()
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
+        match self.exp.parse(ctx) {
+            Ok((ctx, cst)) => {
+                let boxed = Box::new(cst);
+                Ok((ctx, Cst::OverrideList(boxed)))
+            },
+            err => err
+        }
     }
 }
-

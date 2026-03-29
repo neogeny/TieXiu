@@ -1,104 +1,89 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::input::Cursor;
 use super::model::{CanParse, ParseResult};
 use crate::engine::{Cst, Ctx};
 
-// #6
+#[derive(Debug, Clone)]
 pub struct Dot {
 }
 
-impl<C> CanParse<C> for Dot
-where
-    C: Cursor,
+impl CanParse for Dot
 {
-    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         ctx.dot()
     }
 }
 
 
-// #?
+#[derive(Debug, Clone)]
 pub struct Void {
 }
 
-impl<C> CanParse<C> for Void
-where
-    C: Cursor,
+impl CanParse for Void
 {
-    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         Ok((ctx, Cst::Nil))
     }
 }
 
-// #7
+#[derive(Debug, Clone)]
 pub struct Fail {
 }
 
-impl<C> CanParse<C> for Fail
-where
-    C: Cursor,
+impl CanParse for Fail
 {
-    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         Err(ctx)
     }
 }
 
 
-// #8
+#[derive(Debug, Clone)]
 pub struct Eof {
 }
 
-impl<C> CanParse<C> for Eof
-where
-    C: Cursor,
+impl CanParse for Eof
 {
-    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         ctx.eof_check()
     }
 }
 
 
-// #10
+#[derive(Debug, Clone)]
 pub struct Constant {
     pub literal: &'static str,
 }
 
-impl<C> CanParse<C> for Constant
-where
-    C: Cursor,
+impl CanParse for Constant
 {
-    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         Ok((ctx, Cst::Literal(self.literal)))
     }
 }
 
 
-// #11
+#[derive(Debug, Clone)]
 pub struct Alert {
     pub literal: &'static str,
     pub level: u8
 }
 
-impl<C> CanParse<C> for Alert
-where
-    C: Cursor,
+impl CanParse for Alert
 {
-    fn parse(&self, ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, ctx: Ctx<'p>) -> ParseResult<'p> {
         Ok((ctx, Cst::Literal(self.literal)))
     }
 }
 
 
-// #12
+#[derive(Debug, Clone)]
 pub struct Cut {}
 
-impl<C> CanParse<C> for Cut
-where
-    C: Cursor,
+impl CanParse for Cut
 {
-    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
         ctx.cut();
         Ok((ctx, Cst::Nil))
     }

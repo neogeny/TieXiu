@@ -1,16 +1,15 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::input::Cursor;
 use super::model::{CanParse, ParseResult};
 use crate::engine::{Cst, Ctx};
 
-// #28
-pub struct Lookahead {
-    pub exp: Box<dyn CanParse>,
+#[derive(Debug, Clone)]
+pub struct Lookahead<'k> {
+    pub exp: &'k dyn CanParse,
 }
 
-impl CanParse for Lookahead
+impl<'k> CanParse for Lookahead<'k>
 {
     fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
         let _ = self.exp.parse(ctx.clone())?;
@@ -19,12 +18,12 @@ impl CanParse for Lookahead
 }
 
 
-// #29
-pub struct NegativeLookahead {
-    pub exp: Box<dyn CanParse>,
+#[derive(Debug, Clone)]
+pub struct NegativeLookahead<'k> {
+    pub exp: &'k dyn CanParse,
 }
 
-impl CanParse for NegativeLookahead
+impl<'k> CanParse for NegativeLookahead<'k>
 {
     fn parse<'a>(&self, ctx: Ctx<'a>) -> ParseResult<'a> {
         if let Ok((_, _)) = self.exp.parse(ctx.clone()) {
@@ -35,17 +34,14 @@ impl CanParse for NegativeLookahead
 }
 
 
-// #30
-pub struct SkipTo<M> {
-    pub exp: Box<M>,
+#[derive(Debug, Clone)]
+pub struct SkipTo<'s> {
+    pub exp: &'s dyn CanParse,
 }
 
-impl<M, C> CanParse<C> for SkipTo<M>
-where
-    M: CanParse<C>,
-    C: Cursor,
+impl<'s> CanParse for SkipTo<'s>
 {
-    fn parse(&self, mut ctx: Ctx<C>) -> ParseResult<C> {
+    fn parse<'p>(&self, mut ctx: Ctx<'p>) -> ParseResult<'p> {
         loop {
             match self.exp.parse(ctx) {
                 Err(err_ctx) => {
@@ -61,20 +57,3 @@ where
         }
     }
 }
-
-
-// #32
-pub struct Call<M> {
-    pub exp: Box<M>,
-}
-
-impl<M, C> CanParse<C> for Call<M>
-where
-    M: CanParse<C>,
-    C: Cursor,
-{
-    fn parse(&self, _ctx: Ctx<C>) -> ParseResult<C> {
-        unimplemented!()
-    }
-}
-

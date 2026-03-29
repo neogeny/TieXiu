@@ -1,13 +1,15 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::fmt::Debug;
+
 pub trait Text<C: Cursor> {
     fn source(&self) -> &str;
     fn new_cursor(&self) -> C;
 }
 
 /// The abstraction of the position in the input.
-pub trait Cursor {
+pub trait Cursor: Debug {
     fn mark(&self) -> usize;
     fn reset(&mut self, mark: usize);
     fn textstr(&self) -> &str;
