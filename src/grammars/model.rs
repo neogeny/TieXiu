@@ -19,27 +19,28 @@ pub enum Model
     Fail,
     Dot,
     Eof,
-    Token { token: Str },
-    Constant { literal: Str },
-    Alert { literal: Str, level: u8 },
+    Token ( Str ),
+    Constant ( Str ),
+    Alert ( Str, u8 ),
 
-    Named { name: Str, exp: ModelRef },
-    NamedList { name: Str, exp: ModelRef },
-    Override { exp: ModelRef },
-    OverrideList { exp: ModelRef },
+    Named ( Str, ModelRef ),
+    NamedList ( Str, ModelRef ),
+    Override ( ModelRef ),
+    OverrideList ( ModelRef ),
 
-    Group { exp: ModelRef },
-    SkipGroup { exp: ModelRef },
+    Group ( ModelRef ),
+    SkipGroup (ModelRef),
 
-    Lookahead { exp: ModelRef },
-    NegativeLookahead { exp: ModelRef },
-    SkipTo { exp: ModelRef },
+    Lookahead ( ModelRef ),
+    NegativeLookahead (ModelRef ),
+    SkipTo ( ModelRef ),
 
-    Sequence { sequence: ModelRefArr },
-    Choice { options: ModelRefArr },
-    Optional { exp: ModelRef },
-    Closure { exp: ModelRef },
-    PositiveClosure { exp: ModelRef },
+    Sequence ( ModelRefArr ),
+    Choice (ModelRefArr),
+    Optional (ModelRef ),
+    Closure (ModelRef),
+    PositiveClosure ( ModelRef ),
+    
     Join { exp: ModelRef, sep: ModelRef },
     PositiveJoin { exp: ModelRef, sep: ModelRef },
     Gather { exp: ModelRef, sep: ModelRef },
@@ -62,18 +63,18 @@ where C: Ctx
             Self::Eof =>
                 if ctx.eof_check() { Ok((ctx, Cst::Nil)) } else { Err(ctx) },
 
-            Self::Token { token } =>
+            Self::Token ( token ) =>
                 if ctx.token(token) {
                     Ok((ctx, Cst::Token(token.deref().into())))
                 } else {
                     Err(ctx)
                 },
-            Self::Constant { literal } =>
+            Self::Constant ( literal ) =>
                 Ok((ctx, Cst::Literal(literal.to_string()))),
-            Self::Alert { literal, level: _ } =>
+            Self::Alert ( literal, _ ) =>
                 Ok((ctx, Cst::Literal(literal.to_string()))),
 
-            Self::Named { name, exp } => {
+            Self::Named ( name, exp ) => {
                 match exp.parse(ctx) {
                     Ok((ctx, cst)) => {
                         Ok((ctx, Cst::Named(name.to_string(), Box::new(cst))))
@@ -81,7 +82,7 @@ where C: Ctx
                     err => err
                 }
             },
-            Self::NamedList { name, exp } => {
+            Self::NamedList ( name, exp ) => {
                 match exp.parse(ctx) {
                     Ok((ctx, cst)) => {
                         Ok((ctx, Cst::NamedList(name.to_string(), Box::new(cst))))
@@ -89,7 +90,7 @@ where C: Ctx
                     err => err
                 }
             },
-            Self::Override { exp } => {
+            Self::Override ( exp ) => {
                 match exp.parse(ctx) {
                     Ok((ctx, cst)) => {
                         Ok((ctx, Cst::OverrideValue(Box::new(cst))))
@@ -97,7 +98,7 @@ where C: Ctx
                     err => err
                 }
             },
-            Self::OverrideList { exp } => {
+            Self::OverrideList ( exp ) => {
                 match exp.parse(ctx) {
                     Ok((ctx, cst)) => {
                         Ok((ctx, Cst::OverrideList(Box::new(cst))))
@@ -105,22 +106,22 @@ where C: Ctx
                     err => err
                 }
             },
-            Self::Group { exp } => exp.parse(ctx),
-            Self::SkipGroup { exp } => {
+            Self::Group ( exp ) => exp.parse(ctx),
+            Self::SkipGroup ( exp ) => {
                 let (new_ctx, _) = exp.parse(ctx)?;
                 Ok((new_ctx, Cst::Nil))
             },
-            Self::Lookahead { exp } => {
+            Self::Lookahead ( exp ) => {
                 let _ = exp.parse(ctx.clone())?;
                 Ok((ctx, Cst::Nil))
             }
-            Self::NegativeLookahead { exp } =>
+            Self::NegativeLookahead ( exp ) =>
                 if let Ok((_, _)) = exp.parse(ctx.clone()) {
                     Err(ctx)
                 } else {
                     Ok((ctx, Cst::Nil))
                 },
-            Self::SkipTo { exp } =>
+            Self::SkipTo ( exp ) =>
                 loop {
                     match exp.parse(ctx) {
                         Err(errctx) => {
@@ -135,16 +136,20 @@ where C: Ctx
                     }
                 },
 
-            Self::Sequence { sequence } => {
+            Self::Sequence ( sequence ) => {
                 let mut results = Vec::new();
                 for exp in sequence.iter() {
-                    let (new_ctx, cst) = exp.parse(ctx)?;
-                    results.push(cst);
-                    ctx = new_ctx;
+                    match exp.parse(ctx) {
+                        Ok((new_ctx, cst)) => {
+                            results.push(cst);
+                            ctx = new_ctx;
+                        },
+                        err => return err
+                    }
                 }
                 Ok((ctx, Cst::from(results)))
             },
-            Self::Choice { options } => {
+            Self::Choice ( options ) => {
                 for option in options.iter() {
                     match option.parse(ctx) {
                         Ok(res) => return Ok(res),
@@ -159,19 +164,19 @@ where C: Ctx
                 }
                 Err(ctx)
             },
-            Self::Optional { exp } => {
+            Self::Optional ( exp ) => {
                 match exp.parse(ctx.clone()) {
                     Ok(success) => Ok(success),
                     Err(_) => Ok((ctx, Cst::Nil))
                 }
             },
 
-            Self::Closure { exp } => {
+            Self::Closure ( exp ) => {
                 let mut res = Vec::new();
                 let new_ctx = repeat(exp.deref(), ctx, &mut res);
                 Ok((new_ctx, Cst::from(res)))
             },
-            Self::PositiveClosure { exp } => {
+            Self::PositiveClosure ( exp ) => {
                 let mut res: Vec<Cst> = Vec::new();
                 match exp.parse(ctx) {
                     Ok((new_ctx, cst)) => {
