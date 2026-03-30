@@ -1,5 +1,5 @@
 // Re-export everything so the rest of the app
-// just sees "crate::engine::models::Sequence"
+// just sees "crate::contexts::models::Sequence"
 pub mod sequence;
 pub mod choice;
 pub mod repeat;

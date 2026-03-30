@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::model::{CanParse, ParseResult};
-use crate::engine::{Cst, Ctx};
+use crate::contexts::{Cst, Ctx};
 
 #[derive(Debug, Clone)]
 pub struct Lookahead<'k, C> {

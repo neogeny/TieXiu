@@ -6,7 +6,7 @@ use std::collections::HashMap;
 // use std::rc::Rc;
 use std::fmt::Debug;
 use crate::input::{Cursor, StrCursor};
-use crate::model::Rule;
+use crate::grammars::Rule;
 
 
 pub trait Ctx: Clone + Debug

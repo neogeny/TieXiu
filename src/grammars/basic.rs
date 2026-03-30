@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::model::{CanParse, ParseResult};
-use crate::engine::{Cst, Ctx};
+use crate::contexts::{Cst, Ctx};
 
 #[derive(Debug, Clone)]
 pub struct Dot {
@@ -69,7 +69,7 @@ pub struct Constant {
 impl<C: Ctx> CanParse<C> for Constant
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
-        Ok((ctx, Cst::Literal(self.literal.clone().into())))
+        Ok((ctx, Cst::Literal(self.literal.clone())))
     }
 }
 
@@ -83,7 +83,7 @@ pub struct Alert {
 impl<C: Ctx> CanParse<C> for Alert
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
-        Ok((ctx, Cst::Literal(self.literal.clone().into())))
+        Ok((ctx, Cst::Literal(self.literal.clone())))
     }
 }
 

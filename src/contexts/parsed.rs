@@ -18,7 +18,7 @@ pub struct Parsed {
     pub value: ParsedValue,
 }
 
-impl<'p> Parsed {
+impl Parsed {
     /// Creates a new, unlabeled Parsed result.
     pub fn new(value: ParsedValue) -> Self {
         Self {
@@ -44,13 +44,13 @@ impl<'p> Parsed {
 }
 
 // Ergonomic conversions to create Parsed from raw types
-impl<'p> From<Cst> for Parsed {
+impl From<Cst> for Parsed {
     fn from(c: Cst) -> Self {
         Parsed::new(ParsedValue::Cst(c))
     }
 }
 
-impl<'p> From<Ast> for Parsed {
+impl From<Ast> for Parsed {
     fn from(a: Ast) -> Self {
         Parsed::new(ParsedValue::Ast(a))
     }

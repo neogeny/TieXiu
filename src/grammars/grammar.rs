@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::engine::Ctx;
+use crate::contexts::Ctx;
 use super::{CanParse, ParseResult, Rule};
 
 #[derive(Debug, Clone)]

@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use tiexiu::model::{Token, Sequence, Void, CanParse};
+use tiexiu::grammars::{Token, Sequence, Void, CanParse};
 use tiexiu::input::StrCursor;
-use tiexiu::engine::StrCtx;
+use tiexiu::contexts::StrCtx;
 
 
 fn scope() -> (Token, Token) {

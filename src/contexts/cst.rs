@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub use std::ops::Add;
 use super::ast::Ast;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17,12 +18,6 @@ pub enum Cst {
     Nil,
 }
 
-impl Default for Cst {
-    fn default() -> Self {
-        Cst::Nil
-    }
-}
-
 impl From<Vec<Cst>> for Cst {
     fn from(v: Vec<Cst>) -> Self {
         Cst::List(v)
@@ -30,14 +25,16 @@ impl From<Vec<Cst>> for Cst {
 }
 
 
-impl<'c, const N: usize> From<[Cst; N]> for Cst {
+impl<const N: usize> From<[Cst; N]> for Cst {
     fn from(arr: [Cst; N]) -> Self {
         Cst::List(arr.into())
     }
 }
 
-impl Cst {
-    pub fn add(self, node: Cst) -> Cst {
+impl Add for Cst {
+    type Output = Self;
+    
+    fn add(self, node: Self) -> Self::Output {
         match self {
             Cst::Nil => node,
             Cst::List(mut list) => {
@@ -47,7 +44,9 @@ impl Cst {
             _ => Cst::List(vec![self, node]),
         }
     }
+}
 
+impl Cst {
     pub fn addlist(self, node: Cst) -> Cst {
         match self {
             Cst::Nil => Cst::List(vec![node]),

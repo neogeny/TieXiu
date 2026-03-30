@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::fmt::Debug;
-use crate::engine::{Cst, Ctx};
-use crate::model::closure::{add_exp, repeat, repeat_with_pre};
+use crate::contexts::{Cst, Ctx};
+use crate::grammars::closure::{add_exp, repeat, repeat_with_pre};
 
 pub type ParseResult<C > = Result<(C, Cst), C>;
 pub type ModelRef<'m> = &'m Model<'m>;
@@ -61,7 +61,7 @@ impl<'m, C: Ctx> CanParse<C> for Model<'m>
             Self::Void => Ok((ctx, Cst::Nil)),
             Self::Fail => Err(ctx),
             Self::Dot =>
-                if let Some(_) = ctx.next() { Ok((ctx, Cst::Nil)) } else { Err(ctx) },
+                if ctx.next().is_some() { Ok((ctx, Cst::Nil)) } else { Err(ctx) },
             Self::Eof =>
                 if ctx.eof_check() { Ok((ctx, Cst::Nil)) } else { Err(ctx) },
 

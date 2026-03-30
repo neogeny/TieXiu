@@ -10,11 +10,6 @@ impl<'a> StrCursor<'a> {
     pub fn new(text: &'a str, offset: usize) -> Self {
         Self { text, offset }
     }
-    
-    pub fn clone(&self) -> Self {
-        Self { text: &self.text, offset: self.offset }
-    }
-
 }
 
 impl<'a> Cursor for StrCursor<'a> {

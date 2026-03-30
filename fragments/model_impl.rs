@@ -1,4 +1,4 @@
-// model/mod.rs
+// grammars/mod.rs
 
 pub enum ModelImpl {
     Sequence(Sequence),
@@ -19,7 +19,7 @@ impl Model for ModelImpl {
     }
 }
 
-// model/sequence.rs
+// grammars/sequence.rs
 pub struct Sequence {
     pub children: Vec<Box<ModelImpl>>,
 }

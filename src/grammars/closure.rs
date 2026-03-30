@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::model::{CanParse, ParseResult};
-use crate::engine::{Cst, Ctx};
+use crate::contexts::{Cst, Ctx};
 
 
 #[derive(Debug, Clone)]
@@ -40,7 +40,7 @@ pub struct PositiveGather<'c, C> {
 }
 
 
-pub fn skip_exp<'c, C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
+pub fn skip_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
 {
     match exp.parse(ctx) {
         Ok((new_ctx, _)) => {
@@ -107,7 +107,7 @@ impl<'c, C: Ctx> CanParse<C> for Closure<'c, C>
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res = Vec::new();
-        let new_ctx = repeat(&mut res, ctx, &*self.exp);
+        let new_ctx = repeat(&mut res, ctx, self.exp);
         Ok((new_ctx, Cst::from(res)))
     }
 }
@@ -125,7 +125,7 @@ impl<'c, C: Ctx> CanParse<C> for PositiveClosure<'c, C>
             err => return err
         };
 
-        let new_ctx = repeat(&mut res, ctx, &*self.exp);
+        let new_ctx = repeat(&mut res, ctx, self.exp);
         Ok((new_ctx, Cst::from(res)))
     }
 }
@@ -135,9 +135,9 @@ impl<'c, C: Ctx> CanParse<C> for Join<'c, C>
     fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
-        match add_exp(&*self.exp, ctx, &mut res) {
+        match add_exp(self.exp, ctx, &mut res) {
             Ok(new_ctx) => {
-                let ctx = repeat_with_pre(&mut res, new_ctx, &*self.exp, &*self.sep, true);
+                let ctx = repeat_with_pre(&mut res, new_ctx, self.exp, self.sep, true);
                 Ok((ctx, Cst::from(res)))
             },
             Err(err_ctx) => Ok((err_ctx, Cst::from(res)))
@@ -158,7 +158,7 @@ impl<'c, C: Ctx> CanParse<C> for PositiveJoin<'c, C>
             err => return err
         };
 
-        let new_ctx = repeat_with_pre(&mut res, ctx, &*self.exp, &*self.sep, true);
+        let new_ctx = repeat_with_pre(&mut res, ctx, self.exp, self.sep, true);
         Ok((new_ctx, Cst::from(res)))
     }
 }
@@ -168,10 +168,10 @@ impl<'c, C: Ctx> CanParse<C> for Gather<'c, C>
     fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
-        match add_exp(&*self.exp, ctx, &mut res) {
+        match add_exp(self.exp, ctx, &mut res) {
             Ok(new_ctx) => {
                 let ctx = repeat_with_pre(
-                    &mut res, new_ctx, &*self.exp, &*self.sep, false
+                    &mut res, new_ctx, self.exp, self.sep, false
                 );
                 Ok((ctx, Cst::from(res)))
             },
@@ -194,7 +194,7 @@ impl<'c, C: Ctx> CanParse<C> for PositiveGather<'c, C>
         };
 
         let new_ctx = repeat_with_pre(
-            &mut res, ctx, &*self.exp, &*self.sep, false
+            &mut res, ctx, self.exp, self.sep, false
         );
         Ok((new_ctx, Cst::from(res)))
     }

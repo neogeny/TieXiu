@@ -1,4 +1,4 @@
-// model/rule.rs
+// grammars/rule.rs
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -24,7 +24,7 @@ impl<M: Model> Model for Rule<M> {
             Err((mut err_ctx, msg)) => {
                 // FAILURE: We also clear cut_seen here before bubbling up.
                 // This ensures the cut only affected this Rule's internal choices.
-                // If the parent wants to cut, it must have its own Cut model.
+                // If the parent wants to cut, it must have its own Cut grammars.
                 err_ctx.cut_seen = false;
 
                 Err((err_ctx, msg))
