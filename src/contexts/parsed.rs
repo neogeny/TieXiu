@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::cst::Cst;
 use super::ast::Ast;
+use super::cst::Cst;
 
 /// The internal variants of parsed data.
 #[derive(Debug, Clone)]

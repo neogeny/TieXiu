@@ -8,7 +8,7 @@ use std::fmt::Debug;
 use std::ops::Deref;
 
 pub type ModelRef = Box<Model>;
-pub type ModelRefArr = Box<[ModelRef]>;
+pub type ModelRefArr = Box<[Model]>;
 pub type Str = Box<str>;
 
 #[derive(Debug, Clone)]
@@ -44,6 +44,12 @@ pub enum Model {
     PositiveJoin { exp: ModelRef, sep: ModelRef },
     Gather { exp: ModelRef, sep: ModelRef },
     PositiveGather { exp: ModelRef, sep: ModelRef },
+}
+
+impl Model {
+    pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
+        <Self as CanParse<C>>::parse(self, ctx)
+    }
 }
 
 impl<C> CanParse<C> for Model

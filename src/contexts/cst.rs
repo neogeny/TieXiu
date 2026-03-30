@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub use std::ops::Add;
 use super::ast::Ast;
+pub use std::ops::Add;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Cst {
@@ -24,7 +24,6 @@ impl From<Vec<Cst>> for Cst {
     }
 }
 
-
 impl<const N: usize> From<[Cst; N]> for Cst {
     fn from(arr: [Cst; N]) -> Self {
         Cst::List(arr.into())
@@ -33,7 +32,7 @@ impl<const N: usize> From<[Cst; N]> for Cst {
 
 impl Add for Cst {
     type Output = Self;
-    
+
     fn add(self, node: Self) -> Self::Output {
         match self {
             Cst::Nil => node,

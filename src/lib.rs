@@ -1,17 +1,17 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub mod input;
 pub mod contexts;
 pub mod grammars;
+pub mod input;
 
 // #![allow(dead_code)]
 // use pyo3::prelude::*;
-// 
+//
 // #[pymodule]
 // mod _tiexiu {
 //     use pyo3::prelude::*;
-// 
+//
 //     #[pyfunction]
 //     fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 //         Ok((a + b).to_string())

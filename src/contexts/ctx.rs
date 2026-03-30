@@ -4,12 +4,10 @@
 // use std::collections::HashMap;
 // use std::collections::HashMap;
 // use std::rc::Rc;
-use std::fmt::Debug;
 use crate::input::{Cursor, StrCursor};
+use std::fmt::Debug;
 
-
-pub trait Ctx: Clone + Debug
-{
+pub trait Ctx: Clone + Debug {
     // fn resolve(&self, name: &str) -> &Rule<'_, Self>;
     fn mark(&self) -> usize;
     fn dot(&self) -> bool;
@@ -18,26 +16,25 @@ pub trait Ctx: Clone + Debug
     fn token(&self, token: &str) -> bool;
     fn pattern(&self, pattern: &str) -> bool;
     fn search(&self, pattern: &str) -> bool;
-    
+
     fn cut(&mut self);
     fn uncut(&mut self);
     fn cut_seen(&self) -> bool;
-    
 }
 
 #[derive(Clone, Debug)]
 pub struct StrCtx<'c> {
     cursor: StrCursor<'c>,
-    _cut_seen: bool
+    _cut_seen: bool,
 }
 
 impl<'c> StrCtx<'c> {
     pub fn new(cursor: StrCursor<'c>) -> Self {
-       Self {
-           cursor,
-           _cut_seen: false,
-           // rules: HashMap::new(),
-       } 
+        Self {
+            cursor,
+            _cut_seen: false,
+            // rules: HashMap::new(),
+        }
     }
 }
 
@@ -99,10 +96,9 @@ impl<'c> Ctx for StrCtx<'c> {
 }
 
 #[derive(Clone, Debug)]
-pub struct CtxImpl<'c>
-{
+pub struct CtxImpl<'c> {
     pub cursor: &'c dyn Cursor,
-    pub cut_seen : bool,
+    pub cut_seen: bool,
     pub error_msg: Option<String>,
     // pub rules: Rc<HashMap<&'c str, &'c Rule<'c, CtxImpl>>>,
 }
