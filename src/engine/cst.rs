@@ -7,7 +7,6 @@ use super::ast::Ast;
 pub enum Cst {
     Token(String),
     Literal(String),
-    Item(Box<Cst>),
     List(Vec<Box<Cst>>),
     Closure(Vec<Box<Cst>>),
     Named(String, Box<Cst>),
@@ -86,48 +85,52 @@ impl Cst {
         match self {
             Cst::List(mut list) if list.len() == 1 => *list.pop().unwrap(),
             Cst::List(list) => Cst::Closure(list),
-            Cst::Item(cst) => *cst,
             _ => self,
         }
     }
 
-    pub fn distill(self) -> Cst {
+    fn _distill(self) -> (Ast, Cst, Cst) {
+        let mut ast = Ast::new();
+        let mut ovr = Cst::Nil;
+        let mut cst = Cst::Nil;
+
         match self {
             Cst::List(elements) => {
-                let mut new_list = Vec::new();
-                let mut ast = Ast::new();
+                for boxed_node in elements {
+                    // Recursive call handles the "Splat"
+                    let (child_ast, child_ovr, child_cst) = (*boxed_node)._distill();
 
-                for node in elements {
-                    // Recurse to handle nested structures
-                    let child = node.distill();
-                    
-                    match child {
-                        Cst::Nil => continue,
-                        
-                        // Labels are extracted to the current rule's AST
-                        Cst::Named(name, value) => {
-                            ast.set(&name, *value);
-                        }
-                        
-                        // An Ast from a sub-rule is just another positional item
-                        // unless it was Named (handled above).
-                        other => new_list.push(Box::new(other)),
-                    }
-                }
-
-                if !ast.is_empty() {
-                    Cst::Ast(Box::new(ast))
-                } else {
-                    Cst::List(new_list)
+                    ast.update(&child_ast);
+                    ovr = ovr.merge(child_ovr);
+                    cst = cst.merge(child_cst);
                 }
             }
-            // A standalone Named node always promotes to an Ast
-            Cst::Named(name, value) => {
-                let mut ast = Ast::new();
-                ast.set(&name, *value);
-                Cst::Ast(Box::new(ast))
-            }
-            other => other,
+
+            // Active Markers (Parser Injections)
+            Cst::Named(name, val) => ast.set(&name, *val),
+            Cst::NamedList(name, val) => ast.set_list(&name, *val),
+            Cst::OverrideValue(val) => ovr = ovr.add(*val),
+            Cst::OverrideList(val) => ovr = ovr.addlist(*val),
+
+            Cst::Nil => {}
+
+            // Opaque Atoms (Already finalized results)
+            other => cst = cst.merge(other),
+        }
+
+        (ast, ovr, cst)
+    }
+
+    pub fn node(self) -> Cst {
+        let (ast, ovr, cst) = self._distill();
+
+        // Priority Gate: Override > AST > CST
+        if ovr != Cst::Nil {
+            cst_closed(ovr)
+        } else if !ast.is_empty() {
+            Cst::Ast(Box::new(ast))
+        } else {
+            cst_closed(cst)
         }
     }
 }

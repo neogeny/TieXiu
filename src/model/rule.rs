@@ -14,7 +14,7 @@ impl<'r, C: Ctx> CanParse<C> for Rule<'r, C>
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
         match self.exp.parse(ctx) {
-            Ok((new_ctx, cst)) => Ok((new_ctx, cst.distill())),
+            Ok((new_ctx, cst)) => Ok((new_ctx, cst.node())),
             err => err,
         }
     }

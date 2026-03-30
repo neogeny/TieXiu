@@ -23,7 +23,7 @@ impl<C: Ctx> CanParse<C> for Call
         let rule = rctx.resolve(self.name);
         match rule.parse(ctx) {
             Ok((new_ctx, cst)) => {
-                Ok((new_ctx, cst.distill()))
+                Ok((new_ctx, cst))
             },
             err => err,
         }
