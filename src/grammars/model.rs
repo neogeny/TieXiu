@@ -2,55 +2,52 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::fmt::Debug;
+use std::ops::Deref;
 use crate::contexts::{Cst, Ctx};
-use crate::grammars::closure::{add_exp, repeat, repeat_with_pre};
+use super::canparse::{CanParse, ParseResult};
+use super::repeat::{add_exp, repeat, repeat_with_pre};
 
-pub type ParseResult<C > = Result<(C, Cst), C>;
-pub type ModelRef<'m> = &'m Model<'m>;
-pub type ModelRefArr<'m> = &'m [ModelRef<'m>];
-
-
-pub trait CanParse<C: Ctx>: Debug {
-    fn parse(&self, ctx: C) -> ParseResult<C>;
-}
-
+pub type ModelRef = Box<Model>;
+pub type ModelRefArr = Box<[ModelRef]>;
+pub type Str = Box<str>;
 
 #[derive(Debug, Clone)]
-pub enum Model<'m>
+pub enum Model
 {
     Cut,
     Void,
     Fail,
     Dot,
     Eof,
-    Token { token: &'m str },
-    Constant { literal: &'m str },
-    Alert { literal: &'m str, level: u8 },
+    Token { token: Str },
+    Constant { literal: Str },
+    Alert { literal: Str, level: u8 },
 
-    Named { name: &'m str, exp: ModelRef<'m> },
-    NamedList { name: &'m str, exp: ModelRef<'m> },
-    Override { exp: ModelRef<'m> },
-    OverrideList { exp: ModelRef<'m> },
+    Named { name: Str, exp: ModelRef },
+    NamedList { name: Str, exp: ModelRef },
+    Override { exp: ModelRef },
+    OverrideList { exp: ModelRef },
 
-    Group { exp: ModelRef<'m> },
-    SkipGroup { exp: ModelRef<'m> },
+    Group { exp: ModelRef },
+    SkipGroup { exp: ModelRef },
 
-    Lookahead { exp: ModelRef<'m> },
-    NegativeLookahead { exp: ModelRef<'m> },
-    SkipTo { exp: ModelRef<'m> },
+    Lookahead { exp: ModelRef },
+    NegativeLookahead { exp: ModelRef },
+    SkipTo { exp: ModelRef },
 
-    Sequence { sequence: ModelRefArr<'m> },
-    Choice { options: ModelRefArr<'m> },
-    Optional { exp: ModelRef<'m> },
-    Closure { exp: ModelRef<'m> },
-    PositiveClosure { exp: ModelRef<'m> },
-    Join { exp: ModelRef<'m>, sep: ModelRef<'m> },
-    PositiveJoin { exp: ModelRef<'m>, sep: ModelRef<'m> },
-    Gather { exp: ModelRef<'m>, sep: ModelRef<'m> },
-    PositiveGather { exp: ModelRef<'m>, sep: ModelRef<'m> },
+    Sequence { sequence: ModelRefArr },
+    Choice { options: ModelRefArr },
+    Optional { exp: ModelRef },
+    Closure { exp: ModelRef },
+    PositiveClosure { exp: ModelRef },
+    Join { exp: ModelRef, sep: ModelRef },
+    PositiveJoin { exp: ModelRef, sep: ModelRef },
+    Gather { exp: ModelRef, sep: ModelRef },
+    PositiveGather { exp: ModelRef, sep: ModelRef },
 }
 
-impl<'m, C: Ctx> CanParse<C> for Model<'m>
+impl<C> CanParse<C> for Model
+where C: Ctx
 {
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         match self {
@@ -67,7 +64,7 @@ impl<'m, C: Ctx> CanParse<C> for Model<'m>
 
             Self::Token { token } =>
                 if ctx.token(token) {
-                    Ok((ctx, Cst::Token((*token).into())))
+                    Ok((ctx, Cst::Token(token.deref().into())))
                 } else {
                     Err(ctx)
                 },
@@ -171,7 +168,7 @@ impl<'m, C: Ctx> CanParse<C> for Model<'m>
 
             Self::Closure { exp } => {
                 let mut res = Vec::new();
-                let new_ctx = repeat(&mut res, ctx, *exp);
+                let new_ctx = repeat(exp.deref(), ctx, &mut res);
                 Ok((new_ctx, Cst::from(res)))
             },
             Self::PositiveClosure { exp } => {
@@ -184,15 +181,21 @@ impl<'m, C: Ctx> CanParse<C> for Model<'m>
                     err => return err
                 };
 
-                let new_ctx = repeat(&mut res, ctx, *exp);
+                let new_ctx = repeat(exp.deref(), ctx, &mut res);
                 Ok((new_ctx, Cst::from(res)))
             },
             Self::Join { exp, sep } => {
                 let mut res: Vec<Cst> = Vec::new();
 
-                match add_exp(*exp, ctx, &mut res) {
+                match add_exp(exp.deref(), ctx, &mut res) {
                     Ok(new_ctx) => {
-                        let ctx = repeat_with_pre(&mut res, new_ctx, *exp, *sep, true);
+                        let ctx = repeat_with_pre(
+                            exp.deref(),
+                            sep.deref(),
+                            new_ctx,
+                            &mut res,
+                            true,
+                        );
                         Ok((ctx, Cst::from(res)))
                     },
                     Err(err_ctx) => Ok((err_ctx, Cst::from(res)))
@@ -203,21 +206,31 @@ impl<'m, C: Ctx> CanParse<C> for Model<'m>
 
                 match exp.parse(ctx) {
                     Ok((new_ctx, cst)) => {
-                        ctx = new_ctx;
                         res.push(cst);
+                        ctx = new_ctx;
                     },
-                    err => return err
+                    err => return err,
                 };
 
-                let new_ctx = repeat_with_pre(&mut res, ctx, *exp, *sep, true);
+                let new_ctx = repeat_with_pre(
+                    exp.deref(),
+                    sep.deref(),
+                    ctx,
+                    &mut res,
+                    true,
+                );
                 Ok((new_ctx, Cst::from(res)))
             },
             Self::Gather { exp, sep } => {
                 let mut res: Vec<Cst> = Vec::new();
-                match add_exp(*exp, ctx, &mut res) {
+                match add_exp(exp.deref(), ctx, &mut res) {
                     Ok(new_ctx) => {
                         let ctx = repeat_with_pre(
-                            &mut res, new_ctx, *exp, *sep, false
+                            exp.deref(),
+                            sep.deref(),
+                            new_ctx,
+                            &mut res,
+                            false,
                         );
                         Ok((ctx, Cst::from(res)))
                     },
@@ -236,7 +249,11 @@ impl<'m, C: Ctx> CanParse<C> for Model<'m>
                 };
 
                 let new_ctx = repeat_with_pre(
-                    &mut res, ctx, *exp, *sep, false
+                    exp.deref(),
+                    sep.deref(),
+                    ctx,
+                    &mut res,
+                    false,
                 );
                 Ok((new_ctx, Cst::from(res)))
             }

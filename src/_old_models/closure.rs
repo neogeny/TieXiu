@@ -40,7 +40,7 @@ pub struct PositiveGather<'c, C> {
 }
 
 
-pub fn skip_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
+fn _skip_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
 {
     match exp.parse(ctx) {
         Ok((new_ctx, _)) => {
@@ -51,7 +51,7 @@ pub fn skip_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C>
 }
 
 
-pub fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C>
+fn _add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C>
 {
         match exp.parse(ctx) {
             Ok((new_ctx, cst)) => {
@@ -66,7 +66,7 @@ pub fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Res
 pub fn repeat<C: Ctx>(res: &mut Vec<Cst>, mut ctx: C, exp: &dyn CanParse<C>) -> C
 {
     loop {
-        match add_exp(exp, ctx, res) {
+        match _add_exp(exp, ctx, res) {
             Ok(new_ctx) => ctx = new_ctx,
             Err(err_ctx) => return err_ctx
         }
@@ -74,7 +74,7 @@ pub fn repeat<C: Ctx>(res: &mut Vec<Cst>, mut ctx: C, exp: &dyn CanParse<C>) -> 
 }
 
 
-pub fn repeat_with_pre<C: Ctx>(
+fn _repeat_with_pre<C: Ctx>(
     res: &mut Vec<Cst>,
     mut ctx: C, 
     exp: &dyn CanParse<C>, 
@@ -135,9 +135,9 @@ impl<'c, C: Ctx> CanParse<C> for Join<'c, C>
     fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
-        match add_exp(self.exp, ctx, &mut res) {
+        match _add_exp(self.exp, ctx, &mut res) {
             Ok(new_ctx) => {
-                let ctx = repeat_with_pre(&mut res, new_ctx, self.exp, self.sep, true);
+                let ctx = _repeat_with_pre(&mut res, new_ctx, self.exp, self.sep, true);
                 Ok((ctx, Cst::from(res)))
             },
             Err(err_ctx) => Ok((err_ctx, Cst::from(res)))
@@ -158,7 +158,7 @@ impl<'c, C: Ctx> CanParse<C> for PositiveJoin<'c, C>
             err => return err
         };
 
-        let new_ctx = repeat_with_pre(&mut res, ctx, self.exp, self.sep, true);
+        let new_ctx = _repeat_with_pre(&mut res, ctx, self.exp, self.sep, true);
         Ok((new_ctx, Cst::from(res)))
     }
 }
@@ -168,9 +168,9 @@ impl<'c, C: Ctx> CanParse<C> for Gather<'c, C>
     fn parse(&self, ctx: C) -> ParseResult<C> {
         let mut res: Vec<Cst> = Vec::new();
 
-        match add_exp(self.exp, ctx, &mut res) {
+        match _add_exp(self.exp, ctx, &mut res) {
             Ok(new_ctx) => {
-                let ctx = repeat_with_pre(
+                let ctx = _repeat_with_pre(
                     &mut res, new_ctx, self.exp, self.sep, false
                 );
                 Ok((ctx, Cst::from(res)))
@@ -193,7 +193,7 @@ impl<'c, C: Ctx> CanParse<C> for PositiveGather<'c, C>
             err => return err
         };
 
-        let new_ctx = repeat_with_pre(
+        let new_ctx = _repeat_with_pre(
             &mut res, ctx, self.exp, self.sep, false
         );
         Ok((new_ctx, Cst::from(res)))

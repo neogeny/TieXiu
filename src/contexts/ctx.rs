@@ -1,17 +1,16 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::collections::HashMap;
+// use std::collections::HashMap;
 // use std::collections::HashMap;
 // use std::rc::Rc;
 use std::fmt::Debug;
 use crate::input::{Cursor, StrCursor};
-use crate::grammars::Rule;
 
 
 pub trait Ctx: Clone + Debug
 {
-    fn resolve(&self, name: &str) -> &Rule<'_, Self>;
+    // fn resolve(&self, name: &str) -> &Rule<'_, Self>;
     fn mark(&self) -> usize;
     fn dot(&self) -> bool;
     fn eof_check(&self) -> bool;
@@ -29,8 +28,7 @@ pub trait Ctx: Clone + Debug
 #[derive(Clone, Debug)]
 pub struct StrCtx<'c> {
     cursor: StrCursor<'c>,
-    _cut_seen: bool,
-    rules: HashMap<&'c str, Rule<'c, Self>>,
+    _cut_seen: bool
 }
 
 impl<'c> StrCtx<'c> {
@@ -38,17 +36,17 @@ impl<'c> StrCtx<'c> {
        Self {
            cursor,
            _cut_seen: false,
-           rules: HashMap::new(),
+           // rules: HashMap::new(),
        } 
     }
 }
 
 impl<'c> Ctx for StrCtx<'c> {
-    fn resolve(&self, name: &str) -> &Rule<'_, Self> {
-        self.rules
-            .get(name)
-            .expect("Grammar Error: Rule not found")
-    }
+    // fn resolve(&self, name: &str) -> &Rule<'_, Self> {
+    //     self.rules
+    //         .get(name)
+    //         .expect("Grammar Error: Rule not found")
+    // }
 
     fn mark(&self) -> usize {
         self.cursor.mark()
@@ -101,7 +99,7 @@ impl<'c> Ctx for StrCtx<'c> {
 }
 
 #[derive(Clone, Debug)]
-pub struct Ctximpl<'c>
+pub struct CtxImpl<'c>
 {
     pub cursor: &'c dyn Cursor,
     pub cut_seen : bool,
