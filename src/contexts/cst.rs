@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::ast::Ast;
+use super::json::Json;
 pub use std::ops::Add;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -30,6 +31,13 @@ impl<const N: usize> From<[Cst; N]> for Cst {
         Cst::List(arr.into())
     }
 }
+
+impl From<&Cst> for Json {
+    fn from(cst: &Cst) -> Self {
+        cst.to_json()
+    }
+}
+
 
 impl Add for Cst {
     type Output = Self;

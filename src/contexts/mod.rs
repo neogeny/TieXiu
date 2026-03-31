@@ -10,6 +10,7 @@ pub mod memo;
 mod parsed;
 mod ruleinfo;
 pub mod strctx;
+pub mod json;
 
 pub use ast::*;
 pub use cst::*;

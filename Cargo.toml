@@ -18,9 +18,11 @@ exclude = [
 
 [features]
 regex = ["dep:regex"]
+serde_json = ["dep:serde_json"]
 
 [dependencies]
 regex = { version = "1.10", optional = true }
+serde_json = { version = "1.0.149", optional = true }
 #pyo3 = { version = "0.28.2", features = ["extension-module"]}
 #pyo3 = { version = "0.28.2", features = ["extension-module"], optional = true }
 
