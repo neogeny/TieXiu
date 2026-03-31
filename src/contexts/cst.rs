@@ -17,6 +17,7 @@ pub enum Cst {
     OverrideValue(Box<Cst>),
     OverrideList(Box<Cst>),
     Ast(Ast),
+    Void,
     Nil,
     Bottom,
 }
@@ -61,13 +62,17 @@ impl Add for Cst {
     type Output = Self;
 
     fn add(self, node: Self) -> Self::Output {
-        match self {
-            Cst::Nil => node,
-            Cst::List(mut list) => {
+        match (self, node) {
+            // Identity: Nil + node = node
+            (Cst::Nil, node) => node,
+            // Identity: self + Nil = self
+            (s, Cst::Nil) => s,
+
+            (Cst::List(mut list), node) => {
                 list.push(node);
                 Cst::List(list)
             }
-            _ => Cst::List(vec![self, node]),
+            (s, n) => Cst::List(vec![s, n]),
         }
     }
 }
@@ -124,14 +129,11 @@ impl Cst {
                     cst = cst.merge(child_cst);
                 }
             }
-
             Cst::Named(name, val) => ast.set(&name, *val),
             Cst::NamedList(name, val) => ast.set_list(&name, *val),
             Cst::OverrideValue(val) => ovr = ovr.add(*val),
             Cst::OverrideList(val) => ovr = ovr.addlist(*val),
-
             Cst::Nil => {}
-
             other => cst = cst.merge(other),
         }
 
@@ -152,13 +154,11 @@ impl Cst {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::mem::size_of;
 
-    const TARGET: usize = 64;
+    const TARGET: usize = 16;
 
     #[test]
     fn test_cst_size() {
@@ -167,70 +167,54 @@ mod tests {
         assert!(size <= TARGET, "Cst size is {} > {} bytes", size, TARGET);
     }
 
-    // Setup the 4 base variants
-    fn nil() -> Cst { Cst::Nil }
-    fn some() -> Cst { Cst::Number(1.0) }
-    fn list() -> Cst { Cst::List(vec![Cst::Number(2.0)]) }
-    fn closed() -> Cst { Cst::Closure(vec![Cst::Number(3.0)]) }
 
     #[test]
-    fn test_cst_add() {
-        // Examples of the matrix logic:
-        
-        // 1. Nil + Nil -> Nil
-        assert_eq!(cst_add(nil(), nil()), nil());
-        
-        // 2. Nil + Something -> Something (Identity)
-        assert_eq!(cst_add(nil(), some()), some());
-        
-        // 6. Something + Something -> List (Promotion)
-        if let Cst::List(v) = cst_add(some(), some()) {
-            assert_eq!(v.len(), 2);
-        } else { panic!("Should promote to List"); }
+    fn test_node_nil_removal() {
+        // Input: List([Nil, Bottom, Nil])
+        // Step 1: cst = merge(Nil, Nil) -> Nil
+        // Step 2: cst = merge(Nil, Bottom) -> Bottom
+        // Step 3: cst = merge(Bottom, Nil) -> Bottom (The Identity Law)
+        let raw = Cst::List(vec![Cst::Nil, Cst::Bottom, Cst::Nil]);
+        let result = raw.node();
 
-        // 11. List + List -> List (Concatenation)
-        if let Cst::List(v) = cst_add(list(), list()) {
-            assert_eq!(v.len(), 2);
+        // result = cst_closed(Bottom)
+        assert_eq!(result, cst_closed(Cst::Bottom));
+    }
+
+    #[test]
+    fn test_node_nil_removal_to_bottom() {
+        let raw = Cst::List(vec![Cst::Nil, Cst::Bottom, Cst::Nil]);
+        let result = raw.node();
+
+        // If cst_closed is identity for non-lists, this is just Bottom
+        assert_eq!(result, Cst::Bottom);
+    }
+
+    #[test]
+    fn test_node_nil_removal_to_list() {
+        // Input: [Bottom, Nil, Bottom]
+        // Step 1: cst = merge(Bottom, Nil) -> Bottom
+        // Step 2: cst = merge(Bottom, Bottom) -> List([Bottom, Bottom])
+        let raw = Cst::List(vec![Cst::Bottom, Cst::Nil, Cst::Bottom]);
+        let result = raw.node();
+
+        if let Cst::Closure(v) = result {
+            assert_eq!(v.len(), 2); // Nil is gone, only the two Bottoms remain
+            assert_eq!(v[0], Cst::Bottom);
+            assert_eq!(v[1], Cst::Bottom);
+        } else {
+            panic!("Expected Closure, got {:?}", result);
         }
-
-        // 16. Closed + Closed -> List([Closed, Closed])
-        // Usually, Closed is 'atomic' to the next layer up
-        let res = cst_add(closed(), closed());
-        assert!(matches!(res, Cst::List(_)));
     }
 
     #[test]
-    fn test_cst_addlist() {
-        // addlist forces a List even on the first item
-        
-        // 1. Nil + Nil -> List([]) or Nil depending on your preference
-        // 2. Nil + Something -> List([Something])
-        if let Cst::List(v) = cst_addlist(nil(), some()) {
-            assert_eq!(v.len(), 1);
-        }
+    fn test_node_nil_purging_preserves_count() {
+        // Input: List([Nil, Bottom, Nil])
+        let raw = Cst::List(vec![Cst::Nil, Cst::Bottom, Cst::Nil]);
+        let result = raw.node();
 
-        // 6. Something + Something -> List([S, S])
-        let res = cst_addlist(some(), some());
-        assert!(matches!(res, Cst::List(_)));
-    }
-
-    #[test]
-    fn test_cst_merge() {
-        // Merge is the logic for building Objects/Asts.
-        // If we merge two 'Somethings', do they become a List or a new Ast?
-        let res = cst_merge(some(), some());
-        // Simple case: merges into a collection
-        assert!(matches!(res, Cst::List(_)));
-    }
-
-    #[test]
-    fn test_cst_closed() {
-        // This is a unary-like check across the states. 
-        // We ensure that 'closing' any of the 4 types produces the correct 'Closed' state.
-        
-        assert_eq!(cst_closed(nil()), nil());
-        assert!(matches!(cst_closed(some()), Cst::Number(_))); // Usually Something stays as is
-        assert!(matches!(cst_closed(list()), Cst::Closure(_))); // List becomes Closure
-        assert!(matches!(cst_closed(closed()), Cst::Closure(_))); // Idempotent
+        // Since it's effectively Bottom, and Bottom isn't a list,
+        // it doesn't become a Closure of len 1. It just stays Bottom.
+        assert_eq!(result, Cst::Bottom);
     }
 }

@@ -27,7 +27,7 @@ impl Ast {
 impl Cst {
     pub fn to_json(&self) -> Json {
         match self {
-            Cst::Nil | Cst::Bottom => Json::Null,
+            Cst::Nil | Cst::Bottom | Cst::Void => Json::Null,
             Cst::Token(s) | Cst::Literal(s) => Json::String(s.clone()),
             Cst::List(v) | Cst::Closure(v) => {
                 Json::Array(v.iter().map(|c| c.to_json()).collect())

@@ -75,7 +75,7 @@ where
                 ctx.cut();
                 Ok((ctx, Cst::Nil))
             }
-            Self::Void => Ok((ctx, Cst::Nil)),
+            Self::Void => Ok((ctx, Cst::Void)),
             Self::Fail => Err(ctx),
             Self::Dot => {
                 if ctx.next().is_some() {
