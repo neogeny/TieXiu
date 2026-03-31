@@ -10,3 +10,4 @@ pub mod rule;
 
 pub use model::Model;
 pub use parser::{ParseResult, Parser};
+pub use rule::Rule;

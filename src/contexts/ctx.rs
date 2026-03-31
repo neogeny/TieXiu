@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::memo::Cache;
+use crate::contexts::Cst;
 use crate::grammars::{ParseResult, Parser};
 use crate::input::{Cursor, StrCursor};
 use std::cell::RefCell;
@@ -28,7 +29,7 @@ pub trait Ctx: Clone + Debug {
 pub struct StrCtx<'c> {
     cursor: Box<StrCursor<'c>>,
     cutseen: bool,
-    cache: Rc<RefCell<Cache<'c, Self>>>,
+    cache: Rc<RefCell<Cache<'c>>>,
 }
 
 impl<'c> StrCtx<'c> {
@@ -41,16 +42,42 @@ impl<'c> StrCtx<'c> {
         }
     }
 
+    pub fn memo(&mut self, name: &str) -> Option<Cst> {
+        let mut cache = self.cache.borrow_mut();
+        cache.memo(self.cursor.mark(), name)
+    }
+
+    pub fn memoize(&mut self, name: &str, cst: &Cst) {
+        let mut cache = self.cache.borrow_mut();
+        cache.memoize(self.cursor.mark(), name, cst);
+    }
+
     pub fn parser(&mut self, name: &str) -> &'c dyn Parser<Self> {
         let mut cache = self.cache.borrow_mut();
-        cache.parser(self.cursor.mark(), name)
+        cache.rule(name)
     }
 }
 
 impl<'c> Ctx for StrCtx<'c> {
     fn call(mut self, name: &str) -> ParseResult<Self> {
+        if let Some(cst) = self.memo(name) {
+            return match cst {
+                Cst::Bottom => Err(self),
+                _ => Ok((self, cst)),
+            };
+        }
+
         let rule = self.parser(name);
-        rule.parse(self)
+        match rule.parse(self) {
+            Ok((mut ctx, cst)) => {
+                ctx.memoize(name, &cst);
+                Ok((ctx, cst))
+            },
+            Err(mut ctx) => {
+                ctx.memoize(name, &Cst::Bottom);
+                Err(ctx)
+            }
+        }
     }
 
     fn mark(&self) -> usize {
@@ -98,7 +125,7 @@ impl<'c> Ctx for StrCtx<'c> {
 mod tests {
     use super::*;
     use std::mem::size_of;
-    
+
     const TARGET: usize = 32;
 
     #[test]
@@ -112,6 +139,11 @@ mod tests {
     fn test_cursor_size() {
         let size = size_of::<StrCursor>();
         // StrCursor contains &str (16) and usize (8) = 24 bytes.
-        assert!(size <= TARGET, "StrCursor size is {} > {} bytes", size, TARGET);
+        assert!(
+            size <= TARGET,
+            "StrCursor size is {} > {} bytes",
+            size,
+            TARGET
+        );
     }
 }

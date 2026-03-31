@@ -16,6 +16,7 @@ pub enum Cst {
     OverrideList(Box<Cst>),
     Ast(Ast),
     Nil,
+    Bottom,
 }
 
 impl From<Vec<Cst>> for Cst {

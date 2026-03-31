@@ -1,7 +1,6 @@
-use std::rc::Rc;
 use super::Cursor;
 use regex::Regex;
-
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Patterns<'a> {
@@ -14,7 +13,7 @@ pub struct Patterns<'a> {
 pub struct StrCursor<'a> {
     text: &'a str,
     offset: usize,
-    patterns: Rc<Patterns<'a>>
+    patterns: Rc<Patterns<'a>>,
 }
 
 impl<'a> StrCursor<'a> {
