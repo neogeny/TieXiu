@@ -18,7 +18,7 @@ fn test_build() {
     // let cl = Call::new("test");
     let seq = Model::Sequence([a, b, c, v].into());
 
-    let cur = StrCursor::new("a b c", 0);
+    let cur = StrCursor::new("a b c", 0, r"\s+", r"#.*$", r"");
     let ctx = StrCtx::new(cur);
 
     let cst = seq.parse(ctx);

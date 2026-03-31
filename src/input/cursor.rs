@@ -10,6 +10,9 @@ pub trait Cursor: Debug {
     fn at_end(&self) -> bool;
     fn next(&mut self) -> Option<char>;
     fn token(&mut self, token: &str) -> bool;
+    fn pattern(&mut self, pattern: &str) -> Option<&str>;
+    fn next_token(&mut self);
+    fn eat_pattern(&mut self, pattern: &str) -> bool;
     //
     // /// The full source text from the provider.
     // fn source(&self) -> &'a str;
@@ -27,7 +30,6 @@ pub trait Cursor: Debug {
     //
     // // Tokenization Logic
     // fn current(&self) -> Option<&'a str>;
-    // fn next_token(&mut self);
     // fn match_str(&mut self, token: &str) -> Option<&'a str>;
     // fn match_re(&mut self, pattern: &str) -> Option<&'a str>;
     //

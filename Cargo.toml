@@ -17,6 +17,7 @@ exclude = [
 #python = ["dep:pyo3"]
 
 [dependencies]
+regex = "1.10"
 #pyo3 = { version = "0.28.2", features = ["extension-module"]}
 #pyo3 = { version = "0.28.2", features = ["extension-module"], optional = true }
 

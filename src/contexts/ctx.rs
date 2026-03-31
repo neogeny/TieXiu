@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::grammars::{Parser, ParseResult};
+use crate::grammars::{ParseResult, Parser};
 use crate::input::{Cursor, StrCursor};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -9,12 +9,12 @@ use std::fmt::Debug;
 pub trait Ctx: Clone + Debug {
     fn call(self, name: &str) -> ParseResult<Self>;
     fn mark(&self) -> usize;
-    fn dot(&mut self) -> bool;
     fn eof_check(&self) -> bool;
+    fn dot(&mut self) -> bool;
     fn next(&mut self) -> Option<char>;
-    fn token(&self, token: &str) -> bool;
-    fn pattern(&self, pattern: &str) -> bool;
-    fn search(&self, pattern: &str) -> bool;
+    fn token(&mut self, token: &str) -> bool;
+    fn pattern(&mut self, pattern: &str) -> Option<&str>;
+    fn next_token(&mut self);
 
     fn cut(&mut self);
     fn uncut(&mut self);
@@ -48,36 +48,28 @@ impl<'c> Ctx for StrCtx<'c> {
         self.cursor.mark()
     }
 
-    fn dot(&mut self) -> bool {
-        self.next().is_some()
-    }
-
     fn eof_check(&self) -> bool {
         self.cursor.at_end()
+    }
+
+    fn dot(&mut self) -> bool {
+        self.next().is_some()
     }
 
     fn next(&mut self) -> Option<char> {
         self.cursor.next()
     }
 
-    fn token<'p>(&self, _token: &str) -> bool {
-        // if self.cursor.token(token) {
-        //     Ok(
-        //         (self, Cst::Token(token.into()))
-        //     )
-        // }
-        // else {
-        //     Err(self)
-        // }
-        unimplemented!()
+    fn token(&mut self, token: &str) -> bool {
+        self.cursor.token(token)
     }
 
-    fn pattern(&self, _pattern: &str) -> bool {
-        unimplemented!()
+    fn pattern(&mut self, pattern: &str) -> Option<&str> {
+        self.cursor.pattern(pattern)
     }
 
-    fn search(&self, _pattern: &str) -> bool {
-        unimplemented!()
+    fn next_token(&mut self) {
+        self.cursor.next_token();
     }
 
     fn cut(&mut self) {
@@ -91,12 +83,4 @@ impl<'c> Ctx for StrCtx<'c> {
     fn cut_seen(&self) -> bool {
         self._cut_seen
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct CtxImpl<'c> {
-    pub cursor: &'c dyn Cursor,
-    pub cut_seen: bool,
-    pub error_msg: Option<String>,
-    // pub rules: Rc<HashMap<&'c str, &'c Rule<'c, CtxImpl>>>,
 }

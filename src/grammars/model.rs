@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::parser::{Parser, ParseResult};
+use super::parser::{ParseResult, Parser};
 use super::repeat::{add_exp, repeat, repeat_with_pre};
 use crate::contexts::{Cst, Ctx};
 use std::fmt::Debug;
@@ -138,10 +138,10 @@ where
                 match exp.parse(ctx) {
                     Err(mut errctx) => {
                         if !errctx.dot() {
-                            return Err(errctx)
+                            return Err(errctx);
                         }
                         ctx = errctx;
-                    },
+                    }
                     ok => break ok,
                 }
             },
