@@ -6,6 +6,6 @@ use std::fmt::Debug;
 
 pub type ParseResult<C> = Result<(C, Cst), C>;
 
-pub trait CanParse<C: Ctx>: Debug {
+pub trait Parser<C: Ctx>: Debug {
     fn parse(&self, ctx: C) -> ParseResult<C>;
 }

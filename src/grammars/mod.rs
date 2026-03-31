@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #![allow(dead_code)]
-pub mod canparse;
+pub mod parser;
 pub mod model;
 pub mod repeat;
 
-pub use canparse::{CanParse, ParseResult};
+pub use parser::{Parser, ParseResult};
 pub use model::Model;

@@ -1,17 +1,17 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::canparse::CanParse;
+use super::parser::Parser;
 use crate::contexts::{Cst, Ctx};
 
-pub fn skip_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C) -> Result<C, C> {
+pub fn skip_exp<C: Ctx>(exp: &dyn Parser<C>, ctx: C) -> Result<C, C> {
     match exp.parse(ctx) {
         Ok((new_ctx, _)) => Ok(new_ctx),
         Err(err) => Err(err),
     }
 }
 
-pub fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C> {
+pub fn add_exp<C: Ctx>(exp: &dyn Parser<C>, ctx: C, res: &mut Vec<Cst>) -> Result<C, C> {
     match exp.parse(ctx) {
         Ok((new_ctx, cst)) => {
             res.push(cst);
@@ -21,7 +21,7 @@ pub fn add_exp<C: Ctx>(exp: &dyn CanParse<C>, ctx: C, res: &mut Vec<Cst>) -> Res
     }
 }
 
-pub fn repeat<C: Ctx>(exp: &dyn CanParse<C>, mut ctx: C, res: &mut Vec<Cst>) -> C {
+pub fn repeat<C: Ctx>(exp: &dyn Parser<C>, mut ctx: C, res: &mut Vec<Cst>) -> C {
     loop {
         match add_exp(exp, ctx, res) {
             Ok(new_ctx) => ctx = new_ctx,
@@ -31,8 +31,8 @@ pub fn repeat<C: Ctx>(exp: &dyn CanParse<C>, mut ctx: C, res: &mut Vec<Cst>) -> 
 }
 
 pub fn repeat_with_pre<C: Ctx>(
-    exp: &dyn CanParse<C>,
-    pre: &dyn CanParse<C>,
+    exp: &dyn Parser<C>,
+    pre: &dyn Parser<C>,
     mut ctx: C,
     res: &mut Vec<Cst>,
     keep_pre: bool,

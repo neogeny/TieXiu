@@ -1,18 +1,17 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::collections::HashMap;
+use crate::grammars::{Parser, ParseResult};
 use crate::input::{Cursor, StrCursor};
-use crate::grammars::{CanParse, ParseResult};
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
-    // fn resolve(&self, name: &str) -> Box<dyn CanParse<Self>>;
     fn call(self, name: &str) -> ParseResult<Self>;
     fn mark(&self) -> usize;
-    fn dot(&self) -> bool;
+    fn dot(&mut self) -> bool;
     fn eof_check(&self) -> bool;
-    fn next(&self) -> Option<char>;
+    fn next(&mut self) -> Option<char>;
     fn token(&self, token: &str) -> bool;
     fn pattern(&self, pattern: &str) -> bool;
     fn search(&self, pattern: &str) -> bool;
@@ -26,7 +25,7 @@ pub trait Ctx: Clone + Debug {
 pub struct StrCtx<'c> {
     cursor: StrCursor<'c>,
     _cut_seen: bool,
-    rulemap: HashMap<&'c str, &'c dyn CanParse<Self>>,
+    rulemap: HashMap<&'c str, &'c dyn Parser<Self>>,
 }
 
 impl<'c> StrCtx<'c> {
@@ -40,17 +39,8 @@ impl<'c> StrCtx<'c> {
 }
 
 impl<'c> Ctx for StrCtx<'c> {
-    // fn resolve(&self, name: &str) -> Box<dyn CanParse<Self>> {
-    //     let rule = self.rulemap
-    //         .get(name)
-    //         .expect("Rule not found");
-    //     Box::new(rule)
-    // }
-
     fn call(self, name: &str) -> ParseResult<Self> {
-        let rule = self.rulemap
-            .get(name)
-            .expect("Rule not found");
+        let rule = self.rulemap.get(name).expect("Rule not found");
         rule.parse(self)
     }
 
@@ -58,17 +48,16 @@ impl<'c> Ctx for StrCtx<'c> {
         self.cursor.mark()
     }
 
-    fn dot<'a>(&self) -> bool {
-        unimplemented!()
+    fn dot(&mut self) -> bool {
+        self.next().is_some()
     }
 
     fn eof_check(&self) -> bool {
-        unimplemented!()
+        self.cursor.at_end()
     }
 
-    fn next(&self) -> Option<char> {
-        // do it with cursor goto(+1)?
-        unimplemented!()
+    fn next(&mut self) -> Option<char> {
+        self.cursor.next()
     }
 
     fn token<'p>(&self, _token: &str) -> bool {

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::canparse::{CanParse, ParseResult};
+use super::parser::{Parser, ParseResult};
 use super::repeat::{add_exp, repeat, repeat_with_pre};
 use crate::contexts::{Cst, Ctx};
 use std::fmt::Debug;
@@ -51,26 +51,24 @@ pub enum Model {
 
 impl Model {
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
-        <Self as CanParse<C>>::parse(self, ctx)
+        <Self as Parser<C>>::parse(self, ctx)
     }
 }
 
-impl<C> CanParse<C> for Model
+impl<C> Parser<C> for Model
 where
     C: Ctx,
 {
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         match self {
-            Self::Call(name) => {
-                match ctx.call(name) {
-                    Ok((mut ctx, cst)) => {
-                        ctx.uncut();
-                        Ok((ctx, cst))
-                    },
-                    Err(mut err_ctx) => {
-                        err_ctx.uncut();
-                        Err(err_ctx)
-                    }
+            Self::Call(name) => match ctx.call(name) {
+                Ok((mut ctx, cst)) => {
+                    ctx.uncut();
+                    Ok((ctx, cst))
+                }
+                Err(mut err_ctx) => {
+                    err_ctx.uncut();
+                    Err(err_ctx)
                 }
             },
             Self::Cut => {
@@ -138,11 +136,11 @@ where
             }
             Self::SkipTo(exp) => loop {
                 match exp.parse(ctx) {
-                    Err(errctx) => match errctx.next() {
-                        None => break Err(errctx),
-                        Some(_) => {
-                            ctx = errctx;
+                    Err(mut errctx) => {
+                        if !errctx.dot() {
+                            return Err(errctx)
                         }
+                        ctx = errctx;
                     },
                     ok => break ok,
                 }
@@ -166,8 +164,8 @@ where
                     match option.parse(ctx) {
                         Ok((mut ctx, cst)) => {
                             ctx.uncut();
-                            return Ok((ctx, cst))
-                        },
+                            return Ok((ctx, cst));
+                        }
                         Err(mut err_ctx) => {
                             if err_ctx.cut_seen() {
                                 err_ctx.uncut();
