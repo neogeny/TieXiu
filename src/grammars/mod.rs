@@ -6,5 +6,5 @@ pub mod canparse;
 pub mod model;
 pub mod repeat;
 
-pub use canparse::CanParse;
+pub use canparse::{CanParse, ParseResult};
 pub use model::Model;

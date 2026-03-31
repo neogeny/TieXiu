@@ -18,6 +18,9 @@ pub enum Model {
     Fail,
     Dot,
     Eof,
+
+    Call(Str),
+
     Token(Str),
     Constant(Str),
     Alert(Str, u8),
@@ -58,6 +61,18 @@ where
 {
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         match self {
+            Self::Call(name) => {
+                match ctx.call(name) {
+                    Ok((mut ctx, cst)) => {
+                        ctx.uncut();
+                        Ok((ctx, cst))
+                    },
+                    Err(mut err_ctx) => {
+                        err_ctx.uncut();
+                        Err(err_ctx)
+                    }
+                }
+            },
             Self::Cut => {
                 ctx.cut();
                 Ok((ctx, Cst::Nil))
@@ -149,7 +164,10 @@ where
             Self::Choice(options) => {
                 for option in options.iter() {
                     match option.parse(ctx) {
-                        Ok(res) => return Ok(res),
+                        Ok((mut ctx, cst)) => {
+                            ctx.uncut();
+                            return Ok((ctx, cst))
+                        },
                         Err(mut err_ctx) => {
                             if err_ctx.cut_seen() {
                                 err_ctx.uncut();
