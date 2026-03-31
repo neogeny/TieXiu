@@ -92,11 +92,13 @@ impl<'a, 'g> LeftRecursionAnalysis<'a, 'g> {
         let target_depth = *self.node_depth.get(&target_rhs).unwrap_or(&0) as isize;
         let parent_depth = *self.depth_stack.last().unwrap();
 
-        if is_cutoff && target_depth > parent_depth
-            && let Some(rule) = self.rules.get_mut(target_name) {
-                rule.is_memo = false;
-                rule.is_lrec = true;
-            }
+        if is_cutoff
+            && target_depth > parent_depth
+            && let Some(rule) = self.rules.get_mut(target_name)
+        {
+            rule.is_memo = false;
+            rule.is_lrec = true;
+        }
 
         self.depth_stack.pop();
     }

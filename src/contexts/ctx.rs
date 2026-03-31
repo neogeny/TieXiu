@@ -1,18 +1,12 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::memo::Cache;
-use crate::contexts::Cst;
-use crate::grammars::{ParseResult, Parser};
-use crate::input::{Cursor, StrCursor};
-use std::cell::RefCell;
-use std::collections::HashMap;
+use super::cst::Cst;
+use super::memo::{Cache, Key, Memo};
+use crate::grammars::{ParseResult, Rule};
 use std::fmt::Debug;
-use std::rc::Rc;
 
 pub trait Ctx: Clone + Debug {
-    fn call(self, name: &str) -> ParseResult<Self>;
-    fn mark(&self) -> usize;
     fn eof_check(&self) -> bool;
     fn dot(&mut self) -> bool;
     fn next(&mut self) -> Option<char>;
@@ -20,130 +14,100 @@ pub trait Ctx: Clone + Debug {
     fn pattern(&mut self, pattern: &str) -> Option<&str>;
     fn next_token(&mut self);
 
+    fn key(&self, name: &str) -> Key {
+        Cache::key(self.mark(), name)
+    }
+    fn mark(&self) -> usize;
+    fn reset(&mut self, mark: usize);
+    fn memo(&mut self, key: &Key) -> Option<Memo>;
+    fn memoize(&mut self, key: &Key, cst: &Cst);
+
     fn cut(&mut self);
     fn uncut(&mut self);
     fn cut_seen(&self) -> bool;
-}
 
-#[derive(Clone, Debug)]
-pub struct StrCtx<'c> {
-    cursor: Box<StrCursor<'c>>,
-    cutseen: bool,
-    cache: Rc<RefCell<Cache<'c>>>,
-}
+    fn parser(&self, name: &str) -> (Self, &Rule<'_>);
 
-impl<'c> StrCtx<'c> {
-    pub fn new(cursor: StrCursor<'c>) -> Self {
-        let map = HashMap::new();
-        Self {
-            cursor: cursor.into(),
-            cutseen: false,
-            cache: Rc::new(RefCell::new(Cache::new(map))),
-        }
-    }
-
-    pub fn memo(&mut self, name: &str) -> Option<Cst> {
-        let mut cache = self.cache.borrow_mut();
-        cache.memo(self.cursor.mark(), name)
-    }
-
-    pub fn memoize(&mut self, name: &str, cst: &Cst) {
-        let mut cache = self.cache.borrow_mut();
-        cache.memoize(self.cursor.mark(), name, cst);
-    }
-
-    pub fn parser(&mut self, name: &str) -> &'c dyn Parser<Self> {
-        let mut cache = self.cache.borrow_mut();
-        cache.rule(name)
-    }
-}
-
-impl<'c> Ctx for StrCtx<'c> {
     fn call(mut self, name: &str) -> ParseResult<Self> {
-        if let Some(cst) = self.memo(name) {
-            return match cst {
+        let key = self.key(name);
+
+        if let Some(memo) = self.memo(&key) {
+            return match memo.cst {
                 Cst::Bottom => Err(self),
-                _ => Ok((self, cst)),
+                _ => {
+                    self.reset(memo.mark);
+                    Ok((self, memo.cst))
+                }
             };
         }
 
-        let rule = self.parser(name);
-        match rule.parse(self) {
+        let (ctx, rule) = self.parser(name);
+        if rule.is_lrec {
+            return ctx.recursive_call(rule);
+        }
+
+        match rule.parse(ctx) {
             Ok((mut ctx, cst)) => {
-                ctx.memoize(name, &cst);
+                ctx.memoize(&key, &cst);
                 Ok((ctx, cst))
             }
             Err(mut ctx) => {
-                ctx.memoize(name, &Cst::Bottom);
+                ctx.memoize(&key, &Cst::Bottom);
                 Err(ctx)
             }
         }
     }
 
-    fn mark(&self) -> usize {
-        self.cursor.mark()
-    }
+    fn recursive_call(mut self, rule: &Rule) -> ParseResult<Self> {
+        let key = self.key(rule.name);
+        let start_mark = self.mark();
 
-    fn eof_check(&self) -> bool {
-        self.cursor.at_end()
-    }
+        // Fast Path: Non-LRec rules
+        if !rule.is_lrec {
+            panic!("Recursive call on non-LRec rule {}", rule.name);
+        }
 
-    fn dot(&mut self) -> bool {
-        self.next().is_some()
-    }
+        // The Seed-Growing Loop (LRec Ratchet)
+        // Plant the seed. memoize() will record the current (start) mark.
+        self.memoize(&key, &Cst::Bottom);
 
-    fn next(&mut self) -> Option<char> {
-        self.cursor.next()
-    }
+        let mut best_cst: Option<Cst> = None;
+        let mut high_water_mark = start_mark;
 
-    fn token(&mut self, token: &str) -> bool {
-        self.cursor.token(token)
-    }
+        loop {
+            // Prospecting: attempt a fresh parse from the original start
+            let mut trial_ctx = self.clone();
+            trial_ctx.reset(start_mark);
 
-    fn pattern(&mut self, pattern: &str) -> Option<&str> {
-        self.cursor.pattern(pattern)
-    }
+            match rule.parse(trial_ctx) {
+                Ok((next_ctx, new_cst)) => {
+                    let end_mark = next_ctx.mark();
 
-    fn next_token(&mut self) {
-        self.cursor.next_token();
-    }
+                    // Progress Check: Did we move the cursor further?
+                    if end_mark > high_water_mark {
+                        high_water_mark = end_mark;
+                        best_cst = Some(new_cst.clone());
 
-    fn cut(&mut self) {
-        self.cutseen = true;
-    }
+                        // Update the shared memo with the new 'End Mark'
+                        // next_ctx.memoize() captures its own 'end_mark' internally.
+                        self.memoize(&key, &new_cst);
 
-    fn uncut(&mut self) {
-        self.cutseen = false;
-    }
+                        // Advance our primary context to this successful state
+                        self = next_ctx;
+                    } else {
+                        // Fixed point reached
+                        break;
+                    }
+                }
+                Err(_) => break, // No further growth possible
+            }
+        }
 
-    fn cut_seen(&self) -> bool {
-        self.cutseen
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::mem::size_of;
-
-    const TARGET: usize = 32;
-
-    #[test]
-    fn test_ctx_size() {
-        let size = size_of::<StrCtx>();
-        // 24 bytes: Box (8) + Rc (8) + bool/padding (8)
-        assert!(size <= TARGET, "StrCtx size is {} > {} bytes", size, TARGET);
-    }
-
-    #[test]
-    fn test_cursor_size() {
-        let size = size_of::<StrCursor>();
-        // StrCursor contains &str (16) and usize (8) = 24 bytes.
-        assert!(
-            size <= TARGET,
-            "StrCursor size is {} > {} bytes",
-            size,
-            TARGET
-        );
+        // 4. Finalize
+        if let Some(final_cst) = best_cst {
+            Ok((self, final_cst))
+        } else {
+            Err(self)
+        }
     }
 }

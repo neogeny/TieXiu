@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use tiexiu::contexts::StrCtx;
+use tiexiu::contexts::strctx::StrCtx;
 use tiexiu::grammars::Model;
 use tiexiu::input::StrCursor;
 

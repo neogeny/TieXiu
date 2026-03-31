@@ -5,9 +5,11 @@
 mod ast;
 mod cst;
 mod ctx;
+pub mod leftrec;
 pub mod memo;
 mod parsed;
 mod ruleinfo;
+pub mod strctx;
 
 pub use ast::*;
 pub use cst::*;

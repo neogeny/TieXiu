@@ -21,6 +21,10 @@ impl<'r> Rule<'r> {
             rhs,
         }
     }
+
+    pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
+        (self as &dyn Parser<C>).parse(ctx)
+    }
 }
 
 impl<'r, C> Parser<C> for Rule<'r>

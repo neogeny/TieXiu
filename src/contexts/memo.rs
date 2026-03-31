@@ -8,10 +8,16 @@ use std::collections::HashMap;
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Key(usize, String);
 
+#[derive(Clone, Debug)]
+pub struct Memo {
+    pub cst: Cst,
+    pub mark: usize,
+}
+
 #[derive(Debug)]
 pub struct Cache<'c> {
     parsers: HashMap<&'c str, &'c Rule<'c>>,
-    memos: HashMap<Key, Cst>,
+    memos: HashMap<Key, Memo>,
 }
 
 impl<'c> Cache<'c> {
@@ -24,14 +30,20 @@ impl<'c> Cache<'c> {
 }
 
 impl<'c> Cache<'c> {
-    pub fn memo(&mut self, mark: usize, name: &str) -> Option<Cst> {
-        let key = Key(mark, name.into());
-        self.memos.get(&key).cloned()
+    pub fn key(mark: usize, name: &str) -> Key {
+        Key(mark, name.into())
     }
 
-    pub fn memoize(&mut self, mark: usize, name: &str, cst: &Cst) {
-        let key = Key(mark, name.into());
-        self.memos.insert(key, cst.clone());
+    pub fn memo(&mut self, key: &Key) -> Option<Memo> {
+        self.memos.get(key).cloned()
+    }
+
+    pub fn memoize(&mut self, key: &Key, cst: &Cst, mark: usize) {
+        let memo = Memo {
+            cst: cst.clone(),
+            mark,
+        };
+        self.memos.insert(key.clone(), memo);
     }
 
     pub fn rule(&mut self, name: &str) -> &'c Rule<'c> {

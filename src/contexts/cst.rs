@@ -141,3 +141,18 @@ pub fn cst_merge(prev: Cst, node: Cst) -> Cst {
 pub fn cst_closed(cst: Cst) -> Cst {
     cst.closed()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem::size_of;
+
+    const TARGET: usize = 64;
+
+    #[test]
+    fn test_cst_size() {
+        let size = size_of::<Cst>();
+        // 24 bytes: Box (8) + Rc (8) + bool/padding (8)
+        assert!(size <= TARGET, "Cst size is {} > {} bytes", size, TARGET);
+    }
+}
