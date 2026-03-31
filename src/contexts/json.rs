@@ -37,6 +37,7 @@ impl Cst {
                 map.insert(name.clone(), cst.to_json());
                 Json::Object(map)
             }
+            Cst::Number(n) => Json::Number(*n),
             Cst::OverrideValue(cst) | Cst::OverrideList(cst) => cst.to_json(),
             Cst::Ast(ast) => {
                 ast.to_json()
