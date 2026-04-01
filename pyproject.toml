@@ -3,7 +3,7 @@ requires = ["maturin>=1.5,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "tiexiu"
+name = "TieXiu"
 description = "High-performance PEG parsing (a port of TatSu to Rust)"
 dynamic = ["version"]
 readme = "README.md"

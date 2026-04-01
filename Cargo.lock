@@ -3,6 +3,14 @@
 version = 4
 
 [[package]]
+name = "TieXiu"
+version = "0.1.1-alpha.1"
+dependencies = [
+ "regex",
+ "serde_json",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -121,14 +129,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "tiexiu"
-version = "0.1.1-alpha.1"
-dependencies = [
- "regex",
- "serde_json",
 ]
 
 [[package]]
