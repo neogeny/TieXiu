@@ -8,8 +8,6 @@ mod ctx;
 pub mod json;
 pub mod leftrec;
 pub mod memo;
-mod parsed;
-mod ruleinfo;
 pub mod strctx;
 
 pub use ast::*;
