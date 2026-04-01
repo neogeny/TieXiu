@@ -11,5 +11,5 @@ pub mod repeat;
 pub mod rule;
 
 pub use model::Model;
-pub use parser::{ParseResult, Parser};
+pub use parser::{ParseResult, Parser, S};
 pub use rule::Rule;

@@ -4,8 +4,8 @@
 use super::cst::Cst;
 use super::ctx::Ctx;
 use super::strctx::StrCtx;
-use crate::grammars::ParseResult;
 use crate::grammars::Rule;
+use crate::grammars::{ParseResult, S};
 
 impl<'c> StrCtx<'c> {
     pub fn recursive_call(mut self, rule: &Rule) -> ParseResult<Self> {
@@ -22,16 +22,16 @@ impl<'c> StrCtx<'c> {
 
             // The Teleport: Jump the cursor to the recorded end and return
             self.reset(memo.mark);
-            return Ok((self, memo.cst.clone()));
+            return Ok(S(self, memo.cst.clone()));
         }
 
         // 2. Fast Path: Non-LRec rules
         if !rule.is_lrec {
             return match rule.parse(self) {
-                Ok((mut next_ctx, cst)) => {
+                Ok(S(mut next_ctx, cst)) => {
                     // next_ctx.memoize uses its own current mark() as the end-point
                     next_ctx.memoize(&key, &cst);
-                    Ok((next_ctx, cst))
+                    Ok(S(next_ctx, cst))
                 }
                 Err(err_ctx) => Err(err_ctx),
             };
@@ -50,7 +50,7 @@ impl<'c> StrCtx<'c> {
             trial_ctx.reset(start_mark);
 
             match rule.parse(trial_ctx) {
-                Ok((next_ctx, new_cst)) => {
+                Ok(S(next_ctx, new_cst)) => {
                     let end_mark = next_ctx.mark();
 
                     // Progress Check: Did we move the cursor further?
@@ -75,7 +75,7 @@ impl<'c> StrCtx<'c> {
 
         // 4. Finalize
         if let Some(final_cst) = best_cst {
-            Ok((self, final_cst))
+            Ok(S(self, final_cst))
         } else {
             Err(self)
         }

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::parser::{ParseResult, Parser};
+use super::parser::{ParseResult, Parser, S};
 use super::repeat::{add_exp, repeat, repeat_with_pre};
 use crate::contexts::{Cst, Ctx};
 use std::fmt::Debug;
@@ -62,9 +62,9 @@ where
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         match self {
             Self::Call(name) => match ctx.call(name) {
-                Ok((mut ctx, cst)) => {
+                Ok(S(mut ctx, cst)) => {
                     ctx.uncut();
-                    Ok((ctx, cst))
+                    Ok(S(ctx, cst))
                 }
                 Err(mut err_ctx) => {
                     err_ctx.uncut();
@@ -73,20 +73,20 @@ where
             },
             Self::Cut => {
                 ctx.cut();
-                Ok((ctx, Cst::Nil))
+                Ok(S(ctx, Cst::Nil))
             }
-            Self::Void => Ok((ctx, Cst::Void)),
+            Self::Void => Ok(S(ctx, Cst::Void)),
             Self::Fail => Err(ctx),
             Self::Dot => {
                 if ctx.next().is_some() {
-                    Ok((ctx, Cst::Nil))
+                    Ok(S(ctx, Cst::Nil))
                 } else {
                     Err(ctx)
                 }
             }
             Self::Eof => {
                 if ctx.eof_check() {
-                    Ok((ctx, Cst::Nil))
+                    Ok(S(ctx, Cst::Nil))
                 } else {
                     Err(ctx)
                 }
@@ -94,44 +94,44 @@ where
 
             Self::Token(token) => {
                 if ctx.token(token) {
-                    Ok((ctx, Cst::Token(token.deref().into())))
+                    Ok(S(ctx, Cst::Token(token.deref().into())))
                 } else {
                     Err(ctx)
                 }
             }
-            Self::Constant(literal) => Ok((ctx, Cst::Literal(literal.deref().into()))),
-            Self::Alert(literal, _) => Ok((ctx, Cst::Literal(literal.deref().into()))),
+            Self::Constant(literal) => Ok(S(ctx, Cst::Literal(literal.deref().into()))),
+            Self::Alert(literal, _) => Ok(S(ctx, Cst::Literal(literal.deref().into()))),
 
             Self::Named(name, exp) => match exp.parse(ctx) {
-                Ok((ctx, cst)) => Ok((ctx, Cst::named(name, cst))),
+                Ok(S(ctx, cst)) => Ok(S(ctx, Cst::named(name, cst))),
                 err => err,
             },
             Self::NamedList(name, exp) => match exp.parse(ctx) {
-                Ok((ctx, cst)) => Ok((ctx, Cst::named_list(name, cst))),
+                Ok(S(ctx, cst)) => Ok(S(ctx, Cst::named_list(name, cst))),
                 err => err,
             },
             Self::Override(exp) => match exp.parse(ctx) {
-                Ok((ctx, cst)) => Ok((ctx, Cst::OverrideValue(Box::new(cst)))),
+                Ok(S(ctx, cst)) => Ok(S(ctx, Cst::OverrideValue(Box::new(cst)))),
                 err => err,
             },
             Self::OverrideList(exp) => match exp.parse(ctx) {
-                Ok((ctx, cst)) => Ok((ctx, Cst::OverrideList(Box::new(cst)))),
+                Ok(S(ctx, cst)) => Ok(S(ctx, Cst::OverrideList(Box::new(cst)))),
                 err => err,
             },
             Self::Group(exp) => exp.parse(ctx),
             Self::SkipGroup(exp) => {
-                let (new_ctx, _) = exp.parse(ctx)?;
-                Ok((new_ctx, Cst::Nil))
+                let S(new_ctx, _) = exp.parse(ctx)?;
+                Ok(S(new_ctx, Cst::Nil))
             }
             Self::Lookahead(exp) => {
                 let _ = exp.parse(ctx.clone())?;
-                Ok((ctx, Cst::Nil))
+                Ok(S(ctx, Cst::Nil))
             }
             Self::NegativeLookahead(exp) => {
-                if let Ok((_, _)) = exp.parse(ctx.clone()) {
+                if let Ok(S(_, _)) = exp.parse(ctx.clone()) {
                     Err(ctx)
                 } else {
-                    Ok((ctx, Cst::Nil))
+                    Ok(S(ctx, Cst::Nil))
                 }
             }
             Self::SkipTo(exp) => loop {
@@ -150,21 +150,21 @@ where
                 let mut results = Vec::new();
                 for exp in sequence.iter() {
                     match exp.parse(ctx) {
-                        Ok((new_ctx, cst)) => {
+                        Ok(S(new_ctx, cst)) => {
                             results.push(cst);
                             ctx = new_ctx;
                         }
                         err => return err,
                     }
                 }
-                Ok((ctx, Cst::from(results)))
+                Ok(S(ctx, Cst::from(results)))
             }
             Self::Choice(options) => {
                 for option in options.iter() {
                     match option.parse(ctx) {
-                        Ok((mut ctx, cst)) => {
+                        Ok(S(mut ctx, cst)) => {
                             ctx.uncut();
-                            return Ok((ctx, cst));
+                            return Ok(S(ctx, cst));
                         }
                         Err(mut err_ctx) => {
                             if err_ctx.cut_seen() {
@@ -179,18 +179,18 @@ where
             }
             Self::Optional(exp) => match exp.parse(ctx.clone()) {
                 Ok(success) => Ok(success),
-                Err(_) => Ok((ctx, Cst::Nil)),
+                Err(_) => Ok(S(ctx, Cst::Nil)),
             },
 
             Self::Closure(exp) => {
                 let mut res = Vec::new();
                 let new_ctx = repeat(exp.deref(), ctx, &mut res);
-                Ok((new_ctx, Cst::from(res)))
+                Ok(S(new_ctx, Cst::from(res)))
             }
             Self::PositiveClosure(exp) => {
                 let mut res: Vec<Cst> = Vec::new();
                 match exp.parse(ctx) {
-                    Ok((new_ctx, cst)) => {
+                    Ok(S(new_ctx, cst)) => {
                         ctx = new_ctx;
                         res.push(cst);
                     }
@@ -198,7 +198,7 @@ where
                 };
 
                 let new_ctx = repeat(exp.deref(), ctx, &mut res);
-                Ok((new_ctx, Cst::from(res)))
+                Ok(S(new_ctx, Cst::from(res)))
             }
             Self::Join { exp, sep } => {
                 let mut res: Vec<Cst> = Vec::new();
@@ -207,16 +207,16 @@ where
                     Ok(new_ctx) => {
                         let ctx =
                             repeat_with_pre(exp.deref(), sep.deref(), new_ctx, &mut res, true);
-                        Ok((ctx, Cst::from(res)))
+                        Ok(S(ctx, Cst::from(res)))
                     }
-                    Err(err_ctx) => Ok((err_ctx, Cst::from(res))),
+                    Err(err_ctx) => Ok(S(err_ctx, Cst::from(res))),
                 }
             }
             Self::PositiveJoin { exp, sep } => {
                 let mut res: Vec<Cst> = Vec::new();
 
                 match exp.parse(ctx) {
-                    Ok((new_ctx, cst)) => {
+                    Ok(S(new_ctx, cst)) => {
                         res.push(cst);
                         ctx = new_ctx;
                     }
@@ -224,7 +224,7 @@ where
                 };
 
                 let new_ctx = repeat_with_pre(exp.deref(), sep.deref(), ctx, &mut res, true);
-                Ok((new_ctx, Cst::from(res)))
+                Ok(S(new_ctx, Cst::from(res)))
             }
             Self::Gather { exp, sep } => {
                 let mut res: Vec<Cst> = Vec::new();
@@ -232,16 +232,16 @@ where
                     Ok(new_ctx) => {
                         let ctx =
                             repeat_with_pre(exp.deref(), sep.deref(), new_ctx, &mut res, false);
-                        Ok((ctx, Cst::from(res)))
+                        Ok(S(ctx, Cst::from(res)))
                     }
-                    Err(err_ctx) => Ok((err_ctx, Cst::from(res))),
+                    Err(err_ctx) => Ok(S(err_ctx, Cst::from(res))),
                 }
             }
             Self::PositiveGather { exp, sep } => {
                 let mut res: Vec<Cst> = Vec::new();
 
                 match exp.parse(ctx) {
-                    Ok((new_ctx, cst)) => {
+                    Ok(S(new_ctx, cst)) => {
                         ctx = new_ctx;
                         res.push(cst);
                     }
@@ -249,7 +249,7 @@ where
                 };
 
                 let new_ctx = repeat_with_pre(exp.deref(), sep.deref(), ctx, &mut res, false);
-                Ok((new_ctx, Cst::from(res)))
+                Ok(S(new_ctx, Cst::from(res)))
             }
         }
     }

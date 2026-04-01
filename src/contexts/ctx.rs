@@ -3,7 +3,7 @@
 
 use super::cst::Cst;
 use super::memo::{Cache, Key, Memo};
-use crate::grammars::{ParseResult, Rule};
+use crate::grammars::{ParseResult, Rule, S};
 use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
@@ -36,7 +36,7 @@ pub trait Ctx: Clone + Debug {
                 Cst::Bottom => Err(self),
                 _ => {
                     self.reset(memo.mark);
-                    Ok((self, memo.cst))
+                    Ok(S(self, memo.cst))
                 }
             };
         }
@@ -47,9 +47,9 @@ pub trait Ctx: Clone + Debug {
         }
 
         match rule.parse(ctx) {
-            Ok((mut ctx, cst)) => {
+            Ok(S(mut ctx, cst)) => {
                 ctx.memoize(&key, &cst);
-                Ok((ctx, cst))
+                Ok(S(ctx, cst))
             }
             Err(mut ctx) => {
                 ctx.memoize(&key, &Cst::Bottom);
@@ -76,7 +76,7 @@ pub trait Ctx: Clone + Debug {
 
             match rule.parse(ctx) {
                 Err(_) => break,
-                Ok((mut ctx, cst)) => {
+                Ok(S(mut ctx, cst)) => {
                     let mark = ctx.mark();
                     if mark < high_water_mark {
                         break;
@@ -91,7 +91,7 @@ pub trait Ctx: Clone + Debug {
         }
 
         if let Some(cst) = best_cst {
-            Ok((self, cst))
+            Ok(S(self, cst))
         } else {
             Err(self)
         }
