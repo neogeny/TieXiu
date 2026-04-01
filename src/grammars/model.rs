@@ -162,27 +162,45 @@ where
                 Ok(S(ctx, Cst::from(results)))
             }
             Self::Choice(options) => {
+                let mut furthest: Option<C> = None;
+
                 for option in options.iter() {
-                    match option.parse(ctx) {
-                        Ok(S(mut ctx, cst)) => {
-                            ctx.uncut();
-                            return Ok(S(ctx, cst));
+                    match option.parse(ctx.clone()) {
+                        Ok(S(mut new_ctx, cst)) => {
+                            new_ctx.uncut();
+                            return Ok(S(new_ctx, cst));
                         }
                         Err(mut err_ctx) => {
                             if err_ctx.cut_seen() {
                                 err_ctx.uncut();
                                 return Err(err_ctx);
                             }
-                            ctx = err_ctx;
+
+                            match furthest {
+                                Some(ref f) if err_ctx.mark() < f.mark() => {
+                                    // This failure was shallow; discard err_ctx.
+                                }
+                                _ => furthest = Some(err_ctx),
+                            }
                         }
                     }
                 }
-                Err(ctx)
+                // If all failed, return the heroic failure or the original start point.
+                Err(furthest.unwrap_or(ctx))
             }
+
             Self::Optional(exp) => match exp.parse(ctx.clone()) {
-                Ok(success) => Ok(success),
-                Err(_) => Ok(S(ctx, Cst::Nil)),
-            },
+                Ok(S(new_ctx, cst)) => Ok(S(new_ctx, cst)),
+                Err(mut err_ctx) => {
+                    // If the expression committed with a cut, we cannot be optional.
+                    if err_ctx.cut_seen() {
+                        err_ctx.uncut();
+                        return Err(err_ctx);
+                    }
+                    // Otherwise, we forgive the failure and return the original ctx.
+                    Ok(S(ctx, Cst::Nil))
+                }
+            }
 
             Self::Closure(exp) => {
                 let mut res = Vec::new();
