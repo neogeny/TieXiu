@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 // 1. The data: Just a collection of models.
 // No mention of a Cursor here.
