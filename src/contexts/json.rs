@@ -3,8 +3,10 @@
 
 use super::ast::Ast;
 use super::cst::Cst;
+#[cfg(feature = "serde_json")]
+use serde_json::Value;
 use std::collections::HashMap;
-use std::ops::Deref;
+use std::ops::Deref; // Local, gated imports
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Json {

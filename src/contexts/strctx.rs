@@ -6,7 +6,6 @@ use crate::input::StrCursor;
 
 pub type StrCtx<'c> = CoreCtx<'c, StrCursor<'c>>;
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

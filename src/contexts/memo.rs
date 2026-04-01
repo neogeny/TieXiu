@@ -5,9 +5,9 @@ use super::cst::Cst;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
-pub struct Key{
+pub struct Key {
     pub mark: usize,
-    pub name: Box<String>
+    pub name: Box<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -30,14 +30,17 @@ impl Default for Cache {
 impl Cache {
     pub fn new() -> Self {
         Self {
-            memos: HashMap::new()
+            memos: HashMap::new(),
         }
     }
 }
 
 impl Cache {
     pub fn key(mark: usize, name: &str) -> Key {
-        Key{mark, name: name.to_string().into()}
+        Key {
+            mark,
+            name: name.to_string().into(),
+        }
     }
 
     pub fn memo(&mut self, key: &Key) -> Option<Memo> {

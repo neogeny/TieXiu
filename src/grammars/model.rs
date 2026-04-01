@@ -200,7 +200,7 @@ where
                     // Otherwise, we forgive the failure and return the original ctx.
                     Ok(S(ctx, Cst::Nil))
                 }
-            }
+            },
 
             Self::Closure(exp) => {
                 let mut res = Vec::new();

@@ -34,7 +34,7 @@ where
     fn parse(&self, ctx: C) -> ParseResult<C> {
         self.rhs.parse(ctx)
     }
-    
+
     fn is_left_recursive(&self) -> bool {
         self.is_lrec
     }

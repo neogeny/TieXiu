@@ -9,7 +9,7 @@ use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
     fn cursor(&self) -> &dyn Cursor;
-    
+
     fn cursor_mut(&mut self) -> &mut dyn Cursor;
 
     fn with_cache_mut<F, R>(&self, f: F) -> R
@@ -62,10 +62,9 @@ pub trait Ctx: Clone + Debug {
         });
     }
 
-
     fn cut_seen(&self) -> bool;
-    fn cut(&mut self);
     fn uncut(&mut self);
+    fn cut(&mut self);
 
     fn prune_cache(&mut self);
 
