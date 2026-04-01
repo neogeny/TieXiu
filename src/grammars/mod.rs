@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #![allow(dead_code)]
+pub mod build;
 pub mod grammar;
-mod leftrec;
+pub mod leftrec;
 pub mod model;
-mod nullability;
+pub mod nullability;
 pub mod parser;
 pub mod repeat;
 pub mod rule;
@@ -13,3 +14,4 @@ pub mod rule;
 pub use model::Model;
 pub use parser::{ParseResult, Parser, S};
 pub use rule::Rule;
+pub use grammar::Grammar;

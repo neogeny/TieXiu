@@ -11,6 +11,8 @@ pub type ModelRef = Box<Model>;
 pub type ModelRefArr = Box<[Model]>;
 pub type Str = Box<str>;
 
+pub use super::build;
+
 #[derive(Debug, Clone)]
 pub enum Model {
     Cut,
