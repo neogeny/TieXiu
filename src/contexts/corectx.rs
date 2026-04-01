@@ -44,7 +44,11 @@ where
         f(&mut cache)
     }
 
-    fn cursor(&mut self) -> &mut dyn Cursor {
+    fn cursor(&self) -> &dyn Cursor {
+        &self.cursor
+    }
+    
+    fn cursor_mut(&mut self) -> &mut dyn Cursor {
         &mut self.cursor
     }
 
@@ -60,7 +64,7 @@ where
     fn uncut(&mut self) {
         self.cutseen = false;
     }
-    
+
     fn prune_cache(&mut self) {
         let cutpoint = self.mark();
         self.with_cache_mut(|cache| cache.prune(cutpoint));

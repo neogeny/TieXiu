@@ -8,7 +8,9 @@ use crate::input::Cursor;
 use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
-    fn cursor(&mut self) -> &mut dyn Cursor;
+    fn cursor(&self) -> &dyn Cursor;
+    
+    fn cursor_mut(&mut self) -> &mut dyn Cursor;
 
     fn with_cache_mut<F, R>(&self, f: F) -> R
     where
@@ -23,30 +25,30 @@ pub trait Ctx: Clone + Debug {
     }
 
     fn next(&mut self) -> Option<char> {
-        self.cursor().next()
+        self.cursor_mut().next()
     }
 
     fn token(&mut self, token: &str) -> bool {
-        self.cursor().token(token)
+        self.cursor_mut().token(token)
     }
 
     fn pattern(&mut self, pattern: &str) -> Option<&str> {
-        self.cursor().pattern(pattern)
+        self.cursor_mut().pattern(pattern)
     }
 
     fn next_token(&mut self) {
-        self.cursor().next_token();
+        self.cursor_mut().next_token();
     }
 
     fn key(&mut self, name: &str) -> Key {
         Cache::key(self.mark(), name)
     }
-    fn mark(&mut self) -> usize {
+    fn mark(&self) -> usize {
         self.cursor().mark()
     }
 
     fn reset(&mut self, mark: usize) {
-        self.cursor().reset(mark);
+        self.cursor_mut().reset(mark);
     }
 
     fn memo(&mut self, key: &Key) -> Option<Memo> {
@@ -102,7 +104,7 @@ pub trait Ctx: Clone + Debug {
         if !rule.is_left_recursive() {
             panic!("Recursive call on non-LRec rule");
         }
-        
+
         self.memoize(&key, &Cst::Bottom);
         let start_mark = self.mark();
         let mut best_cst: Option<Cst> = None;
