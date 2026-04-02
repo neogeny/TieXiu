@@ -1,16 +1,13 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::grammar::Grammar;
-use crate::grammars::{Model, Rule};
+use super::Grammar;
+use super::Model;
 use std::collections::HashMap;
 
-pub fn mark_left_recursion(mut grammar: Grammar) -> Grammar {
-    {
-        let mut analysis = LeftRecursionAnalysis::new(&mut grammar.rulemap);
-        analysis.run();
-    }
-    grammar
+pub fn mark_left_recursion(grammar: &mut Grammar) {
+    let mut analysis = LeftRecursionAnalysis::new(grammar);
+    analysis.run()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -20,36 +17,40 @@ enum Status {
     Visited,
 }
 
-struct LeftRecursionAnalysis<'a, 'g> {
-    // Note: The keys in the rulemap are now &'g str to match your Grammar definition
-    rules: &'a mut HashMap<&'g str, Rule<'g>>,
+struct LeftRecursionAnalysis<'a> {
+    grammar: &'a mut Grammar,
     node_state: HashMap<*const Model, Status>,
     node_depth: HashMap<*const Model, usize>,
     depth_stack: Vec<isize>,
+    rule_name_stack: Vec<String>,
     depth: usize,
 }
 
-impl<'a, 'g> LeftRecursionAnalysis<'a, 'g> {
-    fn new(rules: &'a mut HashMap<&'g str, Rule<'g>>) -> Self {
+impl<'a> LeftRecursionAnalysis<'a> {
+    fn new(grammar: &'a mut Grammar) -> Self {
         Self {
-            rules,
+            grammar,
             node_state: HashMap::new(),
             node_depth: HashMap::new(),
             depth_stack: vec![-1],
+            rule_name_stack: vec![],
             depth: 0,
         }
     }
 
     fn run(&mut self) {
-        // Collect keys (Rule names) to avoid borrowing conflicts
-        let names: Vec<&'g str> = self.rules.keys().cloned().collect();
-        for name in names {
-            let rhs = self.rules.get(name).unwrap().rhs;
-            self.dfs(rhs);
+        let models = &self
+            .grammar
+            .rulemap
+            .values()
+            .map(|r| r.rhs.clone())
+            .collect::<Vec<_>>();
+        for model in models {
+            self.dfs(model);
         }
     }
 
-    fn dfs(&mut self, node: &'g Model) {
+    fn dfs(&mut self, node: &Model) {
         let ptr = node as *const Model;
 
         if *self.node_state.get(&ptr).unwrap_or(&Status::First) != Status::First {
@@ -77,16 +78,19 @@ impl<'a, 'g> LeftRecursionAnalysis<'a, 'g> {
 
     fn handle_call(&mut self, target_name: &str) {
         let target_rhs = {
-            let Some(rule) = self.rules.get(target_name) else {
+            let Some(rule) = self.grammar.rulemap.get(target_name) else {
                 return;
             };
-            rule.rhs as *const Model
+            &rule.rhs as *const Model
         };
 
-        self.depth_stack.push(self.depth as isize);
-
-        let rhs = self.rules.get(target_name).unwrap().rhs;
-        self.dfs(rhs);
+        let rule = self.grammar.rulemap.get(target_name).unwrap();
+        let is_leftrec = rule.is_left_recursive();
+        if is_leftrec {
+            self.depth_stack.push(self.depth as isize);
+            self.rule_name_stack.push(rule.name.clone());
+        }
+        self.dfs(&rule.rhs.clone());
 
         let is_cutoff = self.node_state.get(&target_rhs) == Some(&Status::Cutoff);
         let target_depth = *self.node_depth.get(&target_rhs).unwrap_or(&0) as isize;
@@ -94,12 +98,19 @@ impl<'a, 'g> LeftRecursionAnalysis<'a, 'g> {
 
         if is_cutoff
             && target_depth > parent_depth
-            && let Some(rule) = self.rules.get_mut(target_name)
+            && let Some(rule) = self.grammar.rulemap.get_mut(target_name)
         {
-            rule.is_memo = false;
-            rule.is_lrec = true;
+            rule.set_left_recursive();
+            for name in self.rule_name_stack.iter() {
+                if let Some(rule) = self.grammar.rulemap.get_mut(name) {
+                    rule.set_no_memo();
+                }
+            }
         }
 
-        self.depth_stack.pop();
+        if is_leftrec {
+            self.depth_stack.pop();
+            self.rule_name_stack.pop();
+        }
     }
 }

@@ -3,7 +3,7 @@
 
 use super::cst::Cst;
 use super::memo::{Cache, Key, Memo};
-use crate::grammars::{ParseResult, Parser, S};
+use crate::grammars::{ParseResult, Rule, S};
 use crate::input::Cursor;
 use std::fmt::Debug;
 
@@ -68,11 +68,12 @@ pub trait Ctx: Clone + Debug {
 
     fn prune_cache(&mut self);
 
-    fn parser_for(self, name: &str) -> (Self, &dyn Parser<Self>);
+    fn parser_for(&self, name: &str) -> Rule;
 
     fn call(mut self, name: &str) -> ParseResult<Self> {
-        let key = self.key(name);
+        let rule = self.parser_for(name);
 
+        let key = self.key(name);
         if let Some(memo) = self.memo(&key) {
             return match memo.cst {
                 Cst::Bottom => Err(self),
@@ -83,11 +84,10 @@ pub trait Ctx: Clone + Debug {
             };
         }
 
-        let (ctx, rule) = self.parser_for(name);
         if rule.is_left_recursive() {
-            return ctx.recursive_call(key, rule);
+            return self.recursive_call(key, &rule);
         }
-        match rule.parse(ctx) {
+        match rule.parse(self) {
             Ok(S(mut ctx, cst)) => {
                 ctx.memoize(&key, &cst);
                 Ok(S(ctx, cst))
@@ -99,7 +99,7 @@ pub trait Ctx: Clone + Debug {
         }
     }
 
-    fn recursive_call(mut self, key: Key, rule: &dyn Parser<Self>) -> ParseResult<Self> {
+    fn recursive_call(mut self, key: Key, rule: &Rule) -> ParseResult<Self> {
         if !rule.is_left_recursive() {
             panic!("Recursive call on non-LRec rule");
         }

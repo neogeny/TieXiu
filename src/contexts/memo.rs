@@ -7,7 +7,7 @@ use std::collections::HashMap;
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Key {
     pub mark: usize,
-    pub name: Box<String>,
+    pub name: String,
 }
 
 #[derive(Clone, Debug)]
@@ -39,7 +39,7 @@ impl Cache {
     pub fn key(mark: usize, name: &str) -> Key {
         Key {
             mark,
-            name: name.to_string().into(),
+            name: name.to_string(),
         }
     }
 

@@ -10,7 +10,7 @@ use crate::grammars::{ParseResult, S};
 impl<'c> StrCtx<'c> {
     pub fn recursive_call(mut self, rule: &Rule) -> ParseResult<Self> {
         // The 'start_mark' is our anchor for the Memo Key
-        let key = self.key(rule.name);
+        let key = self.key(rule.name.as_str());
         let start_mark = self.mark();
 
         // 1. The Unified Memo Guard
@@ -26,7 +26,7 @@ impl<'c> StrCtx<'c> {
         }
 
         // 2. Fast Path: Non-LRec rules
-        if !rule.is_lrec {
+        if !rule.is_left_recursive() {
             return match rule.parse(self) {
                 Ok(S(mut next_ctx, cst)) => {
                     // next_ctx.memoize uses its own current mark() as the end-point

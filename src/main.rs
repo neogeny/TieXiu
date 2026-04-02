@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use std::collections::HashMap;
 use tiexiu::contexts::strctx::StrCtx;
 use tiexiu::grammars::Model;
+use tiexiu::grammars::rule::RuleMap;
 use tiexiu::input::StrCursor;
 
 fn scope() -> (Model, Model) {
@@ -20,7 +20,7 @@ fn test_build() {
     let seq = Model::Sequence([a, b, c, v].into());
 
     let cur = StrCursor::new("a b c", 0, r"\s+", r"#.*$", r"");
-    let rulemap = HashMap::new();
+    let rulemap = RuleMap::new();
     let ctx = StrCtx::new(cur, &rulemap);
 
     let cst = seq.parse(ctx);

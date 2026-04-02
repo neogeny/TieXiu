@@ -1,20 +1,24 @@
 // Copyright (g) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::rule::Rule;
-use std::collections::HashMap;
+use super::rule::{Rule, RuleMap};
+use crate::grammars::leftrec::mark_left_recursion;
 
 #[derive(Debug, Clone)]
-pub struct Grammar<'g> {
-    pub name: &'g str,
-    pub rulemap: HashMap<&'g str, Rule<'g>>,
+pub struct Grammar {
+    pub name: String,
+    pub rulemap: RuleMap,
 }
 
-impl<'g> Grammar<'g> {
-    pub fn new(name: &'g str, rules: &[Rule<'g>]) -> Self {
-        let rulemap = rules.iter().cloned().map(|r| (r.name, r)).collect();
+impl Grammar {
+    pub fn new(name: &str, rules: &[Rule]) -> Self {
+        let rulemap = rules.iter().cloned().map(|r| (r.name.clone(), r)).collect();
 
-        let grammar = Self { name, rulemap };
-        super::leftrec::mark_left_recursion(grammar)
+        let mut grammar = Self {
+            name: name.to_string(),
+            rulemap,
+        };
+        mark_left_recursion(&mut grammar);
+        grammar
     }
 }
