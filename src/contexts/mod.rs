@@ -7,7 +7,6 @@ pub mod corectx;
 mod cst;
 mod ctx;
 pub mod json;
-pub mod leftrec;
 pub mod memo;
 pub mod strctx;
 

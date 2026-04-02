@@ -12,7 +12,6 @@ pub trait Cursor: Debug {
     fn token(&mut self, token: &str) -> bool;
     fn pattern(&mut self, pattern: &str) -> Option<&str>;
     fn next_token(&mut self);
-    fn eat_pattern(&mut self, pattern: &str) -> bool;
     //
     // /// The full source text from the provider.
     // fn source(&self) -> &'a str;

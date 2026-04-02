@@ -69,9 +69,10 @@ pub trait Ctx: Clone + Debug {
     fn cut(&mut self);
 
     fn prune_cache(&mut self);
-    
+
     fn parser_for(&self, name: &str) -> Rule {
-        let rule = self.grammar()
+        let rule = self
+            .grammar()
             .rulemap
             .get(name)
             .unwrap_or_else(|| panic!("rule '{}' not found", name));

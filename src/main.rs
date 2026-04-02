@@ -4,6 +4,7 @@
 use tiexiu::contexts::strctx::StrCtx;
 use tiexiu::grammars::{Grammar, Model};
 use tiexiu::input::StrCursor;
+use tiexiu::input::strcursor::DefaultPatterns;
 
 fn scope() -> (Model, Model) {
     let a = Model::Token("a".into());
@@ -18,7 +19,7 @@ fn test_build() {
     // let cl = Call::new("test");
     let seq = Model::Sequence([a, b, c, v].into());
 
-    let cur = StrCursor::new("a b c", 0, r"\s+", r"#.*$", r"");
+    let cur: StrCursor<DefaultPatterns> = StrCursor::new("a b c", 0);
     let grammar = Grammar::new("test", &[]);
     let ctx = StrCtx::new(cur, &grammar);
 

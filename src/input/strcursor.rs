@@ -1,45 +1,61 @@
 use super::Cursor;
-use std::rc::Rc;
+use std::fmt::Debug;
+use std::marker::PhantomData;
 
 #[cfg(feature = "regex")]
 use regex::Regex;
 
-#[derive(Debug)]
-pub struct Patterns<'a> {
-    whitespace: &'a str,
-    eol_comments: &'a str,
-    comments: &'a str,
+pub trait Patterns: Clone + Debug + Default {
+    const WHITESPACE: &'static str = r"\s+";
+    const EOL_COMMENTS: &'static str = r"//.*$";
+    const COMMENTS: &'static str = r"";
 }
+
+#[derive(Clone, Debug, Default)]
+pub struct DefaultPatterns;
+
+impl Patterns for DefaultPatterns {}
 
 #[derive(Debug, Clone)]
-pub struct StrCursor<'a> {
+pub struct StrCursor<'a, P> {
     text: &'a str,
     offset: usize,
-    patterns: Rc<Patterns<'a>>,
+    _p: PhantomData<P>, // Zero-sized: 0 bytes
 }
 
-impl<'a> StrCursor<'a> {
-    pub fn new(
-        text: &'a str,
-        offset: usize,
-        whitespace: &'a str,
-        eol_comments: &'a str,
-        comments: &'a str,
-    ) -> Self {
-        let patterns = Patterns {
-            whitespace,
-            eol_comments,
-            comments,
-        };
+impl<'a, P: Patterns> StrCursor<'a, P> {
+    pub fn new(text: &'a str, offset: usize) -> Self {
+        let _p = P::default();
         Self {
             text,
             offset,
-            patterns: patterns.into(),
+            _p: PhantomData,
         }
+    }
+
+    fn eat_pattern(&mut self, pattern: &str) -> bool {
+        if pattern.is_empty() {
+            return false;
+        }
+
+        #[cfg(feature = "regex")]
+        match Regex::new(pattern) {
+            Err(_) => return false,
+            Ok(re) => {
+                if let Some(mat) = re.find_at(self.text, self.offset) {
+                    if mat.start() != self.offset {
+                        return false;
+                    }
+                    self.offset = mat.end();
+                    return true;
+                }
+            }
+        }
+        false
     }
 }
 
-impl<'a> Cursor for StrCursor<'a> {
+impl<'a, P: Patterns> Cursor for StrCursor<'a, P> {
     fn mark(&self) -> usize {
         self.offset
     }
@@ -105,39 +121,17 @@ impl<'a> Cursor for StrCursor<'a> {
     }
 
     fn next_token(&mut self) {
-        let mut last_p = usize::MAX;
+        let _p = P::default();
+        let mut last_offset = usize::MAX;
+        while self.offset != last_offset {
+            last_offset = self.offset;
 
-        // Keep eating as long as we are making progress
-        while self.offset != last_p {
-            last_p = self.offset;
-
-            self.eat_pattern(self.patterns.whitespace);
-            if self.eat_pattern(self.patterns.eol_comments) {
-                self.eat_pattern(self.patterns.whitespace);
+            self.eat_pattern(P::WHITESPACE);
+            if self.eat_pattern(P::EOL_COMMENTS) {
+                self.eat_pattern(P::WHITESPACE);
             }
-            self.eat_pattern(self.patterns.comments);
+            self.eat_pattern(P::COMMENTS);
         }
-    }
-
-    fn eat_pattern(&mut self, pattern: &str) -> bool {
-        if pattern.is_empty() {
-            return false;
-        }
-
-        #[cfg(feature = "regex")]
-        match Regex::new(pattern) {
-            Err(_) => return false,
-            Ok(re) => {
-                if let Some(mat) = re.find_at(self.text, self.offset) {
-                    if mat.start() != self.offset {
-                        return false;
-                    }
-                    self.offset = mat.end();
-                    return true;
-                }
-            }
-        }
-        false
     }
 }
 

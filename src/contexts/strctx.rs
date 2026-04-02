@@ -2,27 +2,28 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::corectx::CoreCtx;
-use crate::input::StrCursor;
+use crate::input::strcursor::StrCursor;
 
-pub type StrCtx<'c> = CoreCtx<'c, StrCursor<'c>>;
+pub type StrCtx<'c, P> = CoreCtx<'c, StrCursor<'c, P>>;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input::strcursor::DefaultPatterns;
     use std::mem::size_of;
 
     const TARGET: usize = 16;
 
     #[test]
     fn test_ctx_size() {
-        let size = size_of::<StrCtx>();
+        let size = size_of::<StrCtx<DefaultPatterns>>();
         // 24 bytes: Box (8) + Rc (8) + bool/padding (8)
         assert!(size <= TARGET, "StrCtx size is {} > {} bytes", size, TARGET);
     }
 
     #[test]
     fn test_cursor_size() {
-        let size = size_of::<StrCursor>();
+        let size = size_of::<StrCursor<DefaultPatterns>>();
         // StrCursor contains &str (16) and usize (8) = 24 bytes.
         assert!(
             size <= TARGET,

@@ -1,9 +1,9 @@
 use crate::contexts::Ctx;
 use crate::contexts::memo::Cache;
+use crate::grammars::Grammar;
 use crate::input::Cursor;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::grammars::Grammar;
 
 #[derive(Clone, Debug)]
 pub struct CoreCtx<'c, C>
