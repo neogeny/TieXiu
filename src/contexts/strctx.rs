@@ -22,7 +22,7 @@ mod tests {
         let size = size_of::<Cst>();
         assert!(size <= TARGET, "Cst size is {} > {} bytes", size, TARGET);
     }
-    
+
     #[test]
     fn test_ctx_size() {
         let size = size_of::<StrCtx<DefaultPatterns>>();
@@ -37,7 +37,12 @@ mod tests {
     #[test]
     fn test_ctx_handle_size() {
         let size = size_of::<CoreCtx<StrCursor<DefaultPatterns>>>();
-        assert!(size <= TARGET, "CoreCtx handle size is {} > 16 bytes", size);
+        assert!(
+            size <= TARGET,
+            "CoreCtx handle size is {} > {} bytes",
+            size,
+            TARGET
+        );
     }
 
     #[test]
@@ -96,9 +101,9 @@ mod tests {
         let cursor: StrCursor = StrCursor::new("abc");
         let mut ctx1 = CoreCtx::new(cursor, &grammar);
         let mut ctx2 = ctx1.clone();
-    
+
         ctx2.reset(1);
-    
+
         assert_ne!(ctx1.cursor().mark(), ctx2.cursor().mark());
 
         let entry = Cst::Bottom;
