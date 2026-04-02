@@ -10,7 +10,7 @@ A high-performance port of **TatSu** to Rust.
 
 Implementation is complete for the core execution engine, the grammar model, the parsing engine, and support for left-recursive grammars. Development is currently advancing toward high-level tree construction and model synthesis.
 
-### Ultra-Lean Context (16-byte Handles)
+### Lean Parsing Context
 
 **TieXiu** uses the runtime stack as the parsing state stack. A state 
 change has a 16-byte stack footprint consisting of two  pointers: one for the *Volatile State* (Input Cursor) and one for the *Heavy Stated* (Grammar + Memoization Cache). This allows for deep recursive descent with 
@@ -38,15 +38,6 @@ grammars. A pre-pass *analysis* identifies and marks recursive cycles, while the
 
 The building blocks for grammar models are implemented with a clear chain of ownership. The `Grammar` acts as the root container owning the `Rule` map, while each `Rule` owns its `Model` definition. This hierarchy eliminates reference proliferation and simplifies lifetime management.
 
-### The Bootstrap Plan
-
-A critical upcoming milestone is the **Bootstrap Process**. The roadmap 
-includes **Self-Hosting** through the implementation of a **TieXiu** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
-
-After the initial bootstrap (**TieXiu** parsing grammars in its own grammar 
-language) either **TieXiu** or **TatSu** will generate the Rust code 
-necessary for faster parser bootstrap.
-
 ### Milestone: From CST to AST
 
  The algebra for creating **Concrete Syntax Trees (CST)** was ported from 
@@ -63,6 +54,15 @@ necessary for faster parser bootstrap.
 ### Packrat & Memoization
 
 All branches in a parse use a shared *Memoization Cache* to achieve the `O(N) ` complexity of packrat parsers. The cache is pruned at `cut` points to place a bound on memory use and make the lookups more efficient.
+
+### The Bootstrap Plan
+
+A critical upcoming milestone is the **Bootstrap Process**. The roadmap
+includes **Self-Hosting** through the implementation of a **TieXiu** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
+
+After the initial bootstrap (**TieXiu** parsing grammars in its own grammar
+language) either **TieXiu** or **TatSu** will generate the Rust code
+necessary for faster parser bootstrap.
 
 ## Features
 
