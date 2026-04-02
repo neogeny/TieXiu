@@ -180,6 +180,27 @@ impl Cst {
             cst_closed(cst)
         }
     }
+
+    pub fn length(&self) -> usize {
+        match self {
+            Cst::Token(text) | Cst::Literal(text) => text.len(),
+
+            Cst::Number(val) => val.to_string().len(),
+
+            Cst::List(items) | Cst::Closure(items) => items.iter().map(|item| item.length()).sum(),
+
+            Cst::Named(pair) | Cst::NamedList(pair) => {
+                let (_, val) = &**pair;
+                val.length()
+            }
+
+            Cst::OverrideValue(inner) | Cst::OverrideList(inner) => inner.length(),
+
+            Cst::Ast(ast) => ast.fields.values().map(|node| node.length()).sum(),
+
+            Cst::Void | Cst::Nil | Cst::Bottom => 0,
+        }
+    }
 }
 
 #[cfg(test)]
