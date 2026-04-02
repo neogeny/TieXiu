@@ -134,26 +134,3 @@ impl<'a, P: Patterns> Cursor for StrCursor<'a, P> {
         }
     }
 }
-
-// #[inline]
-// fn pos(&self) -> usize {
-//     self.offset
-// }
-//
-// #[inline]
-// fn set_pos(&mut self, pos: usize) {
-//     self.offset = pos;
-// }
-//
-// fn peek(&self, len: usize) -> Option<&str> {
-//     self.buffer.get(self.offset..self.offset + len)
-// }
-//
-// #[inline]
-// fn is_at_end(&self) -> bool {
-//     self.offset >= self.buffer.len()
-// }
-//
-// fn remaining(&self) -> &str {
-//     &self.buffer[self.offset..]
-// }
