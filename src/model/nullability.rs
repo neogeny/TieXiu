@@ -20,7 +20,12 @@ impl E {
             // Always consumes (or fails), never succeeds with zero width
             E::Fail | E::Dot | E::Token(_) => false,
 
-            E::Pattern(_) => false, // todo!("need to check for empty matches")
+            E::Pattern(pattern) => {
+                // true if it CAN match the empty string (is nullable)
+                regex::Regex::new(pattern)
+                    .map(|re| re.is_match(""))
+                    .unwrap_or(false)
+            }
 
             // Transparent wrappers
             E::Group(m)
