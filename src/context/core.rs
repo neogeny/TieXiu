@@ -6,8 +6,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
-pub struct State<C: Cursor> {
-    pub cursor: C,
+pub struct State<U: Cursor> {
+    pub cursor: U,
     pub cutseen: bool,
 }
 
@@ -18,19 +18,19 @@ pub struct HeavyState<'c> {
 }
 
 #[derive(Clone, Debug)]
-pub struct CoreCtx<'c, C>
+pub struct CoreCtx<'c, U>
 where
-    C: Cursor + Clone,
+    U: Cursor + Clone,
 {
-    pub state: Rc<State<C>>,
+    pub state: Rc<State<U>>,
     pub heavy: Rc<RefCell<HeavyState<'c>>>,
 }
 
-impl<'c, C> CoreCtx<'c, C>
+impl<'c, U> CoreCtx<'c, U>
 where
-    C: Cursor + Clone,
+    U: Cursor + Clone,
 {
-    pub fn new(cursor: C, grammar: &'c Grammar) -> Self {
+    pub fn new(cursor: U, grammar: &'c Grammar) -> Self {
         Self {
             state: State {
                 cursor,
@@ -46,14 +46,14 @@ where
     }
 
     #[inline]
-    fn state_mut(&mut self) -> &mut State<C> {
+    fn state_mut(&mut self) -> &mut State<U> {
         Rc::make_mut(&mut self.state)
     }
 }
 
-impl<'c, C> Ctx for CoreCtx<'c, C>
+impl<'c, U> Ctx for CoreCtx<'c, U>
 where
-    C: Cursor + Clone,
+    U: Cursor + Clone,
 {
     fn grammar(&self) -> &Grammar {
         self.heavy.borrow().grammar
