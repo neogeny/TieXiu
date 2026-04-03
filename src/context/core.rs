@@ -15,17 +15,15 @@ pub struct State<C: Cursor> {
 pub struct HeavyState<'c> {
     pub grammar: &'c Grammar,
     pub cache: Cache,
-    // pub cache: Rc<RefCell<Cache>>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CoreCtx<'c, C>
 where
     C: Cursor + Clone,
 {
     pub state: Rc<State<C>>,
     pub heavy: Rc<RefCell<HeavyState<'c>>>,
-    // pub heavy: Box<HeavyState<'c>>,
 }
 
 impl<'c, C> CoreCtx<'c, C>
@@ -55,15 +53,6 @@ where
     }
 }
 
-impl<'a, C: Cursor + Clone> Clone for CoreCtx<'a, C> {
-    fn clone(&self) -> Self {
-        Self {
-            // This clones the actual 32-byte State data into a new allocation
-            state: Rc::clone(&self.state),
-            heavy: Rc::clone(&self.heavy),
-        }
-    }
-}
 
 impl<'c, C> Ctx for CoreCtx<'c, C>
 where
