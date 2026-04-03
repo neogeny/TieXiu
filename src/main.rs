@@ -31,7 +31,21 @@ fn test_build() {
     }
 }
 
+
+fn cli() {
+    use clap::Parser;
+    use tiexiu::tool::cli::{Cli, Commands};
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Run { grammar, input, .. } => {
+            println!("Ready to parse {} with grammar {}", input, grammar);
+        }
+    }
+}
+
 fn main() {
+    cli();
     println!("Hello, world!");
     test_build();
 }
