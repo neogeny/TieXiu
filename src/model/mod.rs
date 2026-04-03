@@ -13,5 +13,5 @@ pub mod rule;
 
 pub use elements::E;
 pub use grammar::Grammar;
-pub use parser::{ParseResult, Parser, S};
+pub use parser::{F, ParseResult, Parser, S};
 pub use rule::Rule;

@@ -5,14 +5,51 @@ use crate::astree::Cst;
 use crate::context::Ctx;
 use std::fmt::Debug;
 
-pub type ParseResult<C> = Result<S<C>, C>;
+#[derive(Debug, Clone, PartialEq)]
+pub struct S<C: Ctx>(pub C, pub Cst);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct F {
+    mark: usize,     // The position where the disaster occurred
+    msg: Box<str>,   // The "Why" (using your Boxed str for density)
+    cut: bool,
+}
+
+pub type ParseResult<C> = Result<S<C>, F>;
 
 pub trait Parser<C: Ctx>: Debug {
     fn parse(&self, ctx: C) -> ParseResult<C>;
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct S<C: Ctx>(pub C, pub Cst);
+impl F {
+    pub fn new(mark: usize, msg: &str, cut: bool) -> Self {
+        Self {
+            mark,
+            msg: msg.into(),
+            cut,
+        }
+    }
+
+    pub fn mark(&self) -> usize {
+        self.mark
+    }
+
+    pub fn msg(&self) -> &str {
+        &self.msg
+    }
+
+    pub fn cut_seen(&self) -> bool {
+        self.cut
+    }
+
+    pub fn cut(&mut self) {
+        self.cut = true;
+    }
+
+    pub fn uncut(&mut self) {
+        self.cut = false;
+    }
+}
 
 impl<C: Ctx> S<C> {
     #[inline]

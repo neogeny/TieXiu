@@ -7,6 +7,7 @@ use crate::astree::Cst;
 use crate::context::Ctx;
 use std::fmt::Debug;
 use std::ops::Deref;
+use crate::model::F;
 
 pub type ERef = Box<E>;
 pub type ERefArr = Box<[E]>;
@@ -69,9 +70,9 @@ where
                     ctx.uncut();
                     Ok(S(ctx, cst))
                 }
-                Err(mut err_ctx) => {
-                    err_ctx.uncut();
-                    Err(err_ctx)
+                Err(mut f) => {
+                    f.uncut();
+                    Err(f)
                 }
             },
             Self::Cut => {
@@ -79,19 +80,19 @@ where
                 Ok(S(ctx, Cst::Nil))
             }
             Self::Void => Ok(S(ctx, Cst::Void)),
-            Self::Fail => Err(ctx),
+            Self::Fail => Err(ctx.failure("Fail")),
             Self::Dot => {
                 if ctx.next().is_some() {
                     Ok(S(ctx, Cst::Nil))
                 } else {
-                    Err(ctx)
+                    Err(ctx.failure("No more input"))
                 }
             }
             Self::Eof => {
                 if ctx.eof_check() {
                     Ok(S(ctx, Cst::Nil))
                 } else {
-                    Err(ctx)
+                    Err(ctx.failure("Expecting EOF/EOT"))
                 }
             }
 
@@ -99,7 +100,7 @@ where
                 if ctx.token(token) {
                     Ok(S(ctx, Cst::Token(token.deref().into())))
                 } else {
-                    Err(ctx)
+                    Err(ctx.failure(&format!("Expecting '{}'", token.deref())))
                 }
             }
             Self::Constant(literal) => Ok(S(ctx, Cst::Literal(literal.deref().into()))),
@@ -132,18 +133,17 @@ where
             }
             Self::NegativeLookahead(exp) => {
                 if let Ok(S(_, _)) = exp.parse(ctx.clone()) {
-                    Err(ctx)
+                    Err(ctx.failure("Not expecting: ???"))
                 } else {
                     Ok(S(ctx, Cst::Nil))
                 }
             }
             Self::SkipTo(exp) => loop {
-                match exp.parse(ctx) {
-                    Err(mut errctx) => {
-                        if !errctx.dot() {
-                            return Err(errctx);
+                match exp.parse(ctx.clone()) {
+                    Err(f) => {
+                        if !ctx.dot() {
+                            return Err(f);
                         }
-                        ctx = errctx;
                     }
                     ok => break ok,
                 }
@@ -163,7 +163,7 @@ where
                 Ok(S(ctx, Cst::from(results)))
             }
             Self::Choice(options) => {
-                let mut furthest: Option<C> = None;
+                let mut furthest: Option<F> = None;
 
                 for option in options.iter() {
                     match option.parse(ctx.clone()) {
@@ -171,34 +171,33 @@ where
                             new_ctx.uncut();
                             return Ok(S(new_ctx, cst));
                         }
-                        Err(mut err_ctx) => {
-                            if err_ctx.cut_seen() {
-                                err_ctx.uncut();
-                                return Err(err_ctx);
+                        Err(mut f) => {
+                            if f.cut_seen() {
+                                f.uncut();
+                                return Err(f);
                             }
 
                             match furthest {
-                                Some(ref f) if err_ctx.mark() < f.mark() => {
-                                    // This failure was shallow; discard err_ctx.
+                                Some(ref f) if f.mark() < f.mark() => {
                                 }
-                                _ => furthest = Some(err_ctx),
+                                _ => furthest = Some(f),
                             }
                         }
                     }
                 }
-                // If all failed, return the heroic failure or the original start point.
-                Err(furthest.unwrap_or(ctx))
+                Err(furthest.unwrap_or(ctx.failure("Expecting opions: X y z")))
             }
 
             Self::Optional(exp) => match exp.parse(ctx.clone()) {
                 Ok(S(new_ctx, cst)) => Ok(S(new_ctx, cst)),
-                Err(mut err_ctx) => {
+                Err(mut f) => {
                     // If the expression committed with a cut, we cannot be optional.
-                    if err_ctx.cut_seen() {
-                        err_ctx.uncut();
-                        return Err(err_ctx);
+                    if f.cut_seen() {
+                        f.uncut();
+                        return Err(f);
                     }
                     // Otherwise, we forgive the failure and return the original ctx.
+                    ctx.uncut();
                     Ok(S(ctx, Cst::Nil))
                 }
             },

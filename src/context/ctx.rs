@@ -4,7 +4,7 @@
 use super::memo::{Cache, Key, Memo};
 use crate::astree::cst::Cst;
 use crate::input::Cursor;
-use crate::model::{Grammar, ParseResult, Rule, S};
+use crate::model::{F, Grammar, ParseResult, Rule, S};
 use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
@@ -14,9 +14,13 @@ pub trait Ctx: Clone + Debug {
 
     fn cursor_mut(&mut self) -> &mut dyn Cursor;
 
-    fn with_cache_mut<F, R>(&self, f: F) -> R
+    fn with_cache_mut<FnMut, R>(&self, f: FnMut) -> R
     where
-        F: FnOnce(&mut Cache) -> R;
+        FnMut: FnOnce(&mut Cache) -> R;
+
+    fn failure(&self, msg: &str) -> F {
+        F::new(self.mark(), msg, self.cut_seen())
+    }
 
     fn eof_check(&mut self) -> bool {
         self.cursor().at_end()
@@ -91,7 +95,7 @@ pub trait Ctx: Clone + Debug {
         let key = self.key(name);
         if let Some(memo) = self.memo(&key) {
             return match memo.cst {
-                Cst::Bottom => Err(self),
+                Cst::Bottom => Err(self.failure(name)),
                 _ => {
                     self.reset(memo.mark);
                     Ok(S(self, memo.cst))
@@ -102,14 +106,14 @@ pub trait Ctx: Clone + Debug {
         if rule.is_left_recursive() {
             return self.recursive_call(key, &rule);
         }
-        match rule.parse(self) {
+        match rule.parse(self.clone()) {
             Ok(S(mut ctx, cst)) => {
                 ctx.memoize(&key, &cst);
                 Ok(S(ctx, cst))
             }
-            Err(mut ctx) => {
-                ctx.memoize(&key, &Cst::Bottom);
-                Err(ctx)
+            Err(f) => {
+                self.memoize(&key, &Cst::Bottom);
+                Err(f)
             }
         }
     }
@@ -123,13 +127,17 @@ pub trait Ctx: Clone + Debug {
         let start_mark = self.mark();
         let mut best_cst: Option<Cst> = None;
         let mut high_water_mark = start_mark;
+        let mut last_failure: Option<F> = None;
 
         loop {
             let mut ctx = self.clone();
             ctx.reset(start_mark);
 
             match rule.parse(ctx) {
-                Err(_) => break,
+                Err(f) => {
+                    last_failure = Some(f);
+                    break;
+                }
                 Ok(S(mut ctx, cst)) => {
                     let mark = ctx.mark();
                     if mark < high_water_mark {
@@ -147,7 +155,7 @@ pub trait Ctx: Clone + Debug {
         if let Some(cst) = best_cst {
             Ok(S(self, cst))
         } else {
-            Err(self)
+            Err(last_failure.unwrap_or_else(|| self.failure(&rule.name)))
         }
     }
 }
