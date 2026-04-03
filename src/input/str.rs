@@ -116,7 +116,7 @@ impl<'a, P: Patterns> Cursor for StrCursor<'a, P> {
     }
 
     #[cfg(feature = "regex")]
-    fn pattern(&mut self, pattern: &str) -> Option<&'a str> {
+    fn pattern(&mut self, pattern: &str) -> Option<String> {
         if pattern.is_empty() {
             return None;
         }
@@ -124,17 +124,13 @@ impl<'a, P: Patterns> Cursor for StrCursor<'a, P> {
             let re = Regex::new(pattern).ok()?;
             let caps = re.captures_at(self.text, self.offset)?;
 
-            // Only match if it starts EXACTLY at the cursor
             let whole = caps.get(0)?;
             if whole.start() != self.offset {
                 return None;
             }
 
-            // Move the cursor by the whole match, but return the "Value"
             self.offset = whole.end();
-
-            // Logic: If there is 1+ group, return group 1. Else return group 0.
-            Some(caps.get(1).or(caps.get(0))?.as_str())
+            Some(caps.get(1).or(caps.get(0))?.as_str().into())
         }
     }
 

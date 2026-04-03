@@ -47,13 +47,17 @@ pub enum TatSuModel {
         pattern: String,
     },
     Constant {
-        value: serde_json::Value,
+        literal: String,
+    },
+    Alert {
+        literal: String,
+        leverl: u16,
     },
     Call {
         name: String,
     },
     Void {
-        exp: Box<TatSuModel>,
+        // exp: Box<TatSuModel>,
     },
     Cut,
     EOF,
@@ -68,19 +72,27 @@ pub enum TatSuModel {
     },
     Gather {
         exp: Box<TatSuModel>,
-        joiner: Box<TatSuModel>,
+        sep: Box<TatSuModel>,
     },
     PositiveGather {
         exp: Box<TatSuModel>,
-        joiner: Box<TatSuModel>,
+        sep: Box<TatSuModel>,
+    },
+    Join {
+        exp: Box<TatSuModel>,
+        sep: Box<TatSuModel>,
+    },
+    PositiveJoin {
+        exp: Box<TatSuModel>,
+        sep: Box<TatSuModel>,
     },
     LeftJoin {
         exp: Box<TatSuModel>,
-        joiner: Box<TatSuModel>,
+        sep: Box<TatSuModel>,
     },
     RightJoin {
         exp: Box<TatSuModel>,
-        joiner: Box<TatSuModel>,
+        sep: Box<TatSuModel>,
     },
     PositiveLookahead {
         exp: Box<TatSuModel>,
@@ -99,11 +111,13 @@ pub enum TatSuModel {
     Override {
         exp: Box<TatSuModel>,
     },
+    OverrideList {
+        exp: Box<TatSuModel>,
+    },
     SkipTo {
         exp: Box<TatSuModel>,
     },
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -117,8 +131,8 @@ mod tests {
         path.push("grammar");
         path.push("calc.json");
 
-        let original_json = fs::read_to_string(&path)
-            .expect("Unable to read original grammar file");
+        let original_json =
+            fs::read_to_string(&path).expect("Unable to read original grammar file");
 
         // 1. First Eat: JSON -> Rust
         let first_model: TatSuModel = serde_json::from_str(&original_json)
@@ -126,8 +140,8 @@ mod tests {
 
         // 2. The Spit: Rust -> JSON String
         // We use to_string_pretty to make any diffing easier if it fails
-        let serialized_json = serde_json::to_string_pretty(&first_model)
-            .expect("Serialization failed");
+        let serialized_json =
+            serde_json::to_string_pretty(&first_model).expect("Serialization failed");
 
         // 3. Second Eat: New JSON -> New Rust
         let second_model: TatSuModel = serde_json::from_str(&serialized_json)

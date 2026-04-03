@@ -19,6 +19,8 @@ impl E {
 
             // Always consumes (or fails), never succeeds with zero width
             E::Fail | E::Dot | E::Token(_) => false,
+            
+            E::Pattern(_) => false, // todo!("need to check for empty matches") 
 
             // Transparent wrappers
             E::Group(m)
@@ -57,6 +59,7 @@ impl E {
             | E::Dot
             | E::Eof
             | E::Token(_)
+            | E::Pattern(_)
             | E::Constant(_)
             | E::Alert(..)
             | E::Call(_) => vec![],

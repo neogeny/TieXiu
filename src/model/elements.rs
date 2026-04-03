@@ -26,6 +26,7 @@ pub enum E {
     Call(Str),
 
     Token(Str),
+    Pattern(Str),
     Constant(Str),
     Alert(Str, u8),
 
@@ -101,6 +102,13 @@ where
                     Ok(S(ctx, Cst::Token(token.deref().into())))
                 } else {
                     Err(ctx.failure(&format!("Expecting '{}'", token.deref())))
+                }
+            }
+            Self::Pattern(pattern) => {
+                if let Some(matched) = ctx.pattern(pattern) {
+                    Ok(S(ctx, Cst::Token(matched.into())))
+                } else {
+                    Err(ctx.failure(&format!("Expecting '{}'", pattern.deref())))
                 }
             }
             Self::Constant(literal) => Ok(S(ctx, Cst::Literal(literal.deref().into()))),

@@ -39,7 +39,7 @@ pub trait Ctx: Clone + Debug {
         self.cursor_mut().token(token)
     }
 
-    fn pattern(&mut self, pattern: &str) -> Option<&str> {
+    fn pattern(&mut self, pattern: &str) -> Option<String> {
         // NOTE: no next_token() here
         self.cursor_mut().pattern(pattern)
     }

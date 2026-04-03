@@ -10,7 +10,7 @@ pub trait Cursor: Debug {
     fn at_end(&self) -> bool;
     fn next(&mut self) -> Option<char>;
     fn token(&mut self, token: &str) -> bool;
-    fn pattern(&mut self, _pattern: &str) -> Option<&str> {
+    fn pattern(&mut self, _pattern: &str) -> Option<String> {
         None
     }
     fn next_token(&mut self);
@@ -41,6 +41,4 @@ pub trait Cursor: Debug {
     // // Simplified coordinates
     // fn line_at(&self, pos: Option<usize>) -> usize;
     //
-    // /// Required for the State Stack to backtrack.
-    // fn clone_box(&self) -> CursorBox<'a>;
 }
