@@ -1,7 +1,6 @@
 use super::Cursor;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-
 #[cfg(feature = "regex")]
 use regex::Regex;
 
@@ -9,12 +8,42 @@ pub trait Patterns: Clone + Debug + Default {
     const WHITESPACE: &'static str = r"\s+";
     const EOL_COMMENTS: &'static str = r"//.*$";
     const COMMENTS: &'static str = r"";
+
+    fn whitespace_re(&self) -> &Regex;
+    fn comments_re(&self) -> &Regex;
+    fn eol_comments_re(&self) -> &Regex;
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct DefaultPatterns;
+#[derive(Clone, Debug)]
+pub struct DefaultPatterns {
+    _whitespace_re: Regex,
+    _comments_re: Regex,
+    _eol_comments_re: Regex,
+}
 
-impl Patterns for DefaultPatterns {}
+impl Default for DefaultPatterns{
+    fn default() -> Self {
+        Self {
+            _whitespace_re: Regex::new(DefaultPatterns::WHITESPACE).unwrap(),
+            _comments_re: Regex::new(DefaultPatterns::COMMENTS).unwrap(),
+            _eol_comments_re: Regex::new(DefaultPatterns::EOL_COMMENTS).unwrap(),
+        }
+    }
+}
+
+impl Patterns for DefaultPatterns {
+    fn whitespace_re(&self) -> &Regex {
+        &self._whitespace_re
+    }
+
+    fn comments_re(&self) -> &Regex {
+        &self._comments_re
+    }
+
+    fn eol_comments_re(&self) -> &Regex {
+        &self._eol_comments_re
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct StrCursor<'a, P = DefaultPatterns> {
@@ -33,23 +62,15 @@ impl<'a, P: Patterns> StrCursor<'a, P> {
         }
     }
 
-    fn eat_pattern(&mut self, pattern: &str) -> bool {
-        if pattern.is_empty() {
-            return false;
-        }
+    fn eat_regex(&mut self, re: &Regex) -> bool {
 
         #[cfg(feature = "regex")]
-        match Regex::new(pattern) {
-            Err(_) => return false,
-            Ok(re) => {
-                if let Some(mat) = re.find_at(self.text, self.offset) {
-                    if mat.start() != self.offset {
-                        return false;
-                    }
-                    self.offset = mat.end();
-                    return true;
-                }
+        if let Some(mat) = re.find_at(self.text, self.offset) {
+            if mat.start() != self.offset {
+                return false;
             }
+            self.offset = mat.end();
+            return true;
         }
         false
     }
@@ -119,16 +140,20 @@ impl<'a, P: Patterns> Cursor for StrCursor<'a, P> {
     }
 
     fn next_token(&mut self) {
-        let _p = P::default();
+        let patterns = P::default();
+        let wre = patterns.whitespace_re();
+        let cre = patterns.comments_re();
+        let ere = patterns.eol_comments_re();
+
+
         let mut last_offset = usize::MAX;
         while self.offset != last_offset {
             last_offset = self.offset;
-
-            self.eat_pattern(P::WHITESPACE);
-            if self.eat_pattern(P::EOL_COMMENTS) {
-                self.eat_pattern(P::WHITESPACE);
+            self.eat_regex(wre);
+            if self.eat_regex(ere) {
+                self.eat_regex(wre);
             }
-            self.eat_pattern(P::COMMENTS);
+            self.eat_regex(cre);
         }
     }
 }
