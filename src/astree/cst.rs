@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::ast::Ast;
-use std::fmt;
 use std::ops::Add;
 use std::ops::Deref;
 
@@ -63,43 +62,6 @@ impl From<Vec<Cst>> for Cst {
 impl<const N: usize> From<[Cst; N]> for Cst {
     fn from(arr: [Cst; N]) -> Self {
         Cst::List(arr.into())
-    }
-}
-
-impl fmt::Display for KeyValue {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "«{}={}»", self.0, self.1)
-    }
-}
-
-impl fmt::Display for Cst {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Token(s) | Self::Literal(s) => write!(f, "\"{}\"", s),
-            Self::Number(n) => write!(f, "{}", n),
-            Self::List(items) | Self::Closure(items) => {
-                let bracket = if matches!(self, Self::List(_)) {
-                    ("[", "]")
-                } else {
-                    ("{", "}")
-                };
-                write!(f, "{}", bracket.0)?;
-                for (i, item) in items.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{}", item)?;
-                }
-                write!(f, "{}", bracket.1)
-            }
-            Self::Named(kv) | Self::NamedList(kv) => write!(f, "{}", kv),
-            Self::OverrideValue(v) => write!(f, "!{}", v),
-            Self::OverrideList(v) => write!(f, "!!{}", v),
-            Self::Ast(ast) => write!(f, "{}", ast),
-            Self::Void => write!(f, "()"),
-            Self::Nil => write!(f, "∅"),
-            Self::Bottom => write!(f, "⊥"),
-        }
     }
 }
 
