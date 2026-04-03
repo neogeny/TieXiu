@@ -16,7 +16,7 @@ pub struct Memo {
     pub mark: usize,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Cache {
     memos: HashMap<Key, Memo>,
 }

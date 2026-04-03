@@ -14,7 +14,8 @@ pub struct State<C: Cursor> {
 #[derive(Clone, Debug)]
 pub struct HeavyState<'c> {
     pub grammar: &'c Grammar,
-    pub cache: Rc<RefCell<Cache>>,
+    pub cache: Cache,
+    // pub cache: Rc<RefCell<Cache>>,
 }
 
 #[derive(Debug)]
@@ -23,7 +24,8 @@ where
     C: Cursor + Clone,
 {
     pub state: Rc<State<C>>,
-    pub heavy: Box<HeavyState<'c>>,
+    pub heavy: Rc<RefCell<HeavyState<'c>>>,
+    // pub heavy: Box<HeavyState<'c>>,
 }
 
 impl<'c, C> CoreCtx<'c, C>
@@ -37,10 +39,12 @@ where
                 cutseen: false,
             }
             .into(),
-            heavy: HeavyState {
-                grammar,
-                cache: Rc::new(RefCell::new(Cache::new())),
-            }
+            heavy: RefCell::new(
+                HeavyState {
+                    grammar,
+                    cache: Cache::new(),
+                }
+            )
             .into(),
         }
     }
@@ -55,8 +59,8 @@ impl<'a, C: Cursor + Clone> Clone for CoreCtx<'a, C> {
     fn clone(&self) -> Self {
         Self {
             // This clones the actual 32-byte State data into a new allocation
-            state: (*self.state).clone().into(),
-            heavy: Box::clone(&self.heavy),
+            state: Rc::clone(&self.state),
+            heavy: Rc::clone(&self.heavy),
         }
     }
 }
@@ -66,7 +70,7 @@ where
     C: Cursor + Clone,
 {
     fn grammar(&self) -> &Grammar {
-        self.heavy.grammar
+        self.heavy.borrow().grammar
     }
 
     #[inline]
@@ -83,8 +87,8 @@ where
     where
         F: FnOnce(&mut Cache) -> R,
     {
-        let mut cache = self.heavy.cache.borrow_mut();
-        f(&mut cache)
+        let mut heavy = self.heavy.borrow_mut();
+        f(&mut heavy.cache)
     }
 
     #[inline]
