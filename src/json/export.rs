@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::contexts::ast::Ast;
-use crate::contexts::Cst;
+use crate::contexts::{Cst, KeyValue};
 use std::collections::HashMap;
 use std::ops::Deref;
 
@@ -48,7 +48,7 @@ impl ToJson for Cst {
                 Json::Array(v.iter().map(|c| c.to_json()).collect())
             }
             Cst::Named(keyval) | Cst::NamedList(keyval) => {
-                let (name, cst) = keyval.deref();
+                let KeyValue(name, cst) = keyval.deref();
                 let mut map = HashMap::new();
                 map.insert(name.to_string(), cst.to_json());
                 Json::Object(map)

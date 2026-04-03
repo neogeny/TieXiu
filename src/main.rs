@@ -18,14 +18,16 @@ fn test_build() {
     let v = Model::Void;
     let r = Model::closure(c);
     // let cl = Call::new("test");
-    let seq = Model::Sequence([a, b, r, v].into());
+    let n = Model::named("test", b);
+    let seq = Model::Sequence([a, n, r, v].into());
 
     let cur: StrCursor<DefaultPatterns> = StrCursor::new("a b c c c");
     let grammar = Grammar::new("test", &[]);
     let ctx = StrCtx::new(cur, &grammar);
 
     if let Ok(S(_, cst)) = seq.parse(ctx) {
-        print!("{:?}", cst);
+        println!("{}", cst);
+        println!("{}", cst.node());
     }
 }
 

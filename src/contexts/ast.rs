@@ -4,11 +4,28 @@
 use super::cst::Cst;
 use std::collections::HashMap;
 use std::ops::Add;
+use std::fmt;
 
 /// A structured mapping for AST nodes.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Ast {
     pub fields: HashMap<String, Cst>,
+}
+
+impl fmt::Display for Ast {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Collect and sort keys for a stable, predictable string
+        let mut keys: Vec<&String> = self.fields.keys().collect();
+        keys.sort();
+
+        write!(f, "{{")?;
+        for (i, key) in keys.iter().enumerate() {
+            if i > 0 { write!(f, ", ")?; }
+            // Safe to unwrap because we just got the key from the map
+            write!(f, "{}: {}", key, self.fields.get(*key).unwrap())?;
+        }
+        write!(f, "}}")
+    }
 }
 
 impl Ast {
