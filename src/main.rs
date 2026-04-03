@@ -31,7 +31,6 @@ fn test_build() {
     }
 }
 
-
 fn cli() {
     use clap::Parser;
     use tiexiu::tool::cli::{Cli, Commands};

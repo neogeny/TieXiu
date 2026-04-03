@@ -22,9 +22,12 @@ mod tests {
         let grammar = Grammar::load_bootstrap()?;
 
         assert!(!grammar.name.is_empty(), "Grammar name should not be empty");
-        assert!(!grammar.rulemap.is_empty(), "Bootstrap grammar should have rulemap");
-        let has_start = grammar.rulemap.contains_key("start")
-                     || grammar.rulemap.contains_key("grammar");
+        assert!(
+            !grammar.rulemap.is_empty(),
+            "Bootstrap grammar should have rulemap"
+        );
+        let has_start =
+            grammar.rulemap.contains_key("start") || grammar.rulemap.contains_key("grammar");
 
         assert!(has_start, "Bootstrap grammar missing a starting rule");
 
