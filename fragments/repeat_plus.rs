@@ -7,10 +7,10 @@ impl Ctx {
         let mut current_ctx = *self;
         let mut results = Vec::new();
 
-        while let Ok((next_ctx, cst)) = parse_fn(current_ctx) {
+        while let Ok((next_ctx, tree)) = parse_fn(current_ctx) {
             if next_ctx.offset == current_ctx.offset { break; } // Avoid infinite loops
             current_ctx = next_ctx;
-            results.push(cst);
+            results.push(tree);
         }
         (current_ctx, Cst::Closed(results))
     }

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-pub mod astree;
+pub mod trees;
 pub mod context;
 pub mod input;
 pub mod json;

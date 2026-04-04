@@ -9,7 +9,7 @@ pub type StrCtx<'c> = CoreCtx<'c, StrCursor<'c>>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::astree::{Cst, KeyValue};
+    use crate::trees::{KeyValue, Tree};
     use crate::context::Ctx;
     use crate::input::strcursor::StrCursor;
     use crate::model::Grammar;
@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn test_cst_size() {
-        let size = size_of::<Cst>();
+        let size = size_of::<Tree>();
         assert!(size <= TARGET, "Cst size is {} > {} bytes", size, TARGET);
     }
 
@@ -97,7 +97,7 @@ mod tests {
 
         let key = ctx1.key("hello");
 
-        ctx1.memoize(&key, &Cst::Void);
+        ctx1.memoize(&key, &Tree::Stump);
 
         let retrieved = ctx2.memo(&key);
 
@@ -106,8 +106,8 @@ mod tests {
             "ctx2 failed to see the memoization entry from ctx1"
         );
         assert_eq!(
-            retrieved.unwrap().cst,
-            Cst::Void,
+            retrieved.unwrap().tree,
+            Tree::Stump,
             "Memoization data mismatch between shared contexts"
         );
     }
@@ -123,7 +123,7 @@ mod tests {
 
         assert_ne!(ctx1.cursor().mark(), ctx2.cursor().mark());
 
-        let entry = Cst::Bottom;
+        let entry = Tree::Bottom;
         let key = ctx1.key("world");
         ctx2.memoize(&key, &entry);
         assert!(

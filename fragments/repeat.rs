@@ -8,13 +8,13 @@ impl Ctx {
         let mut current_ctx = *self; // Assuming Ctx is Copy or Clone
         let mut results = Vec::new();
 
-        while let Ok((next_ctx, cst)) = parse_fn(current_ctx) {
+        while let Ok((next_ctx, tree)) = parse_fn(current_ctx) {
             // Safety: Ensure we actually progressed to avoid infinite loops
             if next_ctx.offset == current_ctx.offset {
                 break;
             }
             current_ctx = next_ctx;
-            results.push(cst);
+            results.push(tree);
         }
 
         (current_ctx, results)

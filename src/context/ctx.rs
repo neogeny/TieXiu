@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::memo::{Key, Memo, MemoCache};
-use crate::astree::cst::Cst;
+use crate::trees::tree::Tree;
 use crate::input::Cursor;
 use crate::model::{F, Grammar, ParseResult, Rule, S};
 use regex::Regex;
 use std::fmt::Debug;
+
 
 pub trait Ctx: Clone + Debug {
     fn grammar(&self) -> &Grammar;
@@ -61,7 +62,7 @@ pub trait Ctx: Clone + Debug {
 
     fn memo(&mut self, key: &Key) -> Option<Memo>;
 
-    fn memoize(&mut self, key: &Key, cst: &Cst);
+    fn memoize(&mut self, key: &Key, tree: &Tree);
 
     fn cut_seen(&self) -> bool;
     fn uncut(&mut self);
@@ -87,11 +88,11 @@ pub trait Ctx: Clone + Debug {
 
         let key = self.key(name);
         if let Some(memo) = self.memo(&key) {
-            return match memo.cst {
-                Cst::Bottom => Err(self.failure(name)),
+            return match memo.tree {
+                Tree::Bottom => Err(self.failure(name)),
                 _ => {
                     self.reset(memo.mark);
-                    Ok(S(self, memo.cst))
+                    Ok(S(self, memo.tree))
                 }
             };
         }
@@ -100,12 +101,12 @@ pub trait Ctx: Clone + Debug {
             return self.recursive_call(key, &rule);
         }
         match rule.parse(self.clone()) {
-            Ok(S(mut ctx, cst)) => {
-                ctx.memoize(&key, &cst);
-                Ok(S(ctx, cst))
+            Ok(S(mut ctx, tree)) => {
+                ctx.memoize(&key, &tree);
+                Ok(S(ctx, tree))
             }
             Err(f) => {
-                self.memoize(&key, &Cst::Bottom);
+                self.memoize(&key, &Tree::Bottom);
                 Err(f)
             }
         }
@@ -116,9 +117,9 @@ pub trait Ctx: Clone + Debug {
             panic!("Recursive call on non-LRec rule");
         }
 
-        self.memoize(&key, &Cst::Bottom);
+        self.memoize(&key, &Tree::Bottom);
         let start_mark = self.mark();
-        let mut best_cst: Option<Cst> = None;
+        let mut best_cst: Option<Tree> = None;
         let mut high_water_mark = start_mark;
         let mut last_failure: Option<F> = None;
 
@@ -131,22 +132,22 @@ pub trait Ctx: Clone + Debug {
                     last_failure = Some(f);
                     break;
                 }
-                Ok(S(mut ctx, cst)) => {
+                Ok(S(mut ctx, tree)) => {
                     let mark = ctx.mark();
                     if mark < high_water_mark {
                         break;
                     }
 
-                    ctx.memoize(&key, &cst);
+                    ctx.memoize(&key, &tree);
                     high_water_mark = mark;
-                    best_cst = Some(cst);
+                    best_cst = Some(tree);
                     self = ctx;
                 }
             }
         }
 
-        if let Some(cst) = best_cst {
-            Ok(S(self, cst))
+        if let Some(tree) = best_cst {
+            Ok(S(self, tree))
         } else {
             Err(last_failure.unwrap_or_else(|| self.failure(&rule.name)))
         }

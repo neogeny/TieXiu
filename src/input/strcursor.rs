@@ -39,6 +39,13 @@ pub struct StrCursor<'a> {
     patterns: Rc<Patterns>,
 }
 
+impl<'a> From<&'a str> for StrCursor<'a> {
+    #[inline]
+    fn from(text: &'a str) -> Self {
+        Self::new(text)
+    }
+}
+
 impl<'a> StrCursor<'a> {
     pub fn new(text: &'a str) -> Self {
         Self {

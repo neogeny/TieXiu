@@ -1,12 +1,12 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::astree::Cst;
+use crate::trees::Tree;
 use crate::context::Ctx;
 use std::fmt::Debug;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct S<C: Ctx>(pub C, pub Cst);
+pub struct S<C: Ctx>(pub C, pub Tree);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct F {
@@ -58,7 +58,7 @@ impl<C: Ctx> S<C> {
     }
 
     #[inline]
-    pub fn cst(self) -> Cst {
+    pub fn tree(self) -> Tree {
         self.1
     }
 
@@ -68,7 +68,7 @@ impl<C: Ctx> S<C> {
     }
 
     #[inline]
-    pub fn cst_ref(&self) -> &Cst {
+    pub fn cst_ref(&self) -> &Tree {
         &self.1
     }
 }

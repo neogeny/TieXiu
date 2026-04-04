@@ -1,254 +1,254 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::elements::E;
+use super::elements::Element;
 
 #[inline]
-pub fn cut() -> E {
-    E::Cut
-}
-
-#[inline]
-pub fn void() -> E {
-    E::Void
+pub fn cut() -> Element {
+    Element::Cut
 }
 
 #[inline]
-pub fn fail() -> E {
-    E::Fail
+pub fn void() -> Element {
+    Element::Void
 }
 
 #[inline]
-pub fn dot() -> E {
-    E::Dot
+pub fn fail() -> Element {
+    Element::Fail
 }
 
 #[inline]
-pub fn eof() -> E {
-    E::Eof
+pub fn dot() -> Element {
+    Element::Dot
 }
 
-pub fn call(name: &str) -> E {
-    E::Call(name.into())
+#[inline]
+pub fn eof() -> Element {
+    Element::Eof
 }
 
-pub fn token(name: &str) -> E {
-    E::Token(name.into())
+pub fn call(name: &str) -> Element {
+    Element::Call(name.into())
 }
 
-pub fn constant(value: &str) -> E {
-    E::Constant(value.into())
+pub fn token(name: &str) -> Element {
+    Element::Token(name.into())
 }
 
-pub fn alert(msg: &str, code: u8) -> E {
-    E::Alert(msg.into(), code)
+pub fn constant(value: &str) -> Element {
+    Element::Constant(value.into())
 }
 
-pub fn named(name: &str, model: E) -> E {
-    E::Named(name.into(), model.into())
+pub fn alert(msg: &str, code: u8) -> Element {
+    Element::Alert(msg.into(), code)
 }
 
-pub fn named_list(name: &str, model: E) -> E {
-    E::NamedList(name.into(), model.into())
+pub fn named(name: &str, model: Element) -> Element {
+    Element::Named(name.into(), model.into())
 }
 
-pub fn override_node(model: E) -> E {
-    E::Override(model.into())
+pub fn named_list(name: &str, model: Element) -> Element {
+    Element::NamedList(name.into(), model.into())
 }
 
-pub fn override_list(model: E) -> E {
-    E::OverrideList(model.into())
+pub fn override_node(model: Element) -> Element {
+    Element::Override(model.into())
 }
 
-pub fn group(model: E) -> E {
-    E::Group(model.into())
+pub fn override_list(model: Element) -> Element {
+    Element::OverrideList(model.into())
 }
 
-pub fn skip_group(model: E) -> E {
-    E::SkipGroup(model.into())
+pub fn group(model: Element) -> Element {
+    Element::Group(model.into())
 }
 
-pub fn lookahead(model: E) -> E {
-    E::Lookahead(model.into())
+pub fn skip_group(model: Element) -> Element {
+    Element::SkipGroup(model.into())
 }
 
-pub fn negative_lookahead(model: E) -> E {
-    E::NegativeLookahead(model.into())
+pub fn lookahead(model: Element) -> Element {
+    Element::Lookahead(model.into())
 }
 
-pub fn skip_to(model: E) -> E {
-    E::SkipTo(model.into())
+pub fn negative_lookahead(model: Element) -> Element {
+    Element::NegativeLookahead(model.into())
 }
 
-pub fn sequence(models: Vec<E>) -> E {
-    E::Sequence(models.into_boxed_slice())
+pub fn skip_to(model: Element) -> Element {
+    Element::SkipTo(model.into())
 }
 
-pub fn choice(models: Vec<E>) -> E {
-    E::Choice(models.into_boxed_slice())
+pub fn sequence(models: Vec<Element>) -> Element {
+    Element::Sequence(models.into_boxed_slice())
 }
 
-pub fn optional(model: E) -> E {
-    E::Optional(model.into())
+pub fn choice(models: Vec<Element>) -> Element {
+    Element::Choice(models.into_boxed_slice())
 }
 
-pub fn closure(model: E) -> E {
-    E::Closure(model.into())
+pub fn optional(model: Element) -> Element {
+    Element::Optional(model.into())
 }
 
-pub fn positive_closure(model: E) -> E {
-    E::PositiveClosure(model.into())
+pub fn closure(model: Element) -> Element {
+    Element::Closure(model.into())
 }
 
-pub fn join(exp: E, sep: E) -> E {
-    E::Join {
+pub fn positive_closure(model: Element) -> Element {
+    Element::PositiveClosure(model.into())
+}
+
+pub fn join(exp: Element, sep: Element) -> Element {
+    Element::Join {
         exp: exp.into(),
         sep: sep.into(),
     }
 }
 
-pub fn positive_join(exp: E, sep: E) -> E {
-    E::PositiveJoin {
+pub fn positive_join(exp: Element, sep: Element) -> Element {
+    Element::PositiveJoin {
         exp: exp.into(),
         sep: sep.into(),
     }
 }
 
-pub fn gather(exp: E, sep: E) -> E {
-    E::Gather {
+pub fn gather(exp: Element, sep: Element) -> Element {
+    Element::Gather {
         exp: exp.into(),
         sep: sep.into(),
     }
 }
 
-pub fn positive_gather(exp: E, sep: E) -> E {
-    E::PositiveGather {
+pub fn positive_gather(exp: Element, sep: Element) -> Element {
+    Element::PositiveGather {
         exp: exp.into(),
         sep: sep.into(),
     }
 }
 
-impl E {
+impl Element {
     #[inline]
     pub fn cut() -> Self {
-        E::Cut
+        Element::Cut
     }
 
     #[inline]
     pub fn void() -> Self {
-        E::Void
+        Element::Void
     }
 
     #[inline]
     pub fn fail() -> Self {
-        E::Fail
+        Element::Fail
     }
 
     #[inline]
     pub fn dot() -> Self {
-        E::Dot
+        Element::Dot
     }
 
     #[inline]
     pub fn eof() -> Self {
-        E::Eof
+        Element::Eof
     }
 
     pub fn call(name: &str) -> Self {
-        E::Call(name.into())
+        Element::Call(name.into())
     }
 
     pub fn token(name: &str) -> Self {
-        E::Token(name.into())
+        Element::Token(name.into())
     }
 
     pub fn constant(value: &str) -> Self {
-        E::Constant(value.into())
+        Element::Constant(value.into())
     }
 
     pub fn alert(msg: &str, code: u8) -> Self {
-        E::Alert(msg.into(), code)
+        Element::Alert(msg.into(), code)
     }
 
-    pub fn named(name: &str, model: E) -> Self {
-        E::Named(name.into(), model.into())
+    pub fn named(name: &str, model: Element) -> Self {
+        Element::Named(name.into(), model.into())
     }
 
-    pub fn named_list(name: &str, model: E) -> Self {
-        E::NamedList(name.into(), model.into())
+    pub fn named_list(name: &str, model: Element) -> Self {
+        Element::NamedList(name.into(), model.into())
     }
 
-    pub fn override_node(model: E) -> Self {
-        E::Override(model.into())
+    pub fn override_node(model: Element) -> Self {
+        Element::Override(model.into())
     }
 
-    pub fn override_list(model: E) -> Self {
-        E::OverrideList(model.into())
+    pub fn override_list(model: Element) -> Self {
+        Element::OverrideList(model.into())
     }
 
-    pub fn group(model: E) -> Self {
-        E::Group(model.into())
+    pub fn group(model: Element) -> Self {
+        Element::Group(model.into())
     }
 
-    pub fn skip_group(model: E) -> Self {
-        E::SkipGroup(model.into())
+    pub fn skip_group(model: Element) -> Self {
+        Element::SkipGroup(model.into())
     }
 
-    pub fn lookahead(model: E) -> Self {
-        E::Lookahead(model.into())
+    pub fn lookahead(model: Element) -> Self {
+        Element::Lookahead(model.into())
     }
 
-    pub fn negative_lookahead(model: E) -> Self {
-        E::NegativeLookahead(model.into())
+    pub fn negative_lookahead(model: Element) -> Self {
+        Element::NegativeLookahead(model.into())
     }
 
-    pub fn skip_to(model: E) -> Self {
-        E::SkipTo(model.into())
+    pub fn skip_to(model: Element) -> Self {
+        Element::SkipTo(model.into())
     }
 
-    pub fn sequence(models: Vec<E>) -> Self {
-        E::Sequence(models.into_boxed_slice())
+    pub fn sequence(models: Vec<Element>) -> Self {
+        Element::Sequence(models.into_boxed_slice())
     }
 
-    pub fn choice(models: Vec<E>) -> Self {
-        E::Choice(models.into_boxed_slice())
+    pub fn choice(models: Vec<Element>) -> Self {
+        Element::Choice(models.into_boxed_slice())
     }
 
-    pub fn optional(model: E) -> Self {
-        E::Optional(model.into())
+    pub fn optional(model: Element) -> Self {
+        Element::Optional(model.into())
     }
 
-    pub fn closure(model: E) -> Self {
-        E::Closure(model.into())
+    pub fn closure(model: Element) -> Self {
+        Element::Closure(model.into())
     }
 
-    pub fn positive_closure(model: E) -> Self {
-        E::PositiveClosure(model.into())
+    pub fn positive_closure(model: Element) -> Self {
+        Element::PositiveClosure(model.into())
     }
 
-    pub fn join(exp: E, sep: E) -> Self {
-        E::Join {
+    pub fn join(exp: Element, sep: Element) -> Self {
+        Element::Join {
             exp: exp.into(),
             sep: sep.into(),
         }
     }
 
-    pub fn positive_join(exp: E, sep: E) -> Self {
-        E::PositiveJoin {
+    pub fn positive_join(exp: Element, sep: Element) -> Self {
+        Element::PositiveJoin {
             exp: exp.into(),
             sep: sep.into(),
         }
     }
 
-    pub fn gather(exp: E, sep: E) -> Self {
-        E::Gather {
+    pub fn gather(exp: Element, sep: Element) -> Self {
+        Element::Gather {
             exp: exp.into(),
             sep: sep.into(),
         }
     }
 
-    pub fn positive_gather(exp: E, sep: E) -> Self {
-        E::PositiveGather {
+    pub fn positive_gather(exp: Element, sep: Element) -> Self {
+        Element::PositiveGather {
             exp: exp.into(),
             sep: sep.into(),
         }

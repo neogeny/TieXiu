@@ -1,4 +1,4 @@
-use crate::astree::Cst;
+use crate::trees::Tree;
 use crate::context::Ctx;
 use crate::context::memo::{Key, Memo, MemoCache};
 use crate::input::Cursor;
@@ -100,10 +100,10 @@ where
         self.with_heavy_mut(|heavy| heavy.memos.memo(key))
     }
 
-    fn memoize(&mut self, key: &Key, cst: &Cst) {
+    fn memoize(&mut self, key: &Key, tree: &Tree) {
         let mark = self.mark();
         self.with_heavy_mut(|heavy| {
-            heavy.memos.memoize(key, cst, mark);
+            heavy.memos.memoize(key, tree, mark);
         });
     }
 

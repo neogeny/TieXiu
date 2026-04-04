@@ -1,11 +1,11 @@
 /// Finalizes a Cst by calling into Python to create the final Node object.
 pub fn finalize_to_python(
     py: Python<'_>,
-    cst: Cst,
+    tree: Cst,
     type_name: &str,
     factory: &PyAny // The Python 'get_node' function
 ) -> PyResult<PyObject> {
-    let value = match cst {
+    let value = match tree {
         Cst::Item(node) => {
             // Attempt to treat the node as something that implements ToPy
             // In a real implementation, we'd use a more sophisticated

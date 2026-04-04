@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::astree::cst::Cst;
+use crate::trees::tree::Tree;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
@@ -12,7 +12,7 @@ pub struct Key {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Memo {
-    pub cst: Cst,
+    pub tree: Tree,
     pub mark: usize,
 }
 
@@ -47,9 +47,9 @@ impl MemoCache {
         self.memos.get(key).cloned()
     }
 
-    pub fn memoize(&mut self, key: &Key, cst: &Cst, mark: usize) {
+    pub fn memoize(&mut self, key: &Key, tree: &Tree, mark: usize) {
         let memo = Memo {
-            cst: cst.clone(),
+            tree: tree.clone(),
             mark,
         };
         self.memos.insert(key.clone(), memo);

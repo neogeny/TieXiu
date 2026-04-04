@@ -11,7 +11,7 @@ pub mod parser;
 pub mod repeat;
 pub mod rule;
 
-pub use elements::E;
+pub use elements::Element;
 pub use grammar::Grammar;
 pub use parser::{F, ParseResult, Parser, S};
 pub use rule::Rule;

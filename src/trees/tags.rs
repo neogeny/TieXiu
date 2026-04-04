@@ -1,64 +1,64 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::cst::Cst;
+use super::tree::Tree;
 use std::collections::HashMap;
 use std::ops::Add;
 
 /// A structured mapping for AST nodes.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct Ast {
-    pub fields: HashMap<String, Cst>,
+pub struct TreeTags {
+    pub tags: HashMap<String, Tree>,
 }
 
-impl Ast {
+impl TreeTags {
     pub fn new() -> Self {
         Self::default()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.fields.is_empty()
+        self.tags.is_empty()
     }
 
-    pub fn get(&self, key: &str) -> Option<&Cst> {
-        self.fields.get(key)
+    pub fn get(&self, key: &str) -> Option<&Tree> {
+        self.tags.get(key)
     }
 
-    pub fn update(&mut self, other: &Ast) {
-        for (key, value) in &other.fields {
-            self.fields.insert(key.clone(), value.clone());
+    pub fn update(&mut self, other: &TreeTags) {
+        for (key, value) in &other.tags {
+            self.tags.insert(key.clone(), value.clone());
         }
     }
 
     pub fn define(&mut self, keys: &[&str], list_keys: &[&str]) {
         for &k in keys {
             let key = self.safekey(k);
-            self.fields.entry(key).or_insert(Cst::Nil);
+            self.tags.entry(key).or_insert(Tree::Nil);
         }
 
         for &k in list_keys {
             let key = self.safekey(k);
-            self.fields.entry(key).or_insert(Cst::List([].into()));
+            self.tags.entry(key).or_insert(Tree::Node([].into()));
         }
     }
 
-    pub fn set(&mut self, key: &str, item: Cst) {
+    pub fn set(&mut self, key: &str, item: Tree) {
         let key = self.safekey(key);
-        if let Some(current) = self.fields.remove(&key) {
+        if let Some(current) = self.tags.remove(&key) {
             let new = current.add(item);
-            self.fields.insert(key, new);
+            self.tags.insert(key, new);
         } else {
-            self.fields.insert(key, item);
+            self.tags.insert(key, item);
         }
     }
 
-    pub fn set_list(&mut self, key: &str, item: Cst) {
+    pub fn set_list(&mut self, key: &str, item: Tree) {
         let key = self.safekey(key);
-        if let Some(current) = self.fields.remove(&key) {
-            let new = current.addlist(item);
-            self.fields.insert(key, new);
+        if let Some(current) = self.tags.remove(&key) {
+            let new = current.add_node(item);
+            self.tags.insert(key, new);
         } else {
-            self.fields.insert(key, item);
+            self.tags.insert(key, item);
         }
     }
 

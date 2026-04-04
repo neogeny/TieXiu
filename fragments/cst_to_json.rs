@@ -2,8 +2,8 @@ use serde_json::{Map, Value};
 
 /// Converts a Cst (and its nested Ast) into a JSON-compatible Value.
 /// This acts as the boundary layer, requiring no Serialize traits on internal types.
-pub fn cst_to_json(cst: &Cst) -> Value {
-    match cst {
+pub fn cst_to_json(tree: &Cst) -> Value {
+    match tree {
         // Basic terminal values
         Cst::Token(s) | Cst::Literal(s) => Value::String(s.to_string()),
 
@@ -17,9 +17,9 @@ pub fn cst_to_json(cst: &Cst) -> Value {
         }
 
         // Pre-transformed Structured Mapping
-        Cst::Ast(ast) => {
+        Cst::Ast(tags) => {
             let mut obj = Map::new();
-            for (key, value) in &ast.fields {
+            for (key, value) in &tags.fields {
                 obj.insert(key.clone(), cst_to_json(value));
             }
             Value::Object(obj)

@@ -1,26 +1,26 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::elements::E;
+use super::elements::Element;
 
-impl E {
+impl Element {
     pub fn is_nullable(&self) -> bool {
         match self {
             // Consumes nothing, always succeeds (or affects state only)
-            E::Cut
-            | E::Void
-            | E::Eof
-            | E::Lookahead(_)
-            | E::NegativeLookahead(_)
-            | E::Optional(_)
-            | E::Constant(_)
-            | E::Alert(..)
-            | E::Closure(_) => true,
+            Element::Cut
+            | Element::Void
+            | Element::Eof
+            | Element::Lookahead(_)
+            | Element::NegativeLookahead(_)
+            | Element::Optional(_)
+            | Element::Constant(_)
+            | Element::Alert(..)
+            | Element::Closure(_) => true,
 
             // Always consumes (or fails), never succeeds with zero width
-            E::Fail | E::Dot | E::Token(_) => false,
+            Element::Fail | Element::Dot | Element::Token(_) => false,
 
-            E::Pattern(pattern) => {
+            Element::Pattern(pattern) => {
                 // true if it CAN match the empty string (is nullable)
                 regex::Regex::new(pattern)
                     .map(|re| re.is_match(""))
@@ -28,26 +28,26 @@ impl E {
             }
 
             // Transparent wrappers
-            E::Group(m)
-            | E::SkipGroup(m)
-            | E::Override(m)
-            | E::Named(_, m)
-            | E::OverrideList(m)
-            | E::NamedList(_, m) => m.is_nullable(),
+            Element::Group(m)
+            | Element::SkipGroup(m)
+            | Element::Override(m)
+            | Element::Named(_, m)
+            | Element::OverrideList(m)
+            | Element::NamedList(_, m) => m.is_nullable(),
 
             // Logic-based variants
-            E::Choice(models) => models.iter().any(|m| m.is_nullable()),
-            E::Sequence(models) => models.iter().all(|m| m.is_nullable()),
-            E::PositiveClosure(m) => m.is_nullable(),
+            Element::Choice(models) => models.iter().any(|m| m.is_nullable()),
+            Element::Sequence(models) => models.iter().all(|m| m.is_nullable()),
+            Element::PositiveClosure(m) => m.is_nullable(),
 
             // Join/Gather variants
-            E::Join { .. } | E::Gather { .. } => true, // These can match zero times
-            E::PositiveJoin { exp, .. } | E::PositiveGather { exp, .. } => exp.is_nullable(),
+            Element::Join { .. } | Element::Gather { .. } => true, // These can match zero times
+            Element::PositiveJoin { exp, .. } | Element::PositiveGather { exp, .. } => exp.is_nullable(),
 
             // Special cases
-            E::SkipTo(_) => false, // SkipTo must find a match to succeed
+            Element::SkipTo(_) => false, // SkipTo must find a match to succeed
 
-            E::Call(_name) => {
+            Element::Call(_name) => {
                 // In a stateless walker, you cannot determine this without
                 // looking up the definition of _name in the grammar.
                 false
@@ -55,39 +55,39 @@ impl E {
         }
     }
 
-    pub fn callable_from(&self) -> Vec<&E> {
+    pub fn callable_from(&self) -> Vec<&Element> {
         match self {
             // These don't lead to further rules
-            E::Cut
-            | E::Void
-            | E::Fail
-            | E::Dot
-            | E::Eof
-            | E::Token(_)
-            | E::Pattern(_)
-            | E::Constant(_)
-            | E::Alert(..)
-            | E::Call(_) => vec![],
+            Element::Cut
+            | Element::Void
+            | Element::Fail
+            | Element::Dot
+            | Element::Eof
+            | Element::Token(_)
+            | Element::Pattern(_)
+            | Element::Constant(_)
+            | Element::Alert(..)
+            | Element::Call(_) => vec![],
 
             // Transparent wrappers: return the inner expression
-            E::Group(m)
-            | E::SkipGroup(m)
-            | E::Override(m)
-            | E::Named(_, m)
-            | E::OverrideList(m)
-            | E::NamedList(_, m)
-            | E::Lookahead(m)
-            | E::NegativeLookahead(m)
-            | E::Optional(m)
-            | E::Closure(m)
-            | E::PositiveClosure(m)
-            | E::SkipTo(m) => vec![m.as_ref()],
+            Element::Group(m)
+            | Element::SkipGroup(m)
+            | Element::Override(m)
+            | Element::Named(_, m)
+            | Element::OverrideList(m)
+            | Element::NamedList(_, m)
+            | Element::Lookahead(m)
+            | Element::NegativeLookahead(m)
+            | Element::Optional(m)
+            | Element::Closure(m)
+            | Element::PositiveClosure(m)
+            | Element::SkipTo(m) => vec![m.as_ref()],
 
             // Choice: Any option is a potential "next" step
-            E::Choice(models) => models.iter().collect(),
+            Element::Choice(models) => models.iter().collect(),
 
             // Sequence: Collect all leading nullable elements plus the first non-nullable one
-            E::Sequence(models) => {
+            Element::Sequence(models) => {
                 let mut result = Vec::new();
                 for m in models {
                     result.push(m);
@@ -99,10 +99,10 @@ impl E {
             }
 
             // Join/Gather variants: the expression is always reachable
-            E::Join { exp, .. }
-            | E::PositiveJoin { exp, .. }
-            | E::Gather { exp, .. }
-            | E::PositiveGather { exp, .. } => vec![exp.as_ref()],
+            Element::Join { exp, .. }
+            | Element::PositiveJoin { exp, .. }
+            | Element::Gather { exp, .. }
+            | Element::PositiveGather { exp, .. } => vec![exp.as_ref()],
         }
     }
 }

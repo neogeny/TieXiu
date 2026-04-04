@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::E;
+use super::Element;
 use super::Grammar;
 use std::collections::HashMap;
 
@@ -19,8 +19,8 @@ enum Status {
 
 struct LeftRecursionAnalysis<'a> {
     grammar: &'a mut Grammar,
-    node_state: HashMap<*const E, Status>,
-    node_depth: HashMap<*const E, usize>,
+    node_state: HashMap<*const Element, Status>,
+    node_depth: HashMap<*const Element, usize>,
     depth_stack: Vec<isize>,
     rule_name_stack: Vec<String>,
     depth: usize,
@@ -50,8 +50,8 @@ impl<'a> LeftRecursionAnalysis<'a> {
         }
     }
 
-    fn dfs(&mut self, node: &E) {
-        let ptr = node as *const E;
+    fn dfs(&mut self, node: &Element) {
+        let ptr = node as *const Element;
 
         if *self.node_state.get(&ptr).unwrap_or(&Status::First) != Status::First {
             return;
@@ -62,7 +62,7 @@ impl<'a> LeftRecursionAnalysis<'a> {
         self.depth += 1;
 
         for child in node.callable_from() {
-            if let E::Call(target_name) = child {
+            if let Element::Call(target_name) = child {
                 // target_name is a &String inside the Model,
                 // but handle_call accepts a &str.
                 self.handle_call(target_name);
@@ -81,7 +81,7 @@ impl<'a> LeftRecursionAnalysis<'a> {
             let Some(rule) = self.grammar.rulemap.get(target_name) else {
                 return;
             };
-            &rule.rhs as *const E
+            &rule.rhs as *const Element
         };
 
         let rule = self.grammar.rulemap.get(target_name).unwrap();

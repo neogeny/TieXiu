@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::{E, ParseResult, Parser};
+use super::{Element, ParseResult, Parser};
 use crate::context::Ctx;
 use std::collections::HashMap;
 
@@ -14,11 +14,11 @@ pub struct Rule {
     is_lrec: bool,
     is_name: bool,
     is_tokn: bool,
-    pub rhs: E,
+    pub rhs: Element,
 }
 
 impl Rule {
-    pub fn new(name: &str, rhs: E) -> Self {
+    pub fn new(name: &str, rhs: Element) -> Self {
         Self {
             name: name.to_string(),
             is_memo: true,

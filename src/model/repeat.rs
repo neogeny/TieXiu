@@ -2,28 +2,28 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::parser::S;
-use crate::astree::Cst;
+use crate::trees::Tree;
 use crate::context::Ctx;
-use crate::model::E;
+use crate::model::Element;
 
-pub fn skip_exp<C: Ctx>(exp: &E, ctx: C) -> C {
+pub fn skip_exp<C: Ctx>(exp: &Element, ctx: C) -> C {
     match exp.parse(ctx.clone()) {
         Ok(S(new_ctx, _)) => new_ctx,
         Err(_) => ctx,
     }
 }
 
-pub fn add_exp<C: Ctx>(exp: &E, ctx: C, res: &mut Vec<Cst>) -> Result<C, C> {
+pub fn add_exp<C: Ctx>(exp: &Element, ctx: C, res: &mut Vec<Tree>) -> Result<C, C> {
     match exp.parse(ctx.clone()) {
-        Ok(S(new_ctx, cst)) => {
-            res.push(cst);
+        Ok(S(new_ctx, tree)) => {
+            res.push(tree);
             Ok(new_ctx)
         }
         Err(_) => Err(ctx),
     }
 }
 
-pub fn repeat<C: Ctx>(exp: &E, mut ctx: C, res: &mut Vec<Cst>) -> C {
+pub fn repeat<C: Ctx>(exp: &Element, mut ctx: C, res: &mut Vec<Tree>) -> C {
     loop {
         match add_exp(exp, ctx.clone(), res) {
             Ok(new_ctx) => ctx = new_ctx,
@@ -33,10 +33,10 @@ pub fn repeat<C: Ctx>(exp: &E, mut ctx: C, res: &mut Vec<Cst>) -> C {
 }
 
 pub fn repeat_with_pre<C: Ctx>(
-    exp: &E,
-    pre: &E,
+    exp: &Element,
+    pre: &Element,
     mut ctx: C,
-    res: &mut Vec<Cst>,
+    res: &mut Vec<Tree>,
     keep_pre: bool,
 ) -> C {
     loop {

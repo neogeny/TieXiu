@@ -3,30 +3,30 @@
 
 use tiexiu::context::strctx::StrCtx;
 use tiexiu::input::StrCursor;
-use tiexiu::model::{E, Grammar, S};
+use tiexiu::model::{Element, Grammar, S};
 
-fn scope() -> (E, E) {
-    let a = E::Token("a".into());
-    let b = E::Token("b".into());
+fn scope() -> (Element, Element) {
+    let a = Element::Token("a".into());
+    let b = Element::Token("b".into());
     (a, b)
 }
 
 fn test_build() {
     let (a, b) = scope();
-    let c = E::Token("c".into());
-    let v = E::Void;
-    let r = E::closure(c);
+    let c = Element::Token("c".into());
+    let v = Element::Void;
+    let r = Element::closure(c);
     // let cl = Call::new("test");
-    let n = E::named("test", b);
-    let seq = E::Sequence([a, n, r, v].into());
+    let n = Element::named("test", b);
+    let seq = Element::Sequence([a, n, r, v].into());
 
     let cur: StrCursor = StrCursor::new("a b c c c");
     let grammar = Grammar::new("test", &[]);
     let ctx = StrCtx::new(cur, &grammar);
 
-    if let Ok(S(_, cst)) = seq.parse(ctx) {
-        println!("{}", cst);
-        println!("{}", cst.node());
+    if let Ok(S(_, tree)) = seq.parse(ctx) {
+        println!("{}", tree);
+        println!("{}", tree.trimmed());
     }
 }
 

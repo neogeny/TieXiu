@@ -1818,7 +1818,7 @@
           },
           {
             "__class__": "Void",
-            "ast": "()"
+            "tags": "()"
           },
           {
             "__class__": "Pattern",
@@ -3402,7 +3402,7 @@
             "__class__": "Override",
             "exp": {
               "__class__": "Void",
-              "ast": "()"
+              "tags": "()"
             }
           }
         ]
