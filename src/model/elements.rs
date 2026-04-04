@@ -231,13 +231,7 @@ where
 
                 match Self::add_exp(ctx, exp, &mut res) {
                     Ok(new_ctx) => {
-                        let ctx = Self::repeat_with_pre(
-                            new_ctx,
-                            exp,
-                            sep,
-                            &mut res,
-                            true,
-                        );
+                        let ctx = Self::repeat_with_pre(new_ctx, exp, sep, &mut res, true);
                         Ok(S(ctx, Tree::from(res)))
                     }
                     Err(err_ctx) => Ok(S(err_ctx, Tree::from(res))),
@@ -261,13 +255,7 @@ where
                 let mut res: Vec<Tree> = Vec::new();
                 match Self::add_exp(ctx, exp, &mut res) {
                     Ok(new_ctx) => {
-                        let ctx = Self::repeat_with_pre(
-                            new_ctx,
-                            exp,
-                            sep,
-                            &mut res,
-                            false,
-                        );
+                        let ctx = Self::repeat_with_pre(new_ctx, exp, sep, &mut res, false);
                         Ok(S(ctx, Tree::from(res)))
                     }
                     Err(err_ctx) => Ok(S(err_ctx, Tree::from(res))),
