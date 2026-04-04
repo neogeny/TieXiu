@@ -1,12 +1,12 @@
+use crate::astree::Cst;
 use crate::context::Ctx;
 use crate::context::memo::{Key, Memo, MemoCache};
 use crate::input::Cursor;
 use crate::model::Grammar;
+use regex::Regex;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use regex::Regex;
-use crate::astree::Cst;
 
 type RegexCache = HashMap<String, Regex>;
 
@@ -72,7 +72,6 @@ where
         let mut heavy = self.heavy.borrow_mut();
         f(&mut heavy.regex)
     }
-
 }
 
 impl<'c, U> Ctx for CoreCtx<'c, U>
@@ -94,12 +93,11 @@ where
     }
 
     fn regex(&self, pattern: &str) -> Regex {
-        self.with_regex_mut( |regex| {
-            regex.entry(pattern.to_string()).or_insert_with(
-                || { 
-                    Regex::new(pattern).unwrap() 
-                }
-            ).clone()
+        self.with_regex_mut(|regex| {
+            regex
+                .entry(pattern.to_string())
+                .or_insert_with(|| Regex::new(pattern).unwrap())
+                .clone()
         })
     }
 

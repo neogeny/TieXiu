@@ -100,8 +100,7 @@ fn bench_nested_expression(c: &mut Criterion) {
 
     c.bench_function("parse_nested_expression", |b| {
         b.iter(|| {
-            let cursor: StrCursor =
-                StrCursor::new("start foo bar baz foo bar end");
+            let cursor: StrCursor = StrCursor::new("start foo bar baz foo bar end");
             let ctx = StrCtx::new(cursor, &grammar);
             black_box(expr.parse(ctx))
         });

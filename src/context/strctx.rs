@@ -44,7 +44,12 @@ mod tests {
     #[test]
     fn test_cursor_size() {
         let size = size_of::<StrCursor>();
-        assert!(size <= TARGET, "StrCursor size is {} > {} bytes", size, TARGET);
+        assert!(
+            size <= TARGET,
+            "StrCursor size is {} > {} bytes",
+            size,
+            TARGET
+        );
     }
     #[test]
     fn test_ctx_handle_size() {

@@ -1,12 +1,12 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::memo::{MemoCache, Key, Memo};
+use super::memo::{Key, Memo, MemoCache};
 use crate::astree::cst::Cst;
 use crate::input::Cursor;
 use crate::model::{F, Grammar, ParseResult, Rule, S};
-use std::fmt::Debug;
 use regex::Regex;
+use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
     fn grammar(&self) -> &Grammar;

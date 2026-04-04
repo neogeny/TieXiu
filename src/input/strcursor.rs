@@ -59,7 +59,7 @@ impl<'a, P: Patterns> StrCursor<'a, P> {
         Self {
             text,
             offset: 0,
-            patterns: patterns.into()
+            patterns: patterns.into(),
         }
     }
 

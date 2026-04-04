@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use std::fmt::Debug;
 use regex::Regex;
+use std::fmt::Debug;
 
 pub trait Cursor: Debug {
     fn mark(&self) -> usize;
