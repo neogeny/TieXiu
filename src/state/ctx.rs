@@ -16,7 +16,11 @@ pub trait Ctx: Clone + Debug {
     fn cursor_mut(&mut self) -> &mut dyn Cursor;
 
     fn failure(&self, msg: &str) -> F {
-        F::new(self.mark(), msg, self.cut_seen())
+        F {
+            mark: self.mark(),
+            msg: msg.into(),
+            cut: self.cut_seen(),
+        }
     }
 
     fn eof_check(&mut self) -> bool {

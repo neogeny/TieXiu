@@ -10,9 +10,9 @@ pub struct S<C: Ctx>(pub C, pub Tree);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct F {
-    mark: usize,   // The position where the disaster occurred
-    msg: Box<str>, // The "Why" (using your Boxed str for density)
-    cut: bool,
+    pub mark: usize,   // The position where the disaster occurred
+    pub msg: Box<str>, // The "Why" (using your Boxed str for density)
+    pub cut: bool,
 }
 
 pub type ParseResult<C> = Result<S<C>, F>;
@@ -30,19 +30,7 @@ impl F {
         }
     }
 
-    pub fn mark(&self) -> usize {
-        self.mark
-    }
-
-    pub fn msg(&self) -> &str {
-        &self.msg
-    }
-
-    pub fn cut_seen(&self) -> bool {
-        self.cut
-    }
-
-    pub fn cut(&mut self) {
+    pub fn setcut(&mut self) {
         self.cut = true;
     }
 

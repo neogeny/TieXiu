@@ -180,13 +180,13 @@ where
                             return Ok(S(new_ctx, tree));
                         }
                         Err(mut f) => {
-                            if f.cut_seen() {
+                            if f.cut {
                                 f.uncut();
                                 return Err(f);
                             }
 
                             match furthest {
-                                Some(ref f) if f.mark() < f.mark() => {}
+                                Some(ref prev) if f.mark >= prev.mark => {}
                                 _ => furthest = Some(f),
                             }
                         }
@@ -199,7 +199,7 @@ where
                 Ok(S(new_ctx, tree)) => Ok(S(new_ctx, tree)),
                 Err(mut f) => {
                     // If the expression committed with a cut, we cannot be optional.
-                    if f.cut_seen() {
+                    if f.cut {
                         f.uncut();
                         return Err(f);
                     }
