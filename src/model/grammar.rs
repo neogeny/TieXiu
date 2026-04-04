@@ -2,12 +2,22 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::rule::{Rule, RuleMap};
-use crate::model::leftrec::mark_left_recursion;
+use crate::model::{ParseResult, Parser};
+use crate::state::Ctx;
 
 #[derive(Debug, Clone)]
 pub struct Grammar {
     pub name: String,
     pub rulemap: RuleMap,
+}
+
+impl<C> Parser<C> for Grammar
+where
+    C: Ctx,
+{
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        self.parse_at("start", ctx)
+    }
 }
 
 impl Grammar {
@@ -18,19 +28,22 @@ impl Grammar {
             name: name.to_string(),
             rulemap,
         };
-        mark_left_recursion(&mut grammar);
+        Self::mark_left_recursion(&mut grammar);
         grammar
+    }
+
+    fn parse_at<C: Ctx>(&self, start: &str, ctx: C) -> ParseResult<C> {
+        if let Some(rule) = self.rulemap.get(start) {
+            rule.parse(ctx)
+        } else {
+            Err(ctx.failure(&format!("rule {} not found!", start)))
+        }
     }
 }
 
 impl Default for Grammar {
     #[inline]
     fn default() -> Self {
-        let mut grammar = Self {
-            name: "default".to_string(),
-            rulemap: RuleMap::default(),
-        };
-        mark_left_recursion(&mut grammar);
-        grammar
+        Self::new("Default", &[])
     }
 }

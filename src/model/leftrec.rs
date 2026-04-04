@@ -5,9 +5,11 @@ use super::Element;
 use super::Grammar;
 use std::collections::HashMap;
 
-pub fn mark_left_recursion(grammar: &mut Grammar) {
-    let mut analysis = LeftRecursionAnalysis::new(grammar);
-    analysis.run()
+impl Grammar {
+    pub fn mark_left_recursion(grammar: &mut Grammar) {
+        let mut analysis = LeftRecursionAnalysis::new(grammar);
+        analysis.run()
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

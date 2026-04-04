@@ -17,6 +17,15 @@ pub struct Rule {
     pub rhs: Element,
 }
 
+impl<C> Parser<C> for Rule
+where
+    C: Ctx,
+{
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        self.rhs.parse(ctx)
+    }
+}
+
 impl Rule {
     pub fn new(name: &str, rhs: Element) -> Self {
         Self {
@@ -61,14 +70,5 @@ impl Rule {
 
     pub fn set_no_memo(&mut self) {
         self.is_memo = false;
-    }
-}
-
-impl<C> Parser<C> for Rule
-where
-    C: Ctx,
-{
-    fn parse(&self, ctx: C) -> ParseResult<C> {
-        self.rhs.parse(ctx)
     }
 }

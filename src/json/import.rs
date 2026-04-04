@@ -43,7 +43,7 @@ impl TryFrom<TatSuModel> for Grammar {
                 rulemap: registry,
             })
         } else {
-            Err("Root node must be a Grammar".to_string())
+            Err("Root node must be a Grammar".into())
         }
     }
 }

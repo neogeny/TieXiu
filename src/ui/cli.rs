@@ -11,7 +11,6 @@ pub struct Cli {
     pub command: Commands,
 }
 
-
 #[derive(Subcommand)]
 pub enum Commands {
     /// Execute a grammar against one or more input files.
