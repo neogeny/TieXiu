@@ -40,13 +40,13 @@ fn cli() {
             grammar, inputs, ..
         } => {
             println!(
-                "Ready to parse {} with grammar {}",
+                "Ready to parse with grammar {}  {}",
+                grammar.as_path().to_str().unwrap(),
                 inputs
                     .iter()
-                    .map(|s| s.as_str())
+                    .map(|p| p.as_path().to_str().unwrap())
                     .collect::<Vec<_>>()
                     .join(", "),
-                grammar
             );
         }
     }

@@ -7,7 +7,7 @@ pub const TATSU_GRAMMAR_JSON: &str = include_str!("../../grammar/calc.json");
 
 impl Grammar {
     /// Loads the internal TatSu grammar embedded in the binary.
-    pub fn load_bootstrap() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn boot() -> Result<Self, Box<dyn std::error::Error>> {
         Self::from_json(TATSU_GRAMMAR_JSON)
     }
 }
@@ -19,7 +19,7 @@ mod tests {
     #[test]
     fn test_grammar_bootstrap() -> Result<(), Box<dyn std::error::Error>> {
         // println!("{}", TATSU_GRAMMAR_JSON);
-        let grammar = Grammar::load_bootstrap()?;
+        let grammar = Grammar::boot()?;
 
         assert!(!grammar.name.is_empty(), "Grammar name should not be empty");
         assert!(

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -18,11 +19,11 @@ pub enum Commands {
         /// Path to the compiled TatSu JSON grammar.
         // #[arg(short, long)]
         #[arg(required = true)]
-        grammar: String,
+        grammar: PathBuf,
 
         /// The files to be parsed.
         #[arg(required = true)]
-        inputs: Vec<String>,
+        inputs: Vec<PathBuf>,
 
         /// Display a detailed trace of the parsing process.
         #[arg(short, long)]
