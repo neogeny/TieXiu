@@ -13,7 +13,7 @@ pub mod pretty;
 pub mod repeat;
 pub mod rule;
 
-pub use elements::Element;
+pub use elements::{Element, ParserElem};
 pub use grammar::Grammar;
 pub use parser::{F, ParseResult, Parser, S};
 pub use rule::Rule;

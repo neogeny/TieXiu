@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::elements::{Element, ParserElem};
-use super::parser::{Parser, S};
+use super::parser::S;
 use crate::state::Ctx;
 use crate::trees::Tree;
 

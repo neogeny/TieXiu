@@ -61,6 +61,12 @@ pub enum ParserElem {
     RuleInclude { name: Str, exp: ERef },
 }
 
+impl Element {
+    pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
+        <Self as Parser<C>>::parse(self, ctx)
+    }
+}
+
 impl ParserElem {
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
         <Self as Parser<C>>::parse(self, ctx)
