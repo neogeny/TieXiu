@@ -30,3 +30,25 @@ pub enum Commands {
         trace: bool,
     },
 }
+
+pub fn cli() {
+    use crate::ui::cli::{Cli, Commands};
+    use clap::Parser;
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Run {
+            grammar, inputs, ..
+        } => {
+            println!(
+                "Ready to parse with grammar {}  {}",
+                grammar.as_path().to_str().unwrap(),
+                inputs
+                    .iter()
+                    .map(|p| p.as_path().to_str().unwrap())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            );
+        }
+    }
+}

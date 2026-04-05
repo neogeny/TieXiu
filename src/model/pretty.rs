@@ -24,7 +24,7 @@ impl Element {
 
             Element::Call(name) => name.to_string(),
 
-            Element::Token(token) => format!("{}", token),
+            Element::Token(token) => format!("\"{}\"", token),
             Element::Pattern(pattern) => {
                 if pattern.contains("/") {
                     format!("?\"{}\"", pattern)
@@ -50,7 +50,19 @@ impl Element {
             Element::OverrideList(exp) => format!("+={}", exp.pretty_print(f)),
 
             Element::Group(exp) => {
-                format!("({})", exp.pretty_print(f))
+                let exp_str = exp.pretty_print(f);
+                if exp_str.lines().count() <= 1 {
+                    format!("({})", exp_str)
+                }
+                else {
+                    f.take();
+                    f.writeln("(");
+                    f.with_indent(|f| {
+                        f.writeln(&exp_str);
+                    });
+                    f.writeln(")");
+                    f.take()
+                }
             }
             Element::SkipGroup(exp) => {
                 format!("(?:{})", exp.pretty_print(f))
@@ -73,6 +85,7 @@ impl Element {
                     .collect::<Vec<_>>();
                 f.fold(0, &pretty, "", " ", "").take()
             }
+            Element::Alt(exp) => exp.to_string(),
             Element::Choice(options) => {
                 let mut pretty = options
                     .iter()
@@ -82,7 +95,7 @@ impl Element {
                 // fold for multi-line
                 let folded = f.fold(0, &pretty, "", "", "").take();
                 if folded.lines().count() > 1 {
-                    return folded;
+                    return format!("\n{}", folded)
                 }
 
                 // fold again for single line

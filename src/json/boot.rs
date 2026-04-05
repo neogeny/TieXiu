@@ -3,7 +3,7 @@
 
 use crate::model::grammar::Grammar;
 
-pub const TATSU_GRAMMAR_JSON: &str = include_str!("../../grammar/calc.json");
+pub const TATSU_GRAMMAR_JSON: &str = include_str!("../../grammar/tatsu.json");
 
 impl Grammar {
     /// Loads the internal TatSu grammar embedded in the binary.

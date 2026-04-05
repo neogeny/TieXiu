@@ -4,6 +4,7 @@
 use tiexiu::input::StrCursor;
 use tiexiu::model::{Element, Grammar, S};
 use tiexiu::state::strctx::StrCtx;
+use tiexiu::ui::cli;
 
 fn scope() -> (Element, Element) {
     let a = Element::Token("a".into());
@@ -30,30 +31,11 @@ fn test_build() {
     }
 }
 
-fn cli() {
-    use clap::Parser;
-    use tiexiu::ui::cli::{Cli, Commands};
-    let cli = Cli::parse();
-
-    match cli.command {
-        Commands::Run {
-            grammar, inputs, ..
-        } => {
-            println!(
-                "Ready to parse with grammar {}  {}",
-                grammar.as_path().to_str().unwrap(),
-                inputs
-                    .iter()
-                    .map(|p| p.as_path().to_str().unwrap())
-                    .collect::<Vec<_>>()
-                    .join(", "),
-            );
-        }
-    }
-}
-
 fn main() {
-    cli();
     println!("Hello, world!");
+    let bootg = Grammar::boot().unwrap();
+    println!("Loaded!");
+    println!("{}", bootg);
     test_build();
+    cli::cli();
 }

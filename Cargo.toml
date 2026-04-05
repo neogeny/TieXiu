@@ -19,7 +19,11 @@ exclude = [
 default = ["regex", "serde", "serde_json"]
 regex = ["dep:regex"]
 serde = ["dep:serde"]
-serde_json = ["dep:serde", "dep:serde_json"]
+serde_json = [
+    "dep:serde",
+    "dep:serde_json",
+    "dep:serde_path_to_error",
+]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"], optional = true }
@@ -27,6 +31,7 @@ regex = { version = "1.10", optional = true }
 serde_json = { version = "1.0.149", optional = true }
 pyo3 = { version = "0.28.2", features = ["extension-module"]}
 clap = { version = "4.6.0", features = ["derive"] }
+serde_path_to_error = {  version = "0.1" , optional=true }
 # indexmap = { version = "2.0" }
 
 

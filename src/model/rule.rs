@@ -4,17 +4,21 @@
 use super::{Element, ParseResult, Parser};
 use crate::state::Ctx;
 use std::collections::HashMap;
+use std::fmt;
 
 pub type RuleMap = HashMap<String, Rule>;
 
 #[derive(Debug, Clone)]
 pub struct Rule {
     pub name: String,
+    params: Vec<String>,
     is_memo: bool,
     is_lrec: bool,
     is_name: bool,
     is_tokn: bool,
     pub rhs: Element,
+    // kwparams: dict[str, Any] = field(default_factory=dict)
+    // decorators: list[str] = field(default_factory=list)
 }
 
 impl<C> Parser<C> for Rule
@@ -26,10 +30,23 @@ where
     }
 }
 
+impl fmt::Display for Rule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut params_str = String::new();
+        if !self.params.is_empty() {
+            params_str = format!("[{}]", self.params.join(", "));
+        }
+        let rhs_str = self.rhs.to_string();
+        let start_str = if rhs_str.lines().count() <= 1 {" "} else {"\n"};
+        writeln!(f, "{}{}:{}{}", self.name, params_str, start_str, rhs_str)
+    }
+}
+
 impl Rule {
     pub fn new(name: &str, rhs: Element) -> Self {
         Self {
             name: name.to_string(),
+            params: vec![],
             is_memo: true,
             is_lrec: false,
             is_name: false,

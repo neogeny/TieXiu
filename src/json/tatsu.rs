@@ -9,10 +9,13 @@ pub enum TatSuModel {
     Grammar {
         name: String,
         rules: Vec<TatSuModel>,
-        #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-        directives: std::collections::HashMap<String, serde_json::Value>,
+        // #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+        // directives: std::collections::HashMap<String, serde_json::Value>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         keywords: Vec<String>,
+    },
+    RuleInclude {
+        rule: Box<TatSuModel>,
     },
     Rule {
         name: String,
@@ -50,17 +53,19 @@ pub enum TatSuModel {
         pattern: String,
     },
     Constant {
-        literal: String,
+        // literal: String,
+        literal: serde_json::Value,
     },
     Alert {
-        literal: String,
+        // literal: String,
+        literal: serde_json::Value,
         level: u8,
     },
     Call {
         name: String,
     },
     Void {
-        // exp: Box<TatSuModel>,
+        tags: String,
     },
     Cut,
     EOF,
@@ -97,7 +102,7 @@ pub enum TatSuModel {
         exp: Box<TatSuModel>,
         sep: Box<TatSuModel>,
     },
-    PositiveLookahead {
+    Lookahead {
         exp: Box<TatSuModel>,
     },
     NegativeLookahead {

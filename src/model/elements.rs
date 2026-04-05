@@ -43,6 +43,7 @@ pub enum Element {
 
     Sequence(ERefArr),
     Choice(ERefArr),
+    Alt(ERef),
     Optional(ERef),
     Closure(ERef),
     PositiveClosure(ERef),
@@ -169,6 +170,7 @@ where
                 }
                 Ok(S(ctx, Tree::from(results)))
             }
+            Self::Alt(exp) => exp.parse(ctx),
             Self::Choice(options) => {
                 let mut furthest: Option<F> = None;
 

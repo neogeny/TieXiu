@@ -36,6 +36,7 @@ impl Element {
             | Element::NamedList(_, m) => m.is_nullable(),
 
             // Logic-based variants
+            Element::Alt(m) => m.is_nullable(),
             Element::Choice(models) => models.iter().any(|m| m.is_nullable()),
             Element::Sequence(models) => models.iter().all(|m| m.is_nullable()),
             Element::PositiveClosure(m) => m.is_nullable(),
@@ -83,6 +84,7 @@ impl Element {
             | Element::Optional(m)
             | Element::Closure(m)
             | Element::PositiveClosure(m)
+            | Element::Alt(m)
             | Element::SkipTo(m) => vec![m.as_ref()],
 
             // Choice: Any option is a potential "next" step
