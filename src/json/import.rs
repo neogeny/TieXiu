@@ -4,7 +4,7 @@
 use super::tatsu::TatSuModel;
 use crate::peg::exp::{ERef, Exp};
 use crate::peg::grammar::Grammar;
-use crate::peg::rule::{Rule, RuleInfo, RuleMap};
+use crate::peg::rule::{Rule, RuleInfo};
 use std::collections::HashMap;
 
 impl From<TatSuModel> for ERef {
@@ -69,9 +69,12 @@ impl TryFrom<TatSuModel> for Grammar {
                 } = rule_model
                 {
                     let rhs: Exp = (*exp).into();
-                    // let rule = Rule::new(&name, params, rhs);
                     let rule = Rule {
-                        info: RuleInfo { name, params }.into(),
+                        info: RuleInfo {
+                            name,
+                            params: params.as_slice().into(),
+                        }
+                        .into(),
                         exp: rhs,
                         is_name,
                         is_tokn,
@@ -93,9 +96,8 @@ impl TryFrom<TatSuModel> for Grammar {
                 .collect();
             let mut grammar = Grammar {
                 name: name.as_str().into(),
-                rules: rule_vec.as_slice().into(),
                 analyzed,
-                rulemap: RuleMap::new(),
+                rulemap: Grammar::new_rulemap(&rule_vec),
                 directives: str_directives,
                 keywords,
             };

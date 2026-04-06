@@ -4,6 +4,7 @@
 use super::tags::TreeTags;
 use std::ops::Add;
 use std::ops::Deref;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValue(pub Box<str>, pub Tree);
@@ -13,11 +14,20 @@ pub fn keyval(name: &str, tree: Tree) -> KeyValue {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PruneInfo {
+    pub name: String,
+    pub params: Box<[String]>,
+}
+
+pub type PruneInfoRef = Rc<PruneInfo>;
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Tree {
     Stump,
-    Leaf(Box<str>),      // 16 bytes
-    Node(Box<[Tree]>),   // 16 bytes
-    Tags(Box<TreeTags>), // 8 bytes
+    Leaf(Box<str>),                  // 16 bytes
+    Node(Box<[Tree]>),               // 16 bytes
+    Tags(Box<TreeTags>),             // 8 bytes
+    Pruned(PruneInfoRef, Box<Tree>), // 16 bytes)
 
     LeafTag(Box<KeyValue>), // 8 bytes
     NodeTag(Box<KeyValue>), // 8 bytes
@@ -162,6 +172,7 @@ impl Tree {
                 let KeyValue(_, val) = &**pair;
                 val.width()
             }
+            Tree::Pruned(_info, tree) => tree.width(),
         }
     }
 }

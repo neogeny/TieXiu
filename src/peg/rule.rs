@@ -1,20 +1,16 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::{Exp, ParseResult, Parser};
+use super::{Exp, ParseResult, Parser, S};
 use crate::state::Ctx;
+use crate::trees::Tree;
+use crate::trees::tree::{PruneInfo, PruneInfoRef};
 use std::collections::HashMap;
 use std::fmt;
-use std::rc::Rc;
 
+pub type RuleInfo = PruneInfo;
+pub type RuleInfoRef = PruneInfoRef;
 pub type RuleMap = HashMap<String, Rule>;
-pub type RuleInfoRef = Rc<RuleInfo>;
-
-#[derive(Debug, Clone)]
-pub struct RuleInfo {
-    pub name: String,
-    pub params: Vec<String>,
-}
 
 #[derive(Debug, Clone)]
 pub struct Rule {
@@ -37,7 +33,10 @@ where
     C: Ctx,
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
-        self.exp.parse(ctx)
+        match self.exp.parse(ctx) {
+            Ok(S(ctx, tree)) => Ok(S(ctx, Tree::Pruned(self.info(), tree.trimmed().into()))),
+            err => err,
+        }
     }
 }
 
@@ -66,7 +65,7 @@ impl Rule {
         Self {
             info: RuleInfo {
                 name: name.to_string(),
-                params: vec![],
+                params: [].into(),
             }
             .into(),
 

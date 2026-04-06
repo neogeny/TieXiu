@@ -6,16 +6,14 @@ use super::rule::{Rule, RuleMap};
 use crate::state::Ctx;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
-use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub struct Grammar {
     pub name: String,
-    pub rules: Box<[Rule]>,
-    pub rulemap: RuleMap,
+    pub analyzed: bool,
     pub directives: HashMap<String, String>,
     pub keywords: HashSet<String>,
-    pub analyzed: bool,
+    pub rulemap: RuleMap,
 }
 
 impl<C> Parser<C> for Grammar
@@ -38,7 +36,7 @@ impl fmt::Display for Grammar {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "@@grammar:: {};", self.name)?;
 
-        for rule in self.rules.deref() {
+        for rule in self.rules() {
             writeln!(f, "{}", rule)?;
             writeln!(f)?;
         }
@@ -48,11 +46,11 @@ impl fmt::Display for Grammar {
 
 impl Grammar {
     pub fn new(name: &str, rules: &[Rule]) -> Self {
+        let rulemap = Self::new_rulemap(rules);
         let mut grammar = Self {
             name: name.to_string(),
             analyzed: false,
-            rules: rules.into(),
-            rulemap: HashMap::new(),
+            rulemap,
             directives: HashMap::new(),
             keywords: HashSet::new(),
         };
@@ -60,14 +58,16 @@ impl Grammar {
         grammar
     }
 
-    pub fn initialize(&mut self) {
-        self.rulemap = self
-            .rules
+    pub fn new_rulemap(rules: &[Rule]) -> RuleMap {
+        rules
             .iter()
             .cloned()
             .map(|r| (r.info.name.clone(), r))
-            .collect();
-        Self::mark_left_recursion(self);
+            .collect()
+    }
+
+    pub fn initialize(&mut self) {
+        self.mark_left_recursion();
     }
 
     fn parse_at<C: Ctx>(&self, start: &str, ctx: C) -> ParseResult<C> {
@@ -76,5 +76,13 @@ impl Grammar {
         } else {
             Err(ctx.failure(&format!("rule {} not found!", start)))
         }
+    }
+
+    pub fn rules(&self) -> impl Iterator<Item = &Rule> {
+        self.rulemap.values()
+    }
+
+    pub fn rules_mut(&mut self) -> impl Iterator<Item = &mut Rule> {
+        self.rulemap.values_mut()
     }
 }

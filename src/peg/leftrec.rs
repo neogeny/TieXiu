@@ -97,7 +97,7 @@ impl<'a> Analyzer<'a> {
 impl Grammar {
     pub fn mark_left_recursion(&mut self) {
         // Reset status
-        for rule in &mut self.rules {
+        for rule in &mut self.rules_mut() {
             rule.reset_left_recursion();
         }
 
@@ -106,8 +106,7 @@ impl Grammar {
         // We must collect the references first to avoid borrowing self.rules while analyzer holds &mut self
         let roots: Vec<*const Exp> = analyzer
             .grammar
-            .rules
-            .iter()
+            .rules()
             .map(|r| &r.exp as *const Exp)
             .collect();
 
@@ -124,7 +123,7 @@ impl Grammar {
 
     fn set_no_memo_for(&mut self, ptr: *const Exp) {
         // Find which rule owns this RHS pointer and kill its memo
-        for rule in &mut self.rules {
+        for rule in &mut self.rules_mut() {
             if std::ptr::eq(&rule.exp, ptr) {
                 rule.set_no_memo();
             }

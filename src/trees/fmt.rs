@@ -29,6 +29,13 @@ impl fmt::Display for Tree {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Leaf(s) => write!(f, "\"{}\"", s),
+            Self::LeafTag(kv) | Self::NodeTag(kv) => write!(f, "{}", kv),
+            Self::RootLeaf(v) => write!(f, "!{}", v),
+            Self::RootNode(v) => write!(f, "!!{}", v),
+            Self::Tags(tags) => write!(f, "{}", tags),
+            Self::Stump => write!(f, "()"),
+            Self::Nil => write!(f, "∅"),
+            Self::Bottom => write!(f, "⊥"),
             Self::Node(items) => {
                 let bracket = if matches!(self, Self::Node(_)) {
                     ("[", "]")
@@ -44,13 +51,10 @@ impl fmt::Display for Tree {
                 }
                 write!(f, "{}", bracket.1)
             }
-            Self::LeafTag(kv) | Self::NodeTag(kv) => write!(f, "{}", kv),
-            Self::RootLeaf(v) => write!(f, "!{}", v),
-            Self::RootNode(v) => write!(f, "!!{}", v),
-            Self::Tags(tags) => write!(f, "{}", tags),
-            Self::Stump => write!(f, "()"),
-            Self::Nil => write!(f, "∅"),
-            Self::Bottom => write!(f, "⊥"),
+            Self::Pruned(info, tree) => {
+                let params = info.params.join(", ");
+                writeln!(f, "{}[{}]: {}", info.name, params, tree)
+            }
         }
     }
 }

@@ -50,6 +50,19 @@ impl ToJson for Tree {
             }
             Tree::RootLeaf(tree) | Tree::RootNode(tree) => tree.to_json(),
             Tree::Tags(tags) => tags.to_json(),
+            Tree::Pruned(info, s) => {
+                let params = Json::Array(
+                    info.params
+                        .iter()
+                        .map(|c| Json::String(c.clone()))
+                        .collect(),
+                );
+                let mut map: HashMap<String, Json> = HashMap::new();
+                map.insert("name".into(), Json::String(info.name.clone()));
+                map.insert("params".into(), params);
+                map.insert("tree".into(), s.to_json());
+                Json::Object(map)
+            }
         }
     }
 }
