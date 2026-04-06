@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub use super::build;
-use super::node::Node;
 use super::parser::{F, ParseResult, Parser, S};
 use crate::state::Ctx;
 use crate::trees::Tree;
@@ -71,10 +70,6 @@ impl ParserExp {
         <Self as Parser<C>>::parse(self, ctx)
     }
 }
-
-impl Node for Exp {}
-
-impl Node for ParserExp {}
 
 impl<C> Parser<C> for Exp
 where

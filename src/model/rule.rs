@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::node::Node;
 use super::{Exp, ParseResult, Parser};
 use crate::state::Ctx;
 use std::collections::HashMap;
@@ -26,13 +25,6 @@ pub struct Rule {
 
     pub exp: Exp,
     // kwparams: dict[str, Any] = field(default_factory=dict)
-}
-
-impl Node for Rule {
-    // fn callable_from(&self) -> Vec<&dyn Node> {
-    //     self.rhs.callable_from()
-
-    // }
 }
 
 impl<C> Parser<C> for Rule

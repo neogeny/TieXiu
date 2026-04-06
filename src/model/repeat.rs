@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::parser::S;
 use super::exp::{Exp, ParserExp};
+use super::parser::S;
 use crate::state::Ctx;
 use crate::trees::Tree;
 
