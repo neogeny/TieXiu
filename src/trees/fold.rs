@@ -5,7 +5,7 @@ use super::tree::Tree;
 
 pub trait Translator<O> {
     fn translate(&mut self, tree: &Tree, branches: &[O]) -> O;
-}s
+}
 
 pub trait Translates<O> {
     fn translate_with<T: Translator<O> + ?Sized>(&self, trans: &mut T) -> O;
