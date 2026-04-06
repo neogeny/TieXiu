@@ -1,6 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+
+const BLACK_LEN: usize = 88;
+
 pub struct IndentWriter {
     buffer: String,
     level: usize,
@@ -14,7 +17,7 @@ impl IndentWriter {
             buffer: String::new(),
             level: 0,
             amount,
-            width: 88,
+            width: BLACK_LEN * 60 / 100, // WARNING: Magic!
         }
     }
 
