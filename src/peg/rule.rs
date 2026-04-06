@@ -5,15 +5,20 @@ use super::{Exp, ParseResult, Parser};
 use crate::state::Ctx;
 use std::collections::HashMap;
 use std::fmt;
+use std::rc::Rc;
 
 pub type RuleMap = HashMap<String, Rule>;
+pub type RuleInfoRef = Rc<RuleInfo>;
+
+#[derive(Debug, Clone)]
+pub struct RuleInfo {
+    pub name: String,
+    pub params: Vec<String>,
+}
 
 #[derive(Debug, Clone)]
 pub struct Rule {
-    pub name: String,
-    pub params: Vec<String>,
-    // decorators: HashMap<String, String>;
-
+    pub info: RuleInfoRef,
     // NOTE: these come from the grammar definition
     pub is_name: bool,
     pub is_tokn: bool,
@@ -39,8 +44,8 @@ where
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut params_str = String::new();
-        if !self.params.is_empty() {
-            params_str = format!("[{}]", self.params.join(", "));
+        if !self.info.params.is_empty() {
+            params_str = format!("[{}]", self.info.params.join(", "));
         }
         let rhs_str = self.exp.to_string();
         let start_str = if rhs_str.lines().count() <= 1 {
@@ -48,15 +53,23 @@ impl fmt::Display for Rule {
         } else {
             ""
         };
-        write!(f, "{}{}:{}{}", self.name, params_str, start_str, rhs_str)
+        write!(
+            f,
+            "{}{}:{}{}",
+            self.info.name, params_str, start_str, rhs_str
+        )
     }
 }
 
 impl Rule {
     pub fn new(name: &str, _params: Vec<String>, rhs: Exp) -> Self {
         Self {
-            name: name.to_string(),
-            params: vec![],
+            info: RuleInfo {
+                name: name.to_string(),
+                params: vec![],
+            }
+            .into(),
+
             exp: rhs,
 
             is_name: false,
@@ -65,6 +78,10 @@ impl Rule {
             is_memo: true,
             is_lrec: false,
         }
+    }
+
+    pub fn info(&self) -> RuleInfoRef {
+        self.info.clone()
     }
 
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
@@ -86,6 +103,7 @@ impl Rule {
     pub fn is_token(&self) -> bool {
         self.is_tokn
             || self
+                .info
                 .name
                 .chars()
                 .find(|&c| c != '_')

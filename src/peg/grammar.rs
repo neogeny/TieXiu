@@ -65,7 +65,7 @@ impl Grammar {
             .rules
             .iter()
             .cloned()
-            .map(|r| (r.name.clone(), r))
+            .map(|r| (r.info.name.clone(), r))
             .collect();
         Self::mark_left_recursion(self);
     }
