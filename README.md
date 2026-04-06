@@ -28,6 +28,8 @@ Backtracking in **TieXiu** is *lazy*. Cloning a context/state only increments re
 
 A CST may use *64-bytes* per atomic node plus space proportional to the input matched, but CST are only kept for the currently successful path on the parse, and are dropped as soon as an option fails. CST are compacted on the boundary of the successful parse of a grammar rule node.
 
+The failure path returns the furthest position reached in the input and a message about the error encountered there. The same error value is passed back during backtracking until a branch point is reached and another path can be tried. Atr branching the error value belonging to the furthes position in the input is chosen to pass back. The error value also passes back the _cut_ state so branches can commit to a failed alternative if it was fixed with a cut.
+
 ### Complete Parsing Engine
 
 The core parsing logic is fully implemented, providing a robust execution environment for PEG rules. Choice points, sequences, and lookaheads are handled with high efficiency, leveraging the CoW context for seamless backtracking.
@@ -66,6 +68,13 @@ includes **Self-Hosting** through the implementation of a **TieXiu** grammar tha
 After the initial bootstrap (**TieXiu** parsing grammars in its own grammar
 language) either **TieXiu** or **TatSu** will generate the Rust code
 necessary for faster parser bootstrap.
+
+At the moment **TieXiu** is capable of reading the JSON representation of grammars that **TatSu** generates. In a two-step process the JSON is read and parsed to a model close to its structure. In a second step the intermediate model is translated to a grammar model that can be use for parsing.
+
+* [x] The model pretty-prints to the original grammar text in TatSu-compatibleEBNF
+* [x] **TieXiu** is capable of parsing the JSON representation of the **TatSu** EBNF grammar language
+* [ ] **TieXiu** should be capable of parsing the EBNF text for the **TatSu** grammar language
+* [ ] Any EBNF grammar should be parsed by the tool and applied to input in the language described by the gramar
 
 ## Features
 
