@@ -37,24 +37,115 @@ impl fmt::Display for Tree {
             Self::Nil => write!(f, "∅"),
             Self::Bottom => write!(f, "⊥"),
             Self::Node(items) => {
-                let bracket = if matches!(self, Self::Node(_)) {
-                    ("[", "]")
-                } else {
-                    ("{", "}")
-                };
-                write!(f, "{}", bracket.0)?;
+                write!(f, "[")?;
                 for (i, item) in items.iter().enumerate() {
                     if i > 0 {
                         write!(f, ", ")?;
                     }
                     write!(f, "{}", item)?;
                 }
-                write!(f, "{}", bracket.1)
+                write!(f, "]")
             }
             Self::Pruned(info, tree) => {
                 let params = info.params.join(", ");
-                writeln!(f, "{}[{}]: {}", info.name, params, tree)
+                write!(f, "{}[{}]: {}", info.name, params, tree)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::trees::{KeyValue, PruneInfo, Tree, TreeTags};
+    use std::collections::HashMap;
+    use std::rc::Rc;
+
+    #[test]
+    fn test_tree_tags_display() {
+        let mut tags_map = HashMap::new();
+        tags_map.insert("key1".to_string(), Tree::Leaf("value1".into()));
+        tags_map.insert("key2".to_string(), Tree::Leaf("value2".into()));
+        let tags = TreeTags { tags: tags_map };
+        assert_eq!(tags.to_string(), "{key1: \"value1\", key2: \"value2\"}");
+
+        let tags_empty = TreeTags {
+            tags: HashMap::new(),
+        };
+        assert_eq!(tags_empty.to_string(), "{}");
+    }
+
+    #[test]
+    fn test_key_value_display() {
+        let kv = KeyValue("name".into(), Tree::Leaf("value".into()));
+        assert_eq!(kv.to_string(), "«name=\"value\"»");
+    }
+
+    #[test]
+    fn test_tree_display() {
+        // Leaf
+        assert_eq!(Tree::Leaf("hello".into()).to_string(), "\"hello\"");
+
+        // LeafTag
+        let kv_leaf = KeyValue("tag".into(), Tree::Leaf("leaf_val".into()));
+        assert_eq!(
+            Tree::LeafTag(kv_leaf.into()).to_string(),
+            "«tag=\"leaf_val\"»"
+        );
+
+        // NodeTag
+        let kv_node = KeyValue("node".into(), Tree::Leaf("node_val".into()));
+        assert_eq!(
+            Tree::NodeTag(kv_node.into()).to_string(),
+            "«node=\"node_val\"»"
+        );
+
+        // RootLeaf
+        assert_eq!(
+            Tree::RootLeaf(Tree::Leaf("root".into()).into()).to_string(),
+            "!\"root\""
+        );
+
+        // RootNode
+        assert_eq!(
+            Tree::RootNode(Tree::Node(vec![Tree::Leaf("item".into())].into()).into()).to_string(),
+            "!![\"item\"]"
+        );
+
+        // Tags
+        let mut tags_map = HashMap::new();
+        tags_map.insert("a".to_string(), Tree::Leaf("1".into()));
+        let tags = TreeTags { tags: tags_map };
+        assert_eq!(Tree::Tags(tags.into()).to_string(), "{a: \"1\"}");
+
+        // Stump
+        assert_eq!(Tree::Stump.to_string(), "()");
+
+        // Nil
+        assert_eq!(Tree::Nil.to_string(), "∅");
+
+        // Bottom
+        assert_eq!(Tree::Bottom.to_string(), "⊥");
+
+        // Node
+        let node = Tree::Node(
+            vec![
+                Tree::Leaf("a".into()),
+                Tree::Leaf("b".into()),
+                Tree::Node(vec![Tree::Leaf("c".into())].into()),
+            ]
+            .into(),
+        );
+        assert_eq!(node.to_string(), "[\"a\", \"b\", [\"c\"]]");
+
+        // Pruned
+        let prune_info = Rc::new(PruneInfo {
+            name: "MyRule".to_string(),
+            params: vec!["param1".to_string(), "param2".to_string()].into(),
+        });
+        let pruned_tree = Tree::Pruned(prune_info, Tree::Leaf("pruned_content".into()).into());
+        assert_eq!(
+            pruned_tree.to_string(),
+            "MyRule[param1, param2]: \"pruned_content\""
+        );
     }
 }

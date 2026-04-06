@@ -57,3 +57,71 @@ impl ParserExp {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::input::strcursor::StrCursor;
+    use crate::peg::Grammar;
+    use crate::state::corectx::CoreCtx;
+
+    fn setup(input: &str) -> CoreCtx<'_, StrCursor<'_>> {
+        let grammar = Box::leak(Box::new(Grammar::default()));
+        CoreCtx::new(StrCursor::new(input), grammar)
+    }
+
+    #[test]
+    fn test_skip_exp() {
+        let ctx = setup("abc");
+        let exp = Exp::token("abc");
+        let new_ctx = ParserExp::skip_exp(ctx.clone(), &exp);
+        assert_eq!(new_ctx.cursor().mark(), 3);
+
+        let ctx = setup("def");
+        let new_ctx = ParserExp::skip_exp(ctx.clone(), &exp);
+        assert_eq!(new_ctx.cursor().mark(), 0);
+    }
+
+    #[test]
+    fn test_add_exp() {
+        let ctx = setup("abc");
+        let exp = Exp::token("abc");
+        let mut res = Vec::new();
+        let result = ParserExp::add_exp(ctx, &exp, &mut res);
+        assert!(result.is_ok());
+        assert_eq!(res.len(), 1);
+        assert_eq!(result.unwrap().cursor().mark(), 3);
+    }
+
+    #[test]
+    fn test_repeat() {
+        let ctx = setup("abcabcabc");
+        let exp = Exp::token("abc");
+        let mut res = Vec::new();
+        let final_ctx = ParserExp::repeat(ctx, &exp, &mut res);
+        assert_eq!(res.len(), 3);
+        assert_eq!(final_ctx.cursor().mark(), 9);
+    }
+
+    #[test]
+    fn test_repeat_with_pre() {
+        let ctx = setup(",abc,abc");
+        let exp = Exp::token("abc");
+        let pre = Exp::token(",");
+        let mut res = Vec::new();
+        let final_ctx = ParserExp::repeat_with_pre(ctx, &exp, &pre, &mut res, true);
+        assert_eq!(res.len(), 4); // [",", "abc", ",", "abc"]
+        assert_eq!(final_ctx.cursor().mark(), 8);
+    }
+
+    #[test]
+    fn test_repeat_with_pre_no_keep() {
+        let ctx = setup(",abc,abc");
+        let exp = Exp::token("abc");
+        let pre = Exp::token(",");
+        let mut res = Vec::new();
+        let final_ctx = ParserExp::repeat_with_pre(ctx, &exp, &pre, &mut res, false);
+        assert_eq!(res.len(), 2); // ["abc", "abc"]
+        assert_eq!(final_ctx.cursor().mark(), 8);
+    }
+}
