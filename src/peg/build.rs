@@ -8,7 +8,7 @@ impl Exp {
     pub fn new(exp: ExpKind) -> Self {
         let mut exp = Self {
             kind: exp,
-            lookahead: [].into()
+            lookahead: [].into(),
         };
         exp.compute_lookahead();
         exp

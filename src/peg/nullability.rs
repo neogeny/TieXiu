@@ -4,37 +4,41 @@
 use super::exp::{Exp, ExpKind};
 
 impl Exp {
-    pub fn is_nullable(&self) -> bool {
-        self.kind.is_nullable()
-    }
-
     pub fn callable_from(&self) -> Vec<&Exp> {
         self.kind.callable_from()
+    }
+
+    pub fn callable_from_mut(&mut self) -> Vec<&mut Exp> {
+        self.kind.callable_from_mut()
+    }
+
+    pub fn is_nullable(&self) -> bool {
+        self.kind.is_nullable()
     }
 }
 
 impl ExpKind {
     pub fn is_nullable(&self) -> bool {
-        match self {
-            ExpKind::Nil => true,
-            ExpKind::RuleInclude { name: _, exp } => exp.is_nullable(),
+        match &self {
+            Self::Nil => true,
+            Self::RuleInclude { name: _, exp } => exp.is_nullable(),
 
             // Consumes nothing, always succeeds (or affects state only)
-            ExpKind::Eof => false,
+            Self::Eof => false,
 
-            ExpKind::Cut
-            | ExpKind::Void
-            | ExpKind::Lookahead(_)
-            | ExpKind::NegativeLookahead(_)
-            | ExpKind::Optional(_)
-            | ExpKind::Constant(_)
-            | ExpKind::Alert(..)
-            | ExpKind::Closure(_) => true,
+            Self::Cut
+            | Self::Void
+            | Self::Lookahead(_)
+            | Self::NegativeLookahead(_)
+            | Self::Optional(_)
+            | Self::Constant(_)
+            | Self::Alert(..)
+            | Self::Closure(_) => true,
 
             // Always consumes (or fails), never succeeds with zero width
-            ExpKind::Fail | ExpKind::Dot | ExpKind::Token(_) => false,
+            Self::Fail | Self::Dot | Self::Token(_) => false,
 
-            ExpKind::Pattern(pattern) => {
+            Self::Pattern(pattern) => {
                 // true if it CAN match the empty string (is nullable)
                 regex::Regex::new(pattern)
                     .map(|re| re.is_match(""))
@@ -42,76 +46,75 @@ impl ExpKind {
             }
 
             // Transparent wrappers
-            ExpKind::Group(m)
-            | ExpKind::SkipGroup(m)
-            | ExpKind::Override(m)
-            | ExpKind::Named(_, m)
-            | ExpKind::OverrideList(m)
-            | ExpKind::NamedList(_, m) => m.is_nullable(),
+            Self::Group(m)
+            | Self::SkipGroup(m)
+            | Self::Override(m)
+            | Self::Named(_, m)
+            | Self::OverrideList(m)
+            | Self::NamedList(_, m) => m.is_nullable(),
 
             // Logic-based variants
-            ExpKind::Alt(m) => m.is_nullable(),
-            ExpKind::Choice(models) => models.iter().any(|m| m.is_nullable()),
-            ExpKind::Sequence(models) => models.iter().all(|m| m.is_nullable()),
-            ExpKind::PositiveClosure(m) => m.is_nullable(),
+            Self::Alt(m) => m.is_nullable(),
+            Self::Choice(models) => models.iter().any(|m| m.is_nullable()),
+            Self::Sequence(models) => models.iter().all(|m| m.is_nullable()),
+            Self::PositiveClosure(m) => m.is_nullable(),
 
             // Join/Gather variants
-            ExpKind::Join { .. } | ExpKind::Gather { .. } => true, // These can match zero times
-            ExpKind::PositiveJoin { exp, .. } | ExpKind::PositiveGather { exp, .. } => {
+            Self::Join { .. } | Self::Gather { .. } => true, // These can match zero times
+            Self::PositiveJoin { exp, .. } | Self::PositiveGather { exp, .. } => {
                 exp.is_nullable()
             }
 
             // Special cases
-            ExpKind::SkipTo(_) => false, // SkipTo must find a match to succeed
+            Self::SkipTo(_) => false, // SkipTo must find a match to succeed
 
-            ExpKind::Call(_name, _exp) => {
+            Self::Call(_name, _exp) => {
                 // In a stateless walker, you cannot determine this without
                 // looking up the definition of _name in the grammar.
                 false
             }
         }
     }
-
     //noinspection DuplicatedCode
     pub fn callable_from(&self) -> Vec<&Exp> {
-        match self {
-            ExpKind::Nil => vec![],
-            ExpKind::RuleInclude { name: _, exp } => vec![exp.as_ref()],
+        match &self {
+            Self::Nil => vec![],
+            Self::RuleInclude { name: _, exp } => vec![exp.as_ref()],
 
             // These don't lead to further rules
-            ExpKind::Cut
-            | ExpKind::Void
-            | ExpKind::Fail
-            | ExpKind::Dot
-            | ExpKind::Eof
-            | ExpKind::Token(_)
-            | ExpKind::Pattern(_)
-            | ExpKind::Constant(_)
-            | ExpKind::Alert(..) => vec![],
+            Self::Cut
+            | Self::Void
+            | Self::Fail
+            | Self::Dot
+            | Self::Eof
+            | Self::Token(_)
+            | Self::Pattern(_)
+            | Self::Constant(_)
+            | Self::Alert(..) => vec![],
 
             // NOTE: left recursion detection handles this by resolving by name
-            ExpKind::Call(_, _) => vec![],
+            Self::Call(_, _) => vec![],
 
             // Transparent wrappers: return the inner expression
-            ExpKind::Group(m)
-            | ExpKind::SkipGroup(m)
-            | ExpKind::Override(m)
-            | ExpKind::Named(_, m)
-            | ExpKind::OverrideList(m)
-            | ExpKind::NamedList(_, m)
-            | ExpKind::Lookahead(m)
-            | ExpKind::NegativeLookahead(m)
-            | ExpKind::Optional(m)
-            | ExpKind::Closure(m)
-            | ExpKind::PositiveClosure(m)
-            | ExpKind::Alt(m)
-            | ExpKind::SkipTo(m) => vec![m.as_ref()],
+            Self::Group(m)
+            | Self::SkipGroup(m)
+            | Self::Override(m)
+            | Self::Named(_, m)
+            | Self::OverrideList(m)
+            | Self::NamedList(_, m)
+            | Self::Lookahead(m)
+            | Self::NegativeLookahead(m)
+            | Self::Optional(m)
+            | Self::Closure(m)
+            | Self::PositiveClosure(m)
+            | Self::Alt(m)
+            | Self::SkipTo(m) => vec![m.as_ref()],
 
             // Choice: Any option is a potential "next" step
-            ExpKind::Choice(models) => models.iter().collect(),
+            Self::Choice(models) => models.iter().collect(),
 
             // Sequence: Collect all leading nullable elements plus the first non-nullable one
-            ExpKind::Sequence(models) => {
+            Self::Sequence(models) => {
                 let mut result = Vec::new();
                 for m in models {
                     result.push(m);
@@ -123,53 +126,53 @@ impl ExpKind {
             }
 
             // Join/Gather variants: the expression is always reachable
-            ExpKind::Join { exp, .. }
-            | ExpKind::PositiveJoin { exp, .. }
-            | ExpKind::Gather { exp, .. }
-            | ExpKind::PositiveGather { exp, .. } => vec![exp.as_ref()],
+            Self::Join { exp, .. }
+            | Self::PositiveJoin { exp, .. }
+            | Self::Gather { exp, .. }
+            | Self::PositiveGather { exp, .. } => vec![exp.as_ref()],
         }
     }
 
     //noinspection DuplicatedCode
     pub fn callable_from_mut(&mut self) -> Vec<&mut Exp> {
         match self {
-            ExpKind::Nil => vec![],
-            ExpKind::RuleInclude { name: _, exp } => vec![exp.as_mut()],
+            Self::Nil => vec![],
+            Self::RuleInclude { name: _, exp } => vec![exp.as_mut()],
 
             // These don't lead to further rules
-            ExpKind::Cut
-            | ExpKind::Void
-            | ExpKind::Fail
-            | ExpKind::Dot
-            | ExpKind::Eof
-            | ExpKind::Token(_)
-            | ExpKind::Pattern(_)
-            | ExpKind::Constant(_)
-            | ExpKind::Alert(..) => vec![],
+            Self::Cut
+            | Self::Void
+            | Self::Fail
+            | Self::Dot
+            | Self::Eof
+            | Self::Token(_)
+            | Self::Pattern(_)
+            | Self::Constant(_)
+            | Self::Alert(..) => vec![],
 
             // NOTE: left recursion detection handles this by resolving by name
-            ExpKind::Call(_, _) => vec![],
+            Self::Call(_, _) => vec![],
 
             // Transparent wrappers: return the inner expression
-            ExpKind::Group(m)
-            | ExpKind::SkipGroup(m)
-            | ExpKind::Override(m)
-            | ExpKind::Named(_, m)
-            | ExpKind::OverrideList(m)
-            | ExpKind::NamedList(_, m)
-            | ExpKind::Lookahead(m)
-            | ExpKind::NegativeLookahead(m)
-            | ExpKind::Optional(m)
-            | ExpKind::Closure(m)
-            | ExpKind::PositiveClosure(m)
-            | ExpKind::Alt(m)
-            | ExpKind::SkipTo(m) => vec![m.as_mut()],
+            Self::Group(m)
+            | Self::SkipGroup(m)
+            | Self::Override(m)
+            | Self::Named(_, m)
+            | Self::OverrideList(m)
+            | Self::NamedList(_, m)
+            | Self::Lookahead(m)
+            | Self::NegativeLookahead(m)
+            | Self::Optional(m)
+            | Self::Closure(m)
+            | Self::PositiveClosure(m)
+            | Self::Alt(m)
+            | Self::SkipTo(m) => vec![m.as_mut()],
 
             // Choice: Any option is a potential "next" step
-            ExpKind::Choice(models) => models.iter_mut().collect(),
+            Self::Choice(models) => models.iter_mut().collect(),
 
             // Sequence: Collect all leading nullable elements plus the first non-nullable one
-            ExpKind::Sequence(models) => {
+            Self::Sequence(models) => {
                 let mut result = Vec::new();
                 for m in models {
                     let nullable = m.is_nullable();
@@ -182,10 +185,10 @@ impl ExpKind {
             }
 
             // Join/Gather variants: the expression is always reachable
-            ExpKind::Join { exp, .. }
-            | ExpKind::PositiveJoin { exp, .. }
-            | ExpKind::Gather { exp, .. }
-            | ExpKind::PositiveGather { exp, .. } => vec![exp.as_mut()],
+            Self::Join { exp, .. }
+            | Self::PositiveJoin { exp, .. }
+            | Self::Gather { exp, .. }
+            | Self::PositiveGather { exp, .. } => vec![exp.as_mut()],
         }
     }
 }

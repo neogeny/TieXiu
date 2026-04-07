@@ -16,7 +16,7 @@ pub type Str = Box<str>;
 #[derive(Debug, Clone)]
 pub struct Exp {
     pub(super) kind: ExpKind,
-    pub(super) lookahead: Box<[Box<str>]>,
+    pub(super) lookahead: Box<[Str]>,
 }
 
 #[derive(Debug, Clone)]
@@ -202,9 +202,8 @@ where
                         }
                     }
                 }
-                Err(furthest.unwrap_or(
-                    ctx.failure(ParseError::NoViableOption(self.lookahead.clone().unwrap())),
-                ))
+                Err(furthest
+                    .unwrap_or(ctx.failure(ParseError::NoViableOption(self.lookahead.clone()))))
             }
 
             ExpKind::Optional(exp) => match exp.parse(ctx.clone()) {

@@ -1,7 +1,7 @@
 // copyright (c) 2026 juancarlo añez (apalala@gmail.com)
 // spdx-license-identifier: mit or apache-2.0
 
-use super::exp::{Exp, ExpKind};
+use super::exp::{Exp, ExpKind, Str};
 use std::collections::HashSet;
 
 impl Exp {
@@ -24,13 +24,15 @@ impl Exp {
             _ => {}
         }
 
-        for exp in self.kind.callable_from_mut() {
+        for exp in self.callable_from_mut() {
             lookaheads.extend(exp.compute_lookahead());
         }
 
-        let mut vec: Vec<Box<str>> = lookaheads.iter().cloned().collect();
-        vec.sort();
-        self.lookahead =vec.into_boxed_slice();
+        if !lookaheads.is_empty() {
+            let mut vec: Vec<Str> = lookaheads.iter().cloned().collect();
+            vec.sort();
+            self.lookahead = vec.into_boxed_slice();
+        }
 
         lookaheads
     }
