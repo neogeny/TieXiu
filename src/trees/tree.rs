@@ -15,8 +15,8 @@ pub fn keyval(name: &str, tree: Tree) -> KeyValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PruneInfo {
-    pub name: String,
-    pub params: Box<[String]>,
+    pub name: Box<str>,
+    pub params: Box<[Box<str>]>,
 }
 
 pub type PruneInfoRef = Rc<PruneInfo>;

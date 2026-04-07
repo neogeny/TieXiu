@@ -3,6 +3,7 @@
 
 use super::parser::{ParseResult, Parser};
 use super::rule::{Rule, RuleMap};
+use crate::peg::error::ParseError;
 use crate::state::Ctx;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
@@ -62,7 +63,7 @@ impl Grammar {
         rules
             .iter()
             .cloned()
-            .map(|r| (r.info.name.clone().into(), r))
+            .map(|r| (r.info.name.clone(), r))
             .collect()
     }
 
@@ -74,7 +75,7 @@ impl Grammar {
         if let Some(rule) = self.rulemap.get(start) {
             rule.parse(ctx)
         } else {
-            Err(ctx.failure(&format!("rule {} not found!", start)))
+            Err(ctx.failure(ParseError::RuleNotFound(start.into())))
         }
     }
 

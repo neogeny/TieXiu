@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub use super::build;
+use super::error::ParseError;
 use super::parser::{F, ParseResult, Parser, S};
 use crate::state::Ctx;
 use crate::trees::Tree;
@@ -103,19 +104,19 @@ where
                 Ok(S(ctx, Tree::Nil))
             }
             Self::Void => Ok(S(ctx, Tree::Stump)),
-            Self::Fail => Err(ctx.failure("Fail")),
+            Self::Fail => Err(ctx.failure(ParseError::Fail)),
             Self::Dot => {
                 if ctx.next().is_some() {
                     Ok(S(ctx, Tree::Nil))
                 } else {
-                    Err(ctx.failure("No more input"))
+                    Err(ctx.failure(ParseError::NoMoreInput))
                 }
             }
             Self::Eof => {
                 if ctx.eof_check() {
                     Ok(S(ctx, Tree::Nil))
                 } else {
-                    Err(ctx.failure("Expecting EOF/EOT"))
+                    Err(ctx.failure(ParseError::ExpectingEof))
                 }
             }
 
@@ -123,14 +124,14 @@ where
                 if ctx.token(token) {
                     Ok(S(ctx, Tree::Leaf(token.deref().into())))
                 } else {
-                    Err(ctx.failure(&format!("Expecting '{}'", token)))
+                    Err(ctx.failure(ParseError::ExpectedToken(token.deref().into())))
                 }
             }
             Self::Pattern(pattern) => {
                 if let Some(matched) = ctx.pattern(pattern) {
                     Ok(S(ctx, Tree::Leaf(matched.into())))
                 } else {
-                    Err(ctx.failure(&format!("Expecting '{}'", pattern)))
+                    Err(ctx.failure(ParseError::ExpectedPattern(pattern.deref().into())))
                 }
             }
             Self::Constant(literal) => Ok(S(ctx, Tree::Leaf(literal.deref().into()))),
@@ -163,7 +164,7 @@ where
             }
             Self::NegativeLookahead(exp) => {
                 if let Ok(S(_, _)) = exp.parse(ctx.clone()) {
-                    Err(ctx.failure("Not expecting: ???"))
+                    Err(ctx.failure(ParseError::UnexpectedLookahead))
                 } else {
                     Ok(S(ctx, Tree::Nil))
                 }
@@ -215,7 +216,7 @@ where
                         }
                     }
                 }
-                Err(furthest.unwrap_or(ctx.failure("Expecting opions: X y z")))
+                Err(furthest.unwrap_or(ctx.failure(ParseError::NoViableOption)))
             }
 
             Self::Optional(exp) => match exp.parse(ctx.clone()) {

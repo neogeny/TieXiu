@@ -71,8 +71,8 @@ impl TryFrom<TatSuModel> for Grammar {
                     let rhs: Exp = (*exp).into();
                     let rule = Rule {
                         info: RuleInfo {
-                            name,
-                            params: params.as_slice().into(),
+                            name: name.into(),
+                            params: params.iter().map(|p| p.as_str().into()).collect(),
                         }
                         .into(),
                         exp: rhs,

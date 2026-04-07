@@ -3,6 +3,7 @@
 
 use super::memo::{Key, Memo, MemoCache};
 use crate::input::Cursor;
+use crate::peg::error::ParseError;
 use crate::peg::{F, Grammar, ParseResult, Rule, S};
 use crate::trees::tree::Tree;
 use regex::Regex;
@@ -15,12 +16,8 @@ pub trait Ctx: Clone + Debug {
 
     fn cursor_mut(&mut self) -> &mut dyn Cursor;
 
-    fn failure(&self, msg: &str) -> F {
-        F {
-            mark: self.mark(),
-            msg: msg.into(),
-            cut: self.cut_seen(),
-        }
+    fn failure(&self, error: ParseError) -> F {
+        F::new(self.mark(), self.cut_seen(), error)
     }
 
     fn eof_check(&mut self) -> bool {
@@ -92,7 +89,7 @@ pub trait Ctx: Clone + Debug {
         let key = self.key(name);
         if let Some(memo) = self.memo(&key) {
             return match memo.tree {
-                Tree::Bottom => Err(self.failure(name)),
+                Tree::Bottom => Err(self.failure(ParseError::FailedParse(name.into()))),
                 _ => {
                     self.reset(memo.mark);
                     Ok(S(self, memo.tree))
@@ -152,7 +149,8 @@ pub trait Ctx: Clone + Debug {
         if let Some(tree) = best_cst {
             Ok(S(self, tree))
         } else {
-            Err(last_failure.unwrap_or_else(|| self.failure(&rule.info.name)))
+            Err(last_failure
+                .unwrap_or_else(|| self.failure(ParseError::FailedParse(rule.info.name.clone()))))
         }
     }
 }

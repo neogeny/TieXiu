@@ -54,7 +54,7 @@ impl ToJson for Tree {
                 let params = Json::Array(
                     info.params
                         .iter()
-                        .map(|c| Json::String(c.clone()))
+                        .map(|c| Json::String(c.deref().into()))
                         .collect(),
                 );
                 let mut map: HashMap<String, Json> = HashMap::new();

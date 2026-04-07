@@ -42,7 +42,7 @@ impl Tree {
     pub fn pruned(name: &str, params: &[String], tree: Tree) -> Tree {
         let pi = PruneInfo {
             name: name.into(),
-            params: params.into(),
+            params: params.iter().map(|p| p.as_str().into()).collect(),
         };
         Self::Pruned(pi.into(), tree.into())
     }

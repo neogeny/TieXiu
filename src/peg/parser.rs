@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::error::ParseError;
 use crate::state::Ctx;
 use crate::trees::Tree;
 use std::fmt::Debug;
@@ -10,9 +11,9 @@ pub struct S<C: Ctx>(pub C, pub Tree);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct F {
-    pub mark: usize,   // The position where the disaster occurred
-    pub msg: Box<str>, // The "Why" (using your Boxed str for density)
+    pub mark: usize, // The position where the disaster occurred
     pub cut: bool,
+    pub error: ParseError,
 }
 
 pub type ParseResult<C> = Result<S<C>, F>;
@@ -22,12 +23,8 @@ pub trait Parser<C: Ctx>: Debug {
 }
 
 impl F {
-    pub fn new(mark: usize, msg: &str, cut: bool) -> Self {
-        Self {
-            mark,
-            msg: msg.into(),
-            cut,
-        }
+    pub fn new(mark: usize, cut: bool, error: ParseError) -> Self {
+        Self { mark, cut, error }
     }
 
     pub fn setcut(&mut self) {

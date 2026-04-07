@@ -141,8 +141,8 @@ mod tests {
 
         // Pruned
         let prune_info = Rc::new(PruneInfo {
-            name: "MyRule".to_string(),
-            params: vec!["param1".to_string(), "param2".to_string()].into(),
+            name: "MyRule".into(),
+            params: ["param1", "param2"].map(|s| s.into()).into(),
         });
         let pruned_tree = Tree::Pruned(prune_info, Tree::Leaf("pruned_content".into()).into());
         assert_eq!(

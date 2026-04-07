@@ -3,6 +3,7 @@
 
 // #![allow(dead_code)]
 pub mod build;
+pub mod error;
 pub mod exp;
 pub mod fold;
 pub mod grammar;

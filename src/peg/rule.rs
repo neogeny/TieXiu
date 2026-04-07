@@ -61,11 +61,11 @@ impl fmt::Display for Rule {
 }
 
 impl Rule {
-    pub fn new(name: &str, _params: Vec<String>, rhs: Exp) -> Self {
+    pub fn new(name: &str, params: &[String], rhs: Exp) -> Self {
         Self {
             info: RuleInfo {
-                name: name.to_string(),
-                params: [].into(),
+                name: name.into(),
+                params: params.iter().map(|p| p.as_str().into()).collect(),
             }
             .into(),
 
