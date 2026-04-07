@@ -3,7 +3,9 @@
 
 pub mod corectx;
 pub mod ctx;
+pub mod error;
 mod memo;
 pub mod strctx;
 
 pub use ctx::*;
+pub use error::Error;

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::error::Error as StateError;
 use super::memo::{Key, Memo, MemoCache};
 use crate::input::Cursor;
 use crate::peg::error::ParseError;
@@ -70,17 +71,22 @@ pub trait Ctx: Clone + Debug {
 
     fn prune_cache(&mut self);
 
-    fn parser_for(&self, name: &str) -> Rule {
-        let rule = self
-            .grammar()
+    fn parser_for(&self, name: &str) -> Result<Rule, StateError> {
+        self.grammar()
             .rulemap
             .get(name)
-            .unwrap_or_else(|| panic!("rule '{}' not found", name));
-        rule.clone()
+            .cloned()
+            .ok_or_else(|| StateError::MissingRule(name.to_string()))
     }
 
     fn call(mut self, name: &str) -> ParseResult<Self> {
-        let rule = self.parser_for(name);
+        let rule = match self.parser_for(name) {
+            Ok(rule) => rule,
+            Err(StateError::MissingRule(_)) => {
+                return Err(self.failure(ParseError::RuleNotFound(name.into())));
+            }
+            Err(_) => unreachable!("parser_for() only returns MissingRule"),
+        };
 
         if !rule.is_token() {
             self.next_token();

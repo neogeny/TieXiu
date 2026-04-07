@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::Cursor;
+use super::error::Error;
 use regex::Regex;
 use std::rc::Rc;
 
@@ -17,18 +18,27 @@ impl Patterns {
     const DEFAULT_EOL: &'static str = r"^//.*$";
     const DEFAULT_CMT: &'static str = r"^$"; // Matches nothing by default
 
-    pub fn new(ws: &str, cmt: &str, eol: &str) -> Self {
-        Self {
-            wsp: Regex::new(ws).expect("invalid whitespace regex"),
-            cmt: Regex::new(cmt).expect("invalid comment regex"),
-            eol: Regex::new(eol).expect("invalid EOL regex"),
-        }
+    fn compile(kind: &'static str, pattern: &str) -> Result<Regex, Error> {
+        Regex::new(pattern).map_err(|source| Error::InvalidRegex {
+            kind,
+            pattern: pattern.to_string(),
+            source,
+        })
+    }
+
+    pub fn try_new(ws: &str, cmt: &str, eol: &str) -> Result<Self, Error> {
+        Ok(Self {
+            wsp: Self::compile("whitespace", ws)?,
+            cmt: Self::compile("comment", cmt)?,
+            eol: Self::compile("end-of-line", eol)?,
+        })
     }
 }
 
 impl Default for Patterns {
     fn default() -> Self {
-        Self::new(Self::DEFAULT_WSP, Self::DEFAULT_CMT, Self::DEFAULT_EOL)
+        Self::try_new(Self::DEFAULT_WSP, Self::DEFAULT_CMT, Self::DEFAULT_EOL)
+            .expect("default StrCursor regex patterns must be valid")
     }
 }
 
@@ -55,12 +65,12 @@ impl<'a> StrCursor<'a> {
         }
     }
 
-    pub fn with_patterns(text: &'a str, ws: &str, cmt: &str, eol: &str) -> Self {
-        Self {
+    pub fn with_patterns(text: &'a str, ws: &str, cmt: &str, eol: &str) -> Result<Self, Error> {
+        Ok(Self {
             text,
             offset: 0,
-            patterns: Rc::new(Patterns::new(ws, cmt, eol)),
-        }
+            patterns: Rc::new(Patterns::try_new(ws, cmt, eol)?),
+        })
     }
 
     #[inline]
