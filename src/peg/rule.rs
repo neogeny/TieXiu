@@ -5,26 +5,24 @@ use super::exp::Exp;
 use super::{ParseResult, Parser, S};
 use crate::state::Ctx;
 use crate::trees::Tree;
-use crate::trees::tree::{PruneInfo, PruneInfoRef};
+use crate::trees::tree::{FlagMap, PruneInfo, PruneInfoRef};
 use indexmap::IndexMap;
 use std::fmt;
+use std::rc::Rc;
 
 pub type RuleInfo = PruneInfo;
 pub type RuleInfoRef = PruneInfoRef;
 pub type RuleMap = IndexMap<Box<str>, Rule>;
 
+pub const FLAG_IS_NAME: &str = "is_name";
+pub const FLAG_IS_TOKN: &str = "is_tokn";
+pub const FLAG_NO_MEMO: &str = "no_memo";
+pub const FLAG_IS_MEMO: &str = "is_memo";
+pub const FLAG_IS_LREC: &str = "is_lrec";
+
 #[derive(Debug, Clone)]
 pub struct Rule {
     pub info: RuleInfoRef,
-    // NOTE: these come from the grammar definition
-    pub is_name: bool,
-    pub is_tokn: bool,
-    pub no_memo: bool,
-
-    // NOTE: these belong to the left-recursion analyzer
-    pub is_memo: bool,
-    pub is_lrec: bool,
-
     pub exp: Exp,
     // kwparams: dict[str, Any] = field(default_factory=dict)
 }
@@ -35,7 +33,10 @@ where
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
         match self.exp.parse(ctx) {
-            Ok(S(ctx, tree)) => Ok(S(ctx, Tree::Pruned(self.info(), tree.trimmed().into()))),
+            Ok(S(ctx, tree)) => Ok(S(
+                ctx,
+                Tree::Pruned(self.info.clone(), tree.trimmed().into()),
+            )),
             err => err,
         }
     }
@@ -62,22 +63,41 @@ impl fmt::Display for Rule {
 }
 
 impl Rule {
+    fn make_flags(
+        is_name: bool,
+        is_tokn: bool,
+        no_memo: bool,
+        is_memo: bool,
+        is_lrec: bool,
+    ) -> FlagMap {
+        let mut flags = FlagMap::new();
+        flags.insert(FLAG_IS_NAME.into(), is_name);
+        flags.insert(FLAG_IS_TOKN.into(), is_tokn);
+        flags.insert(FLAG_NO_MEMO.into(), no_memo);
+        flags.insert(FLAG_IS_MEMO.into(), is_memo && !no_memo);
+        flags.insert(FLAG_IS_LREC.into(), is_lrec);
+        flags
+    }
+
+    fn flag(&self, key: &str) -> bool {
+        self.info.flags.get(key).copied().unwrap_or(false)
+    }
+
+    fn set_flag(&mut self, key: &'static str, value: bool) {
+        Rc::make_mut(&mut self.info).flags.insert(key.into(), value);
+    }
+
     pub fn new(name: &str, params: &[&str], mut exp: Exp) -> Self {
         exp.compute_lookahead();
         Self {
             info: RuleInfo {
                 name: name.into(),
                 params: params.iter().map(|p| (*p).into()).collect(),
+                flags: Self::make_flags(false, false, false, true, false),
             }
             .into(),
 
             exp,
-
-            is_name: false,
-            is_tokn: false,
-            no_memo: false,
-            is_memo: true,
-            is_lrec: false,
         }
     }
 
@@ -97,19 +117,11 @@ impl Rule {
             info: RuleInfo {
                 name: name.into(),
                 params: params.into_iter().map(|p| p.into()).collect(),
+                flags: Self::make_flags(is_name, is_tokn, no_memo, is_memo, is_lrec),
             }
             .into(),
             exp,
-            is_name,
-            is_tokn,
-            no_memo,
-            is_memo: is_memo && !no_memo,
-            is_lrec,
         }
-    }
-
-    pub fn info(&self) -> RuleInfoRef {
-        self.info.clone()
     }
 
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
@@ -117,19 +129,35 @@ impl Rule {
     }
 
     pub fn is_left_recursive(&self) -> bool {
-        self.is_lrec
+        self.flag(FLAG_IS_LREC)
     }
 
     pub fn is_memoizable(&self) -> bool {
-        self.is_memo
+        self.flag(FLAG_IS_MEMO)
     }
 
     pub fn is_identifier(&self) -> bool {
-        self.is_name
+        self.flag(FLAG_IS_NAME)
+    }
+
+    pub fn has_token_flag(&self) -> bool {
+        self.flag(FLAG_IS_TOKN)
+    }
+
+    pub fn has_no_memo_flag(&self) -> bool {
+        self.flag(FLAG_NO_MEMO)
+    }
+
+    pub fn has_memo_flag(&self) -> bool {
+        self.flag(FLAG_IS_MEMO)
+    }
+
+    pub fn has_left_recursion_flag(&self) -> bool {
+        self.flag(FLAG_IS_LREC)
     }
 
     pub fn is_token(&self) -> bool {
-        self.is_tokn
+        self.has_token_flag()
             || self
                 .info
                 .name
@@ -139,16 +167,17 @@ impl Rule {
     }
 
     pub fn reset_left_recursion(&mut self) {
-        self.is_memo = !self.no_memo;
-        self.is_lrec = false;
+        self.set_flag(FLAG_IS_MEMO, !self.has_no_memo_flag());
+        self.set_flag(FLAG_IS_LREC, false);
     }
 
     pub fn set_left_recursive(&mut self) {
-        self.is_lrec = true;
-        self.is_memo = false;
+        self.set_flag(FLAG_IS_LREC, true);
+        self.set_flag(FLAG_IS_MEMO, false);
     }
 
     pub fn set_no_memo(&mut self) {
-        self.is_memo = false;
+        self.set_flag(FLAG_NO_MEMO, true);
+        self.set_flag(FLAG_IS_MEMO, false);
     }
 }

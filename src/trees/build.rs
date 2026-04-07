@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::tags::TreeTags;
-use super::tree::{KeyValue, PruneInfo, Tree};
+use super::tree::{FlagMap, KeyValue, PruneInfo, Tree};
 
 impl Tree {
     pub fn stump() -> Tree {
@@ -43,6 +43,7 @@ impl Tree {
         let pi = PruneInfo {
             name: name.into(),
             params: params.iter().map(|p| p.as_str().into()).collect(),
+            flags: FlagMap::new(),
         };
         Self::Pruned(pi.into(), tree.into())
     }

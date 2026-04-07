@@ -34,11 +34,11 @@ impl TryFrom<Grammar> for TatSuModel {
                     name: rule.info.name.clone().into(),
                     params: rule.info.params.iter().map(|p| p.clone().into()).collect(),
                     exp: Box::new(TatSuModel::from(rule.exp.clone())),
-                    is_name: rule.is_name,
-                    is_tokn: rule.is_tokn,
-                    no_memo: rule.no_memo,
-                    is_memo: rule.is_memo,
-                    is_lrec: rule.is_lrec,
+                    is_name: rule.is_identifier(),
+                    is_tokn: rule.has_token_flag(),
+                    no_memo: rule.has_no_memo_flag(),
+                    is_memo: rule.has_memo_flag(),
+                    is_lrec: rule.has_left_recursion_flag(),
                 }
             })
             .collect();

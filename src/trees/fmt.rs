@@ -60,7 +60,7 @@ impl fmt::Display for Tree {
 
 #[cfg(test)]
 mod tests {
-    use crate::trees::{KeyValue, PruneInfo, TagMap, Tree, TreeTags};
+    use crate::trees::{FlagMap, KeyValue, PruneInfo, TagMap, Tree, TreeTags};
     use indexmap::IndexMap;
     use std::rc::Rc;
 
@@ -143,6 +143,7 @@ mod tests {
         let prune_info = Rc::new(PruneInfo {
             name: "MyRule".into(),
             params: ["param1", "param2"].map(|s| s.into()).into(),
+            flags: FlagMap::new(),
         });
         let pruned_tree = Tree::Pruned(prune_info, Tree::Leaf("pruned_content".into()).into());
         assert_eq!(

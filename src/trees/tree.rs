@@ -3,6 +3,7 @@
 
 pub use super::build;
 use super::tags::TreeTags;
+use indexmap::IndexMap;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -13,10 +14,13 @@ pub fn keyval(name: &str, tree: Tree) -> KeyValue {
     KeyValue(name.into(), tree.clone())
 }
 
+pub type FlagMap = IndexMap<Box<str>, bool>;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct PruneInfo {
     pub name: Box<str>,
     pub params: Box<[Box<str>]>,
+    pub flags: FlagMap,
 }
 
 pub type PruneInfoRef = Rc<PruneInfo>;
