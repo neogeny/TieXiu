@@ -1,6 +1,5 @@
-# TieXiu
-
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/neogeny/TieXiu?utm_source=badge)
+# TieXiu
 
 A high-performance port of **TatSu** to Rust.
 
@@ -14,11 +13,11 @@ Implementation is complete for the core execution engine, the grammar model, the
 
 ### Lean Parsing Context
 
-**TieXiu** uses the runtime stack as the parsing state stack. A state 
-change has a 16-byte stack footprint consisting of two  pointers: one for the *Volatile State* (Input Cursor) and one for the *Heavy Stated* (Grammar + Memoization Cache). This allows for deep recursive descent with 
-minimal stack pressure and $O(1)$ branching costs. The `Cursor` 
-implementation for parsing text (`StrCursor`) uses 16 bytes (`&str` + 
-`usize`) and has copy-on-write semantics during a parse (grammar elements 
+**TieXiu** uses the runtime stack as the parsing state stack. A state
+change has a 16-byte stack footprint consisting of two  pointers: one for the *Volatile State* (Input Cursor) and one for the *Heavy Stated* (Grammar + Memoization Cache). This allows for deep recursive descent with
+minimal stack pressure and $O(1)$ branching costs. The `Cursor`
+implementation for parsing text (`StrCursor`) uses 16 bytes (`&str` +
+`usize`) and has copy-on-write semantics during a parse (grammar elements
 that don't advance over the input share the same cursor).
 
 
@@ -36,8 +35,8 @@ The core parsing logic is fully implemented, providing a robust execution enviro
 
 ### Left Recursion Support
 
-TieXiu features a complete implementation for handling left-recursive 
-grammars. A pre-pass *analysis* identifies and marks recursive cycles, while the *runtime* includes the necessary logic to grow the recursive content by iteration instead of recursion. 
+TieXiu features a complete implementation for handling left-recursive
+grammars. A pre-pass *analysis* identifies and marks recursive cycles, while the *runtime* includes the necessary logic to grow the recursive content by iteration instead of recursion.
 
 ### Complete Grammar Model
 
@@ -45,15 +44,15 @@ The building blocks for grammar models are implemented with a clear chain of own
 
 ### Milestone: From CST to AST
 
- The algebra for creating **Concrete Syntax Trees (CST)** was ported from 
- **TatSu** to **TieXiu** with optimizations. Instead of computing the 
- resulting CST during parsing, the engine generates unoptimized trees that 
- are destilled into their concrete versions at rule boundaries. **TieXiu** 
- uses the **TatSu** semantics for **Abstract Syntax Tree (AST)**, in which 
- named elements in a rule definition force the result to be a mapping of 
- names to parsed elements. Rust doesn't allow the creation of synthetic 
- types at runtime, so parsing to native types will require code generation 
- for the desired model and deserialization of the JSON-compatible result of 
+ The algebra for creating **Concrete Syntax Trees (CST)** was ported from
+ **TatSu** to **TieXiu** with optimizations. Instead of computing the
+ resulting CST during parsing, the engine generates unoptimized trees that
+ are destilled into their concrete versions at rule boundaries. **TieXiu**
+ uses the **TatSu** semantics for **Abstract Syntax Tree (AST)**, in which
+ named elements in a rule definition force the result to be a mapping of
+ names to parsed elements. Rust doesn't allow the creation of synthetic
+ types at runtime, so parsing to native types will require code generation
+ for the desired model and deserialization of the JSON-compatible result of
  a parse into the desired model nodes.
 
 ### Packrat & Memoization
