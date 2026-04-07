@@ -49,7 +49,6 @@ pub enum Commands {
         /// Pretty-print the boot grammar
         #[arg(short, long)]
         pretty: bool,
-
     },
     /// Execute a grammar against one or more input files.
     Run {
@@ -100,7 +99,9 @@ pub fn cli() {
                 pygmentize(&json_str, "json", use_color);
             }
         }
-        Commands::Run { grammar, inputs, .. } => {
+        Commands::Run {
+            grammar, inputs, ..
+        } => {
             println!(
                 "Ready to parse with grammar {}  {}",
                 grammar.as_path().to_str().unwrap(),
@@ -123,7 +124,7 @@ pub fn pygmentize(content: &str, extension: &str, use_color: bool) {
     use syntect::easy::HighlightLines;
     use syntect::highlighting::ThemeSet;
     use syntect::parsing::SyntaxSet;
-    use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
+    use syntect::util::{LinesWithEndings, as_24_bit_terminal_escaped};
 
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
