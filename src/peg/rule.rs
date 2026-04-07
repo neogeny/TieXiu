@@ -133,7 +133,7 @@ impl Rule {
     }
 
     pub fn is_memoizable(&self) -> bool {
-        self.flag(FLAG_IS_MEMO)
+        !self.flag(FLAG_NO_MEMO) && self.flag(FLAG_IS_MEMO)
     }
 
     pub fn is_identifier(&self) -> bool {
@@ -177,7 +177,6 @@ impl Rule {
     }
 
     pub fn set_no_memo(&mut self) {
-        self.set_flag(FLAG_NO_MEMO, true);
         self.set_flag(FLAG_IS_MEMO, false);
     }
 }
