@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::error::Error;
 use crate::json::tatsu::TatSuModel;
 use crate::peg::Grammar;
 use clap::builder::styling::{AnsiColor, Styles};
@@ -66,7 +67,7 @@ pub enum Commands {
     },
 }
 
-pub fn cli() {
+pub fn cli() -> Result<(), Error> {
     let cli = Cli::parse();
 
     // Determine if we should use color
@@ -87,14 +88,14 @@ pub fn cli() {
 
     match cli.command {
         Commands::Boot { pretty, json } => {
-            let bootg = Grammar::boot().unwrap();
+            let bootg = Grammar::boot().map_err(Error::BootGrammar)?;
             if pretty {
                 pygmentize(&bootg.to_string(), "ebnf", use_color);
-                return;
+                return Ok(());
             }
             if json {
-                let model: TatSuModel = bootg.clone().try_into().unwrap();
-                let json_str = serde_json::to_string_pretty(&model).unwrap();
+                let model: TatSuModel = bootg.clone().try_into().map_err(Error::Export)?;
+                let json_str = serde_json::to_string_pretty(&model)?;
 
                 pygmentize(&json_str, "json", use_color);
             }
@@ -113,6 +114,8 @@ pub fn cli() {
             );
         }
     }
+
+    Ok(())
 }
 
 pub fn pygmentize(content: &str, extension: &str, use_color: bool) {

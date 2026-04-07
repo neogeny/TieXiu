@@ -33,5 +33,8 @@ fn test_build() {
 
 fn main() {
     // test_build();
-    cli::cli();
+    if let Err(err) = cli::cli() {
+        eprintln!("{err}");
+        std::process::exit(1);
+    }
 }
