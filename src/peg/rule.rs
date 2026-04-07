@@ -5,12 +5,12 @@ use super::{Exp, ParseResult, Parser, S};
 use crate::state::Ctx;
 use crate::trees::Tree;
 use crate::trees::tree::{PruneInfo, PruneInfoRef};
-use std::collections::HashMap;
+use indexmap::IndexMap;
 use std::fmt;
 
 pub type RuleInfo = PruneInfo;
 pub type RuleInfoRef = PruneInfoRef;
-pub type RuleMap = HashMap<String, Rule>;
+pub type RuleMap = IndexMap<Box<str>, Rule>;
 
 #[derive(Debug, Clone)]
 pub struct Rule {

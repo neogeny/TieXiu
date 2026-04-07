@@ -1,7 +1,6 @@
 use super::{Exp, Grammar};
 use crate::peg::exp::ParserExp;
 use std::collections::HashMap;
-use std::ops::Deref;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum State {
@@ -44,17 +43,15 @@ impl<'a> Analyzer<'a> {
         // Since we are traversing Elements, we check if this element is a "Call"
         // to treat it like the start of a Rule logic.
         let mut is_rule: bool = false;
-        if let ParserExp::Call(name, _) = &node.exp {
-            let thisname: String = name.deref().into();
-            if self
+        if let ParserExp::Call(name, _) = &node.exp
+            && self
                 .grammar
                 .rulemap
-                .get(&thisname)
+                .get(name)
                 .is_some_and(|r| r.is_left_recursive())
-            {
-                self.depth_stack.push(self.depth as isize);
-                is_rule = true;
-            }
+        {
+            self.depth_stack.push(self.depth as isize);
+            is_rule = true;
         }
 
         self.node_depth.insert(ptr, self.depth);
