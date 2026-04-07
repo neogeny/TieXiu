@@ -6,6 +6,9 @@ set shell := [shell, "-c"]
 
 default: pre-push
 
+push: pre-push
+    git push
+
 pre-push: clippy fmt test
 
 clippy:
