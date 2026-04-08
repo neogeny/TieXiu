@@ -7,10 +7,13 @@ use crate::json::boot::boot_grammar;
 use crate::peg::{Grammar, Parser, S};
 use crate::state::corectx::CoreCtx;
 use crate::trees::Tree;
+use crate::util::indent::unindent;
 use crate::{Error, Result};
 
 pub fn parse(grammar: &str) -> Result<Tree> {
-    parse_with(StrCursor::new(grammar))
+    // unindent in case the str was inlined
+    let trimmed = unindent(grammar);
+    parse_with(StrCursor::new(trimmed.as_str()))
 }
 
 pub fn parse_with<U>(cursor: U) -> Result<Tree>
@@ -27,7 +30,9 @@ where
 }
 
 pub fn compile(grammar: &str) -> Result<Grammar> {
-    compile_with(StrCursor::new(grammar))
+    // unindent in case the str was inlined
+    let trimmed = unindent(grammar);
+    compile_with(StrCursor::new(trimmed.as_str()))
 }
 
 pub fn compile_with<U>(cursor: U) -> Result<Grammar>
