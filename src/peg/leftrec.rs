@@ -1,140 +1,137 @@
 // Copyright (g) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::{Exp, Grammar};
-use crate::peg::exp::ExpKind;
-use std::collections::HashMap;
+use super::Grammar;
+use super::exp::{Exp, ExpKind};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum State {
     First,
-    Cutoff,
+    Visiting,
     Visited,
 }
 
 struct Analyzer<'a> {
     grammar: &'a mut Grammar,
-    node_state: HashMap<*const Exp, State>,
-    node_depth: HashMap<*const Exp, usize>,
-    depth_stack: Vec<isize>,
-    depth: usize,
+    state: Vec<State>,
+    stack: Vec<usize>,
+    edges: Vec<Vec<usize>>,
 }
 
 impl<'a> Analyzer<'a> {
     fn new(grammar: &'a mut Grammar) -> Self {
+        let edges = grammar
+            .rules()
+            .map(|rule| Self::first_calls(grammar, &rule.exp))
+            .collect::<Vec<_>>();
+        let len = edges.len();
+
         Self {
             grammar,
-            node_state: HashMap::new(),
-            node_depth: HashMap::new(),
-            depth_stack: vec![-1],
-            depth: 0,
+            state: vec![State::First; len],
+            stack: Vec::new(),
+            edges,
         }
     }
 
-    fn dfs(&mut self, node: &Exp) {
-        let ptr = node as *const Exp;
+    fn first_calls(grammar: &Grammar, exp: &Exp) -> Vec<usize> {
+        match &exp.kind {
+            ExpKind::Call { name, .. } => grammar.get_rule_id(name).into_iter().collect(),
+            ExpKind::RuleInclude { rule, .. } => rule
+                .as_ref()
+                .map(|rule| Self::first_calls(grammar, &rule.exp))
+                .unwrap_or_default(),
 
-        // if node_state[node] != State.FIRST: return
-        if *self.node_state.get(&ptr).unwrap_or(&State::First) != State::First {
-            return;
-        }
+            ExpKind::Named(_, inner)
+            | ExpKind::NamedList(_, inner)
+            | ExpKind::Override(inner)
+            | ExpKind::OverrideList(inner)
+            | ExpKind::Group(inner)
+            | ExpKind::SkipGroup(inner)
+            | ExpKind::Lookahead(inner)
+            | ExpKind::NegativeLookahead(inner)
+            | ExpKind::SkipTo(inner)
+            | ExpKind::Alt(inner)
+            | ExpKind::Optional(inner)
+            | ExpKind::Closure(inner)
+            | ExpKind::PositiveClosure(inner) => Self::first_calls(grammar, inner),
 
-        // node_state[node] = State.CUTOFF
-        self.node_state.insert(ptr, State::Cutoff);
+            ExpKind::Choice(items) => items
+                .iter()
+                .flat_map(|item| Self::first_calls(grammar, item))
+                .collect(),
 
-        // leftrec = isinstance(node, Rule) -- In your peg, Rule is the RHS or accessed via Call
-        // Since we are traversing Elements, we check if this element is a "Call"
-        // to treat it like the start of a Rule logic.
-        let mut is_rule: bool = false;
-        if let ExpKind::Call { name, .. } = &node.kind
-            && self
-                .grammar
-                .get_rule(name)
-                .is_ok_and(|r| r.is_left_recursive())
-        {
-            self.depth_stack.push(self.depth as isize);
-            is_rule = true;
-        }
-
-        self.node_depth.insert(ptr, self.depth);
-        self.depth += 1;
-
-        // try:
-        if let ExpKind::RuleInclude { name, .. } = &node.kind
-            && let Ok(rule) = self.grammar.get_rule_ref(name)
-        {
-            self.dfs(&rule.exp);
-        }
-
-        for child in node.callable_from() {
-            self.dfs(child);
-
-            // afterEdge
-            let child_ptr = child as *const Exp;
-            let child_state = *self.node_state.get(&child_ptr).unwrap_or(&State::First);
-            let child_depth = *self.node_depth.get(&child_ptr).unwrap_or(&0) as isize;
-
-            if child_state == State::Cutoff && child_depth > *self.depth_stack.last().unwrap() {
-                // This is a cycle. We need to mark the rule and turn off memoization.
-                if let ExpKind::Call {
-                    name: target_name, ..
-                } = &child.kind
-                {
-                    self.grammar.mark_as_lrec(target_name);
-
-                    // Python: child_rules = (n for n in node_depth if isinstance(n, Rule))
-                    // We invalidate memoization for all rules currently "on the line"
-                    for n_ptr in self.node_depth.keys() {
-                        self.grammar.set_no_memo_for(*n_ptr);
+            ExpKind::Sequence(items) => {
+                let mut calls = Vec::new();
+                for item in items {
+                    calls.extend(Self::first_calls(grammar, item));
+                    if !item.is_nullable() {
+                        break;
                     }
                 }
+                calls
+            }
+
+            ExpKind::Join { exp, .. }
+            | ExpKind::PositiveJoin { exp, .. }
+            | ExpKind::Gather { exp, .. }
+            | ExpKind::PositiveGather { exp, .. } => Self::first_calls(grammar, exp),
+
+            ExpKind::Nil
+            | ExpKind::Cut
+            | ExpKind::Void
+            | ExpKind::Fail
+            | ExpKind::Dot
+            | ExpKind::Eof
+            | ExpKind::Token(_)
+            | ExpKind::Pattern(_)
+            | ExpKind::Constant(_)
+            | ExpKind::Alert(_, _) => Vec::new(),
+        }
+    }
+
+    fn dfs(&mut self, rule_id: usize) {
+        match self.state[rule_id] {
+            State::Visited | State::Visiting => return,
+            State::First => {}
+        }
+
+        self.state[rule_id] = State::Visiting;
+        self.stack.push(rule_id);
+
+        for child_id in self.edges[rule_id].clone() {
+            match self.state[child_id] {
+                State::First => self.dfs(child_id),
+                State::Visiting => self.mark_cycle(child_id),
+                State::Visited => {}
             }
         }
 
-        // finally: (afterNode)
-        if is_rule {
-            self.depth_stack.pop();
+        self.stack.pop();
+        self.state[rule_id] = State::Visited;
+    }
+
+    fn mark_cycle(&mut self, child_id: usize) {
+        if let Some(start) = self.stack.iter().position(|id| *id == child_id) {
+            for rule_id in &self.stack[start..] {
+                if let Some(rule) = self.grammar.rules_mut().nth(*rule_id) {
+                    rule.set_left_recursive();
+                    rule.set_no_memo();
+                }
+            }
         }
-        self.node_depth.remove(&ptr);
-        self.depth -= 1;
-        self.node_state.insert(ptr, State::Visited);
     }
 }
 
-// Helper methods on Grammar to handle the mutation without locking Rule objects
 impl Grammar {
     pub fn mark_left_recursion(&mut self) {
-        // Reset status
-        for rule in &mut self.rules_mut() {
+        for rule in self.rules_mut() {
             rule.reset_left_recursion();
         }
 
         let mut analyzer = Analyzer::new(self);
-
-        // We must collect the references first to avoid borrowing self.rules while analyzer holds &mut self
-        let roots: Vec<*const Exp> = analyzer
-            .grammar
-            .rules()
-            .map(|r| &r.exp as *const Exp)
-            .collect();
-
-        for ptr in roots {
-            unsafe { analyzer.dfs(&*ptr) };
-        }
-    }
-
-    fn mark_as_lrec(&mut self, name: &str) {
-        if let Ok(rule) = self.get_rule_mut(name) {
-            rule.set_left_recursive();
-        }
-    }
-
-    fn set_no_memo_for(&mut self, ptr: *const Exp) {
-        // Find which rule owns this RHS pointer and kill its memo
-        for rule in &mut self.rules_mut() {
-            if std::ptr::eq(&rule.exp, ptr) {
-                rule.set_no_memo();
-            }
+        for rule_id in 0..analyzer.edges.len() {
+            analyzer.dfs(rule_id);
         }
     }
 }
