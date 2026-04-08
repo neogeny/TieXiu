@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub mod build;
+pub mod compile;
 pub mod error;
 pub mod exp;
 pub mod fold;
@@ -15,6 +16,7 @@ pub mod pretty;
 pub mod repeat;
 pub mod rule;
 
+pub use compile::GrammarCompiler;
 pub use error::ParseError;
 pub use exp::{Exp, ExpKind};
 pub use grammar::Grammar;
