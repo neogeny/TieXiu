@@ -24,6 +24,18 @@ impl Rule {
 }
 
 impl Exp {
+    fn xrefd(&self, name: &str, g: &Grammar) -> Result<Exp, ParseError> {
+        let mut exp = self.crossrefed(g)?;
+        if matches!(exp.kind, ExpKind::Nil) {
+            if let Some(rule) = g.rulemap.get(name) {
+                exp = rule.exp.crossrefed(g)?;
+            } else {
+                return Err(ParseError::RuleNotFound(name.into()));
+            }
+        }
+        Ok(exp)
+    }
+
     pub fn crossrefed(&self, g: &Grammar) -> Result<Exp, ParseError> {
         match &self.kind {
             ExpKind::Nil
@@ -38,22 +50,12 @@ impl Exp {
             | ExpKind::Alert(_, _) => Ok(self.clone()),
 
             ExpKind::Call(name, exp) => {
-                let mut exp = exp.crossrefed(g)?;
-                if matches!(exp.kind, ExpKind::Nil)
-                    && let Some(rule) = g.rulemap.get(name)
-                {
-                    exp = rule.exp.crossrefed(g)?;
-                }
-                Ok(Exp::call(name, exp))
+                let new = exp.xrefd(name, g)?;
+                Ok(Exp::call(name, new))
             }
             ExpKind::RuleInclude { name, exp } => {
-                let mut exp = exp.crossrefed(g)?;
-                if matches!(exp.kind, ExpKind::Nil)
-                    && let Some(rule) = g.rulemap.get(name)
-                {
-                    exp = rule.exp.crossrefed(g)?;
-                }
-                Ok(Exp::rule_include(name, exp))
+                let new = exp.xrefd(name, g)?;
+                Ok(Exp::rule_include(name, new))
             }
 
             ExpKind::Named(name, exp) => Ok(Exp::named(name, exp.crossrefed(g)?)),
