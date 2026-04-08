@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::json::error::ImportError;
+use crate::json::tree::TreeJsonError;
 use crate::peg::{CompileError, ParseError};
 use thiserror::Error;
 
@@ -11,6 +12,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("JSON import/export failed: {0}")]
     JsonModel(#[from] ImportError),
+
+    #[error("tree JSON mapping failed: {0}")]
+    TreeJson(#[from] TreeJsonError),
 
     #[error("grammar compilation failed: {0}")]
     Compile(#[from] CompileError),

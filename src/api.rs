@@ -41,3 +41,7 @@ where
 pub fn load(json: &str) -> Result<Grammar> {
     Ok(Grammar::from_json(json)?)
 }
+
+pub fn load_tree(json: &str) -> Result<Tree> {
+    Tree::from_json_str(json).map_err(Error::from)
+}

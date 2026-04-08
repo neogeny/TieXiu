@@ -11,7 +11,7 @@ pub mod trees;
 pub mod ui;
 pub mod util;
 
-pub use api::{compile, compile_with, load, parse, parse_with};
+pub use api::{compile, compile_with, load, load_tree, parse, parse_with};
 pub use error::{Error, Result};
 
 #[allow(dead_code)]
