@@ -1,7 +1,31 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
+use std::fmt::Write;
 
 const BLACK_LEN: usize = 88;
+
+pub fn unindent(text: &str) -> String {
+    let lines: Vec<&str> = text.lines().collect();
+
+    let min_indent = lines
+        .iter()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| line.len() - line.trim_start().len())
+        .min()
+        .unwrap_or(0);
+
+    let mut buf = String::new();
+
+    for line in lines {
+        if line.trim().is_empty() {
+            writeln!(buf).unwrap();
+        } else {
+            writeln!(buf, "{}", line[min_indent..].trim_end()).unwrap();
+        }
+    }
+
+    buf.trim().to_string()
+}
 
 pub struct IndentWriter {
     buffer: String,
