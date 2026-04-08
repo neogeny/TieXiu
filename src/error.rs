@@ -5,19 +5,21 @@ use crate::json::error::ImportError;
 use crate::peg::{CompileError, ParseError};
 use thiserror::Error;
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("JSON import/export failed: {0}")]
     JsonModel(#[from] ImportError),
 
-    #[error("failed to serialize JSON output: {0}")]
-    Json(#[from] serde_json::Error),
+    #[error("grammar compilation failed: {0}")]
+    Compile(#[from] CompileError),
 
     #[error("parse failed: {0}")]
     Parse(#[from] ParseError),
 
-    #[error("grammar compilation failed: {0}")]
-    Compile(#[from] CompileError),
+    #[error("failed to serialize JSON output: {0}")]
+    Json(#[from] serde_json::Error),
 
     #[error("I/O failed: {0}")]
     Io(#[from] std::io::Error),

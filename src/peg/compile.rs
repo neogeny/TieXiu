@@ -81,39 +81,39 @@ impl GrammarCompiler {
 
     fn expect_keys(
         &self,
-        treemap: &TreeMap,
+        m: &TreeMap,
         expected: &[&'static str],
         context: &'static str,
     ) -> CompileResult<()> {
         for key in expected {
-            if treemap.get(key).is_none() {
+            if m.get(key).is_none() {
                 return Err(CompileError::MissingKey { context, key });
             }
         }
         Ok(())
     }
 
-    fn field<'a>(&self, treemap: &'a TreeMap, key: &'static str) -> CompileResult<&'a Tree> {
-        let Some(tree) = treemap.get(key) else {
+    fn field<'a>(&self, m: &'a TreeMap, key: &'static str) -> CompileResult<&'a Tree> {
+        let Some(tree) = m.get(key) else {
             return Err(CompileError::ExpectedField(key));
         };
         Ok(tree)
     }
 
-    fn text_field<'a>(&self, treemap: &'a TreeMap, key: &'static str) -> CompileResult<&'a str> {
-        self.text(self.field(treemap, key)?, key)
+    fn text_field<'a>(&self, m: &'a TreeMap, key: &'static str) -> CompileResult<&'a str> {
+        self.text(self.field(m, key)?, key)
     }
 
-    fn list_field<'a>(&self, treemap: &'a TreeMap, key: &'static str) -> CompileResult<&'a [Tree]> {
-        self.list(self.field(treemap, key)?, key)
+    fn list_field<'a>(&self, m: &'a TreeMap, key: &'static str) -> CompileResult<&'a [Tree]> {
+        self.list(self.field(m, key)?, key)
     }
 
-    fn rhs_field(&self, treemap: &TreeMap, key: &'static str) -> CompileResult<Exp> {
-        self.compile_rhs(self.field(treemap, key)?)
+    fn rhs_field(&self, m: &TreeMap, key: &'static str) -> CompileResult<Exp> {
+        self.compile_rhs(self.field(m, key)?)
     }
 
-    fn rhs_list(&self, treemap: &TreeMap, key: &'static str) -> CompileResult<Vec<Exp>> {
-        self.list_field(treemap, key)?
+    fn rhs_list(&self, m: &TreeMap, key: &'static str) -> CompileResult<Vec<Exp>> {
+        self.list_field(m, key)?
             .iter()
             .map(|tree| self.compile_rhs(tree))
             .collect()
@@ -192,18 +192,18 @@ impl GrammarCompiler {
     }
 
     fn rule_name<'a>(&self, tree: &'a Tree) -> CompileResult<&'a str> {
-        let (name, treemap) = self.node_map(tree, "rule")?;
+        let (name, m) = self.node_map(tree, "rule")?;
         if name != "Rule" {
             return Err(CompileError::UnexpectedNodeName {
                 expected: "Rule",
                 found: name.into(),
             });
         }
-        self.text_field(treemap, "name")
+        self.text_field(m, "name")
     }
 
-    fn bool_flag(&self, treemap: &TreeMap, key: &'static str) -> CompileResult<bool> {
-        treemap
+    fn bool_flag(&self, m: &TreeMap, key: &'static str) -> CompileResult<bool> {
+        m
             .get(key)
             .map(|tree| self.bool_text(tree, key))
             .transpose()
@@ -212,18 +212,18 @@ impl GrammarCompiler {
 
     fn one_of(
         &self,
-        treemap: &TreeMap,
+        m: &TreeMap,
         keys: &[&'static str],
         default: bool,
     ) -> CompileResult<bool> {
         keys.iter()
-            .find_map(|key| treemap.get(key).map(|tree| self.bool_text(tree, key)))
+            .find_map(|key| m.get(key).map(|tree| self.bool_text(tree, key)))
             .transpose()
             .map(|value| value.unwrap_or(default))
     }
 
-    fn compile_rule_decorators(&self, treemap: &TreeMap) -> CompileResult<(bool, bool)> {
-        let decorators = self.field(treemap, "decorators")?;
+    fn compile_rule_decorators(&self, m: &TreeMap) -> CompileResult<(bool, bool)> {
+        let decorators = self.field(m, "decorators")?;
 
         if self.contains_text(decorators, "decorators", "override")? {
             return Err(CompileError::NotImplemented("override decorator"));
@@ -238,37 +238,37 @@ impl GrammarCompiler {
 
     fn unary(
         &self,
-        treemap: &TreeMap,
+        m: &TreeMap,
         key: &'static str,
         build: fn(Exp) -> Exp,
     ) -> CompileResult<Exp> {
-        self.rhs_field(treemap, key).map(build)
+        self.rhs_field(m, key).map(build)
     }
 
     fn binary(
         &self,
-        treemap: &TreeMap,
+        m: &TreeMap,
         left: &'static str,
         right: &'static str,
         build: fn(Exp, Exp) -> Exp,
     ) -> CompileResult<Exp> {
         Ok(build(
-            self.rhs_field(treemap, left)?,
-            self.rhs_field(treemap, right)?,
+            self.rhs_field(m, left)?,
+            self.rhs_field(m, right)?,
         ))
     }
 
-    fn alert(&self, treemap: &TreeMap) -> CompileResult<Exp> {
-        let message = treemap
+    fn alert(&self, m: &TreeMap) -> CompileResult<Exp> {
+        let message = m
             .get("message")
-            .or_else(|| treemap.get("literal"))
+            .or_else(|| m.get("literal"))
             .ok_or(CompileError::ExpectedField("message"))?;
-        let code = self.text_field(treemap, "level")?.len() as u8;
+        let code = self.text_field(m, "level")?.len() as u8;
         Ok(Exp::alert(self.text(message, "message")?, code))
     }
 
     pub fn compile_grammar(&self, tree: &Tree) -> CompileResult<Grammar> {
-        let (name, treemap) = self.node_map(tree, "grammar")?;
+        let (name, m) = self.node_map(tree, "grammar")?;
         if name != "Grammar" {
             return Err(CompileError::UnexpectedNodeName {
                 expected: "Grammar",
@@ -276,15 +276,15 @@ impl GrammarCompiler {
             });
         }
         self.expect_keys(
-            treemap,
+            m,
             &["name", "directives", "keywords", "rules"],
             "Grammar",
         )?;
 
-        let grammar_name = self.text_field(treemap, "name")?;
-        let directives = self.directives(self.field(treemap, "directives")?)?;
-        let keywords = self.keywords(self.field(treemap, "keywords")?)?;
-        let rule_trees = self.list_field(treemap, "rules")?;
+        let grammar_name = self.text_field(m, "name")?;
+        let directives = self.directives(self.field(m, "directives")?)?;
+        let keywords = self.keywords(self.field(m, "keywords")?)?;
+        let rule_trees = self.list_field(m, "rules")?;
         let rules = self.compile_rules(rule_trees)?;
 
         let mut grammar = Grammar::new(grammar_name, &rules);
@@ -294,7 +294,7 @@ impl GrammarCompiler {
     }
 
     pub fn compile_rule(&self, tree: &Tree) -> CompileResult<Rule> {
-        let (name, treemap) = self.node_map(tree, "rule")?;
+        let (name, m) = self.node_map(tree, "rule")?;
         if name != "Rule" {
             return Err(CompileError::UnexpectedNodeName {
                 expected: "Rule",
@@ -302,27 +302,27 @@ impl GrammarCompiler {
             });
         }
         self.expect_keys(
-            treemap,
+            m,
             &["name", "params", "exp", "decorators", "base", "kwparams"],
             "Rule",
         )?;
 
-        let rule_name = self.text_field(treemap, "name")?.to_string();
-        let params = self.text_list(self.field(treemap, "params")?, "params")?;
-        let exp = self.rhs_field(treemap, "exp")?;
-        let (decorator_is_name, decorator_no_memo) = self.compile_rule_decorators(treemap)?;
+        let rule_name = self.text_field(m, "name")?.to_string();
+        let params = self.text_list(self.field(m, "params")?, "params")?;
+        let exp = self.rhs_field(m, "exp")?;
+        let (decorator_is_name, decorator_no_memo) = self.compile_rule_decorators(m)?;
 
-        let is_name = self.bool_flag(treemap, "is_name")? || decorator_is_name;
-        let is_tokn = self.bool_flag(treemap, "is_tokn")?;
-        let no_memo = self.bool_flag(treemap, "no_memo")? || decorator_no_memo;
-        let is_memo = self.one_of(treemap, &["is_memo", "is_memoizable"], true)?;
-        let is_lrec = self.one_of(treemap, &["is_lrec", "is_leftrec"], false)?;
+        let is_name = self.bool_flag(m, "is_name")? || decorator_is_name;
+        let is_tokn = self.bool_flag(m, "is_tokn")?;
+        let no_memo = self.bool_flag(m, "no_memo")? || decorator_no_memo;
+        let is_memo = self.one_of(m, &["is_memo", "is_memoizable"], true)?;
+        let is_lrec = self.one_of(m, &["is_lrec", "is_leftrec"], false)?;
 
-        if !matches!(self.field(treemap, "base")?, Tree::Nil) {
+        if !matches!(self.field(m, "base")?, Tree::Nil) {
             return Err(CompileError::NotImplemented("base rules"));
         }
 
-        match self.field(treemap, "kwparams")? {
+        match self.field(m, "kwparams")? {
             Tree::Nil => {}
             Tree::Map(kwparams) if kwparams.entries.is_empty() => {}
             Tree::Map(_) => return Err(CompileError::NotImplemented("kwparams")),
@@ -335,48 +335,48 @@ impl GrammarCompiler {
     }
 
     pub fn compile_rhs(&self, tree: &Tree) -> CompileResult<Exp> {
-        let (name, treemap) = self.node_map(tree, "expression")?;
+        let (name, m) = self.node_map(tree, "expression")?;
 
         match name {
-            "Sequence" => Ok(Exp::sequence(self.rhs_list(treemap, "sequence")?)),
-            "Choice" => Ok(Exp::choice(self.rhs_list(treemap, "options")?)),
-            "Option" => Ok(Exp::alt(self.rhs_field(treemap, "exp")?)),
-            "Call" | "RuleRef" => Ok(Exp::call(self.text_field(treemap, "name")?)),
+            "Sequence" => Ok(Exp::sequence(self.rhs_list(m, "sequence")?)),
+            "Choice" => Ok(Exp::choice(self.rhs_list(m, "options")?)),
+            "Option" => Ok(Exp::alt(self.rhs_field(m, "exp")?)),
+            "Call" | "RuleRef" => Ok(Exp::call(self.text_field(m, "name")?)),
             "RuleInclude" => Ok(Exp::rule_include(
-                self.rule_name(self.field(treemap, "rule")?)?,
+                self.rule_name(self.field(m, "rule")?)?,
                 Exp::nil(),
             )),
-            "Token" => Ok(Exp::token(self.text_field(treemap, "token")?)),
-            "Pattern" => Ok(Exp::pattern(self.text_field(treemap, "pattern")?)),
-            "Constant" => Ok(Exp::constant(self.text_field(treemap, "literal")?)),
-            "Alert" => self.alert(treemap),
+            "Token" => Ok(Exp::token(self.text_field(m, "token")?)),
+            "Pattern" => Ok(Exp::pattern(self.text_field(m, "pattern")?)),
+            "Constant" => Ok(Exp::constant(self.text_field(m, "literal")?)),
+            "Alert" => self.alert(m),
             "Cut" => Ok(Exp::cut()),
             "Void" => Ok(Exp::void()),
             "Fail" => Ok(Exp::fail()),
             "Dot" => Ok(Exp::dot()),
             "EOF" => Ok(Exp::eof()),
             "Named" => Ok(Exp::named(
-                self.text_field(treemap, "name")?,
-                self.rhs_field(treemap, "exp")?,
+                self.text_field(m, "name")?,
+                self.rhs_field(m, "exp")?,
             )),
             "NamedList" => Ok(Exp::named_list(
-                self.text_field(treemap, "name")?,
-                self.rhs_field(treemap, "exp")?,
+                self.text_field(m, "name")?,
+                self.rhs_field(m, "exp")?,
             )),
-            "Override" => self.unary(treemap, "exp", Exp::override_node),
-            "OverrideList" => self.unary(treemap, "exp", Exp::override_list),
-            "Group" => self.unary(treemap, "exp", Exp::group),
-            "SkipGroup" => self.unary(treemap, "exp", Exp::skip_group),
-            "Lookahead" => self.unary(treemap, "exp", Exp::lookahead),
-            "NegativeLookahead" => self.unary(treemap, "exp", Exp::negative_lookahead),
-            "SkipTo" => self.unary(treemap, "exp", Exp::skip_to),
-            "Optional" => self.unary(treemap, "exp", Exp::optional),
-            "Closure" => self.unary(treemap, "exp", Exp::closure),
-            "PositiveClosure" => self.unary(treemap, "exp", Exp::positive_closure),
-            "Join" => self.binary(treemap, "exp", "sep", Exp::join),
-            "PositiveJoin" => self.binary(treemap, "exp", "sep", Exp::positive_join),
-            "Gather" => self.binary(treemap, "exp", "sep", Exp::gather),
-            "PositiveGather" => self.binary(treemap, "exp", "sep", Exp::positive_gather),
+            "Override" => self.unary(m, "exp", Exp::override_node),
+            "OverrideList" => self.unary(m, "exp", Exp::override_list),
+            "Group" => self.unary(m, "exp", Exp::group),
+            "SkipGroup" => self.unary(m, "exp", Exp::skip_group),
+            "Lookahead" => self.unary(m, "exp", Exp::lookahead),
+            "NegativeLookahead" => self.unary(m, "exp", Exp::negative_lookahead),
+            "SkipTo" => self.unary(m, "exp", Exp::skip_to),
+            "Optional" => self.unary(m, "exp", Exp::optional),
+            "Closure" => self.unary(m, "exp", Exp::closure),
+            "PositiveClosure" => self.unary(m, "exp", Exp::positive_closure),
+            "Join" => self.binary(m, "exp", "sep", Exp::join),
+            "PositiveJoin" => self.binary(m, "exp", "sep", Exp::positive_join),
+            "Gather" => self.binary(m, "exp", "sep", Exp::gather),
+            "PositiveGather" => self.binary(m, "exp", "sep", Exp::positive_gather),
             other => Err(CompileError::UnsupportedRhs(other.into())),
         }
     }

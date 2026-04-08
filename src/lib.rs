@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+pub mod error;
 pub mod input;
 pub mod json;
 pub mod peg;
@@ -8,6 +9,8 @@ pub mod state;
 pub mod trees;
 pub mod ui;
 pub mod util;
+
+pub use error::{Error, Result};
 
 #[allow(dead_code)]
 use pyo3::prelude::*;
