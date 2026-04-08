@@ -16,11 +16,10 @@ exclude = [
 ]
 
 [features]
-# The CLI is now an optional feature, included in default
+bootstrap = ["default"]
 default = ["regex", "serde", "serde_json", "cli"]
 transient = ["regex", "serde", "serde_json", "cli"]
 
-# Core features
 regex = ["dep:regex"]
 serde = ["dep:serde"]
 serde_json = [
@@ -29,22 +28,18 @@ serde_json = [
     "dep:serde_path_to_error",
 ]
 
-# CLI-specific feature group
 cli = ["dep:clap", "dep:syntect", "dep:owo-colors"]
 
 [dependencies]
-# Optional core dependencies
 serde = { version = "1.0", features = ["derive"], optional = true }
 regex = { version = "1.10", optional = true }
 serde_json = { version = "1.0.149", optional = true }
 serde_path_to_error = { version = "0.1", optional = true }
 
-# CLI dependencies (marked as optional)
 clap = { version = "4.6", features = ["derive"], optional = true }
 syntect = { version = "5.3.0", optional = true }
 owo-colors = { version = "4.0", optional = true, features = ["supports-colors"] }
 
-# Mandatory/Library dependencies
 pyo3 = { version = "0.28", features = ["extension-module"] }
 indexmap = { version = "2.13" }
 thiserror = "2.0.18"
@@ -52,7 +47,6 @@ thiserror = "2.0.18"
 [[bin]]
 name = "tiexiu"
 path = "src/main.rs"
-# The binary will only compile if the 'cli' feature is present
 required-features = ["cli"]
 
 [lib]
