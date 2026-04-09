@@ -24,4 +24,6 @@ target
 .envrc.xsh
 
 # Develoment
+tmp
 tatsu
+Modelfile

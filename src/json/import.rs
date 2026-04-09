@@ -109,10 +109,8 @@ impl TryFrom<TatSuModel> for Exp {
                 Err(ImportError::UnsupportedModel(format!("{:?}", model)))
             }
             TatSuModel::RuleInclude { name, exp } => {
-                let _ = Exp::try_from(*exp)?;
-                let out = Exp::rule_include(&name);
-                // FIXME: we have the expx to conver
-                Ok(out)
+                let inner_exp = Exp::try_from(*exp)?;
+                Ok(Exp::rule_include_with(&name, inner_exp))
             }
             TatSuModel::LeftJoin { .. } => Err(ImportError::UnsupportedModel("LeftJoin".into())),
             TatSuModel::RightJoin { .. } => Err(ImportError::UnsupportedModel("RightJoin".into())),

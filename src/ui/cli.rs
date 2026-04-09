@@ -1,13 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::error::Error;
-use crate::input::StrCursor;
-use crate::json::boot::TATSU_GRAMMAR_JSON;
-use crate::json::tatsu::TatSuModel;
-use crate::peg::{Parser as PegParser, S};
-use crate::state::strctx::StrCtx;
-use crate::{compile, load};
+use crate::Result;
+use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
 use owo_colors;
@@ -71,36 +66,28 @@ pub enum Commands {
     },
 }
 
-pub fn cli() -> Result<(), Error> {
+pub fn cli() -> Result<()> {
     let cli = Cli::parse();
 
-    // Determine if we should use color
     let use_color = match cli.color {
         clap::ColorChoice::Always => true,
         clap::ColorChoice::Never => false,
-        clap::ColorChoice::Auto => {
-            // Check if stdout is a TTY (terminal)
-            // Note: is_terminal() requires standard library 1.70+
-            std::io::IsTerminal::is_terminal(&std::io::stdout())
-        }
+        clap::ColorChoice::Auto => std::io::IsTerminal::is_terminal(&std::io::stdout()),
     };
 
-    // Set global override for owo-colors
     if !use_color {
         owo_colors::set_override(false);
     }
 
     match cli.command {
         Commands::Boot { pretty, json } => {
-            let bootg = load(TATSU_GRAMMAR_JSON)?;
             if pretty {
-                pygmentize(&bootg.to_string(), "ebnf", use_color);
+                let pretty_str = boot_grammar_pretty()?;
+                pygmentize(&pretty_str, "ebnf", use_color);
                 return Ok(());
             }
             if json {
-                let model: TatSuModel = bootg.clone().try_into()?;
-                let json_str = serde_json::to_string_pretty(&model)?;
-
+                let json_str = boot_grammar_json()?;
                 pygmentize(&json_str, "json", use_color);
             }
         }
@@ -120,10 +107,9 @@ pub fn cli() -> Result<(), Error> {
 
             for input in inputs {
                 let text = std::fs::read_to_string(&input)?;
-                let ctx = StrCtx::new(StrCursor::new(&text));
-                match parser.parse(ctx) {
-                    Ok(S(_, tree)) => println!("{}", tree.normalized()),
-                    Err(failure) => return Err(Error::from(failure.error)),
+                match parse_input(&parser, &text) {
+                    Ok(tree) => println!("{}", tree.normalized()),
+                    Err(e) => return Err(e),
                 }
             }
         }
@@ -154,11 +140,9 @@ pub fn pygmentize(content: &str, extension: &str, use_color: bool) {
 
     for line in LinesWithEndings::from(content) {
         let ranges = h.highlight_line(line, &ps).unwrap();
-        // false = do not force background colors
         let escaped = as_24_bit_terminal_escaped(&ranges[..], false);
         print!("{}", escaped);
     }
-    // Reset terminal to default state
     print!("\x1b[0m");
     if !content.ends_with('\n') {
         println!();

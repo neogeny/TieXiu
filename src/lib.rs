@@ -11,7 +11,10 @@ pub mod trees;
 pub mod ui;
 pub mod util;
 
-pub use api::{compile, compile_with, load, load_tree, parse, parse_with};
+pub use api::{
+    boot_grammar_json, boot_grammar_pretty, compile, compile_with, load, load_boot, load_tree,
+    parse, parse_input, parse_with, pretty, pretty_tree,
+};
 pub use error::{Error, Result};
 
 #[allow(dead_code)]
@@ -24,6 +27,7 @@ mod tiexiu {
     fn _tiexiu(m: &Bound<'_, PyModule>) -> PyResult<()> {
         m.add_function(wrap_pyfunction!(compile, m)?)?;
         m.add_function(wrap_pyfunction!(parse, m)?)?;
+        m.add_function(wrap_pyfunction!(pretty, m)?)?;
         Ok(())
     }
 
@@ -35,5 +39,10 @@ mod tiexiu {
     #[pyfunction]
     fn parse(_grammar: String, _text: String) -> PyResult<String> {
         Ok("output".to_string())
+    }
+
+    #[pyfunction]
+    fn pretty(_grammar: String) -> PyResult<String> {
+        Ok("pretty".to_string())
     }
 }

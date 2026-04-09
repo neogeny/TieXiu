@@ -3,7 +3,7 @@
 
 use super::Cursor;
 use super::error::Error;
-use regex::Regex;
+use crate::util::regex::Regex;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
@@ -16,7 +16,7 @@ struct Patterns {
 impl Patterns {
     const DEFAULT_WSP: &'static str = r"^\s+";
     const DEFAULT_EOL: &'static str = r"^//.*$";
-    const DEFAULT_CMT: &'static str = r"^$"; // Matches nothing by default
+    const DEFAULT_CMT: &'static str = r"^$";
 
     fn compile(kind: &'static str, pattern: &str) -> Result<Regex, Error> {
         Regex::new(pattern).map_err(|source| Error::InvalidRegex {
@@ -75,10 +75,11 @@ impl<'a> StrCursor<'a> {
 
     #[inline]
     fn eat_regex(&mut self, re: &Regex) -> bool {
-        if let Some(mat) = re.find_at(self.text, self.offset)
-            && mat.start() == self.offset
+        let text = &self.text[self.offset..];
+        if let Some(mat) = re.find(text)
+            && mat.start() == 0
         {
-            self.offset = mat.end();
+            self.offset += mat.end();
             return true;
         }
         false
@@ -119,14 +120,15 @@ impl<'a> Cursor for StrCursor<'a> {
     }
 
     fn pattern_re(&mut self, re: &Regex) -> Option<String> {
-        let caps = re.captures_at(self.text, self.offset)?;
+        let text = &self.text[self.offset..];
+        let caps = re.captures(text)?;
         let whole = caps.get(0)?;
-        if whole.start() != self.offset {
+        if whole.start() != 0 {
             return None;
         }
 
-        self.offset = whole.end();
-        let matched = caps.get(1).or(caps.get(0))?.as_str();
+        self.offset += whole.end();
+        let matched = caps.get(1).unwrap_or(whole).as_str();
         Some(matched.to_string())
     }
 

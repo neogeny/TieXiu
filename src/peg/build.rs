@@ -34,6 +34,13 @@ impl Exp {
         })
     }
 
+    pub fn rule_include_with(name: &str, exp: Self) -> Self {
+        Self::new(ExpKind::RuleInclude {
+            name: name.into(),
+            exp: Some(exp.into()),
+        })
+    }
+
     #[inline]
     pub fn cut() -> Self {
         Self::new(ExpKind::Cut)

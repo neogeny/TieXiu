@@ -50,3 +50,37 @@ pub fn load(json: &str) -> Result<Grammar> {
 pub fn load_tree(json: &str) -> Result<Tree> {
     Tree::from_json_str(json).map_err(Error::from)
 }
+
+pub fn pretty(grammar: &str) -> Result<String> {
+    let grammar = compile(grammar)?;
+    Ok(grammar.to_string())
+}
+
+pub fn pretty_tree(tree: &Tree) -> Result<String> {
+    Ok(tree.to_json_string()?)
+}
+
+pub fn load_boot() -> Result<Grammar> {
+    Ok(boot_grammar()?)
+}
+
+pub fn boot_grammar_json() -> Result<String> {
+    let boot = boot_grammar()?;
+    let model: crate::json::tatsu::TatSuModel = boot.clone().try_into()?;
+    Ok(serde_json::to_string_pretty(&model)?)
+}
+
+pub fn boot_grammar_pretty() -> Result<String> {
+    let boot = boot_grammar()?;
+    Ok(boot.to_string())
+}
+
+pub fn parse_input(grammar: &Grammar, input: &str) -> Result<Tree> {
+    let cursor = StrCursor::new(input);
+    let ctx = CoreCtx::new(cursor);
+
+    match grammar.parse(ctx) {
+        Ok(S(_, tree)) => Ok(tree),
+        Err(failure) => Err(Error::from(failure.error)),
+    }
+}

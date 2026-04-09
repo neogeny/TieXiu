@@ -66,6 +66,10 @@ impl Exp {
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
         <Self as Parser<C>>::parse(self, ctx)
     }
+
+    pub fn link<L: super::fold::Linker + ?Sized>(&mut self, linker: &mut L) {
+        linker.link(self);
+    }
 }
 
 impl<C> Parser<C> for Exp
