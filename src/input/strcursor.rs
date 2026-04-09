@@ -76,11 +76,11 @@ impl<'a> StrCursor<'a> {
     #[inline]
     fn eat_regex(&mut self, re: &Regex) -> bool {
         let text = &self.text[self.offset..];
-        if let Some(mat) = re.search(text) {
-            if mat.start(Option::<usize>::None) == 0 {
-                self.offset += mat.end(Option::<usize>::None) as usize;
-                return true;
-            }
+        if let Some(mat) = re.search(text)
+            && mat.start(Option::<usize>::None) == 0
+        {
+            self.offset += mat.end(Option::<usize>::None) as usize;
+            return true;
         }
         false
     }
