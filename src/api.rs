@@ -4,7 +4,7 @@
 use crate::input::Cursor;
 use crate::input::StrCursor;
 use crate::json::boot::boot_grammar;
-use crate::peg::{Grammar, Parser, S};
+use crate::peg::{Grammar, S};
 use crate::state::corectx::CoreCtx;
 use crate::trees::Tree;
 use crate::util::indent::unindent;

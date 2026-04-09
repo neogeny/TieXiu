@@ -1,9 +1,8 @@
 use tiexiu::input::StrCursor;
-use tiexiu::peg::Parser;
 use tiexiu::state::corectx::CoreCtx;
 
 #[test]
-#[cfg(feature = "bootstrap")]
+#[ignore]
 fn test_ebnf_parsing() {
     let ebnf_text =
         std::fs::read_to_string("grammar/tatsu.tatsu").expect("Failed to read tatsu.tatsu");

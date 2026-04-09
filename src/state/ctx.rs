@@ -6,7 +6,7 @@ use crate::input::Cursor;
 use crate::peg::error::ParseError;
 use crate::peg::{F, ParseResult, Rule, S};
 use crate::trees::tree::Tree;
-use crate::util::regex::Regex;
+use crate::util::re::Regex;
 use std::fmt::Debug;
 
 pub trait Ctx: Clone + Debug {
@@ -38,11 +38,8 @@ pub trait Ctx: Clone + Debug {
     fn regex(&self, pattern: &str) -> Regex;
 
     fn pattern(&mut self, pattern: &str) -> Option<String> {
-        eprintln!("DEBUG pattern: calling next_token()");
         self.next_token();
-        eprintln!("DEBUG pattern: getting regex");
         let re = self.regex(pattern);
-        eprintln!("DEBUG pattern: pattern='{}', calling pattern_re", pattern);
         self.cursor_mut().pattern_re(&re)
     }
 

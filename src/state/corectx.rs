@@ -2,7 +2,7 @@ use crate::input::Cursor;
 use crate::state::Ctx;
 use crate::state::memo::{Key, Memo, MemoCache};
 use crate::trees::Tree;
-use crate::util::regex::Regex;
+use crate::util::re::Regex;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;

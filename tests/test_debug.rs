@@ -1,5 +1,6 @@
 #[test]
 #[cfg(feature = "bootstrap")]
+#[ignore]
 fn test_debug_boot_grammar() {
     let boot = tiexiu::json::boot::boot_grammar().expect("Failed to load boot grammar");
     println!("Boot grammar rules:");

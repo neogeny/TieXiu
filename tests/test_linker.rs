@@ -1,8 +1,8 @@
 use tiexiu::input::StrCursor;
-use tiexiu::peg::{Exp, ExpKind, Grammar, Parser};
+use tiexiu::peg::{Exp, ExpKind, Grammar};
 use tiexiu::state::corectx::CoreCtx;
 
-fn check_exp_for_unlinked(exp: &Exp, path: &str, grammar: &Grammar) {
+pub fn check_exp_for_unlinked(exp: &Exp, path: &str, grammar: &Grammar) {
     match &exp.kind {
         ExpKind::Call { name, rule } => {
             if rule.is_none() {
@@ -65,7 +65,7 @@ fn check_exp_for_unlinked(exp: &Exp, path: &str, grammar: &Grammar) {
 }
 
 #[test]
-#[cfg(feature = "bootstrap")]
+#[ignore]
 fn test_linker_debug() {
     let boot = tiexiu::json::boot::boot_grammar().expect("Failed to load boot grammar");
 

@@ -3,7 +3,7 @@
 
 use super::Cursor;
 use super::error::Error;
-use crate::util::regex::Regex;
+use crate::util::re::Regex;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
@@ -76,7 +76,7 @@ impl<'a> StrCursor<'a> {
     #[inline]
     fn eat_regex(&mut self, re: &Regex) -> bool {
         let text = &self.text[self.offset..];
-        if let Some(mat) = re.find(text)
+        if let Ok(Some(mat)) = re.find(text)
             && mat.start() == 0
         {
             self.offset += mat.end();
@@ -121,7 +121,10 @@ impl<'a> Cursor for StrCursor<'a> {
 
     fn pattern_re(&mut self, re: &Regex) -> Option<String> {
         let text = &self.text[self.offset..];
-        let caps = re.captures(text)?;
+        let caps = match re.captures(text) {
+            Ok(Some(c)) => c,
+            _ => return None,
+        };
         let whole = caps.get(0)?;
         if whole.start() != 0 {
             return None;

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::exp::{Exp, ExpKind};
-use crate::util::regex;
+use crate::util::re;
 
 impl Exp {
     pub fn callable_from(&self) -> Vec<&Exp> {
@@ -41,8 +41,8 @@ impl ExpKind {
 
             Self::Pattern(pattern) => {
                 // true if it CAN match the empty string (is nullable)
-                regex::new(pattern)
-                    .map(|re| re.is_match(""))
+                re::new(pattern)
+                    .and_then(|re| re.is_match(""))
                     .unwrap_or(false)
             }
 

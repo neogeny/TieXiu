@@ -1,7 +1,7 @@
 //! Test fixtures for bootstrap tests
 
 use tiexiu::input::StrCursor;
-use tiexiu::peg::{Exp, ExpKind, Grammar, Parser};
+use tiexiu::peg::{Exp, ExpKind, Grammar};
 use tiexiu::state::corectx::CoreCtx;
 
 pub fn boot_grammar() -> Grammar {

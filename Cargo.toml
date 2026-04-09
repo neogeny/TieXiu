@@ -17,10 +17,10 @@ exclude = [
 
 [features]
 bootstrap = ["default"]
-default = ["regex", "serde", "serde_json", "cli"]
-transient = ["regex", "serde", "serde_json", "cli"]
+default = ["fancy-regex", "serde", "serde_json", "cli"]
+transient = ["fancy-regex", "serde", "serde_json", "cli"]
 
-regex = ["dep:regex"]
+fancy-regex = ["dep:fancy-regex"]
 serde = ["dep:serde"]
 serde_json = [
     "dep:serde",
@@ -32,7 +32,7 @@ cli = ["dep:clap", "dep:syntect", "dep:owo-colors"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"], optional = true }
-regex = { version = "1.10", optional = true }
+fancy-regex = { version = "0.17", optional = true }
 serde_json = { version = "1.0.149", optional = true }
 serde_path_to_error = { version = "0.1", optional = true }
 
