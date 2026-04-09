@@ -1,9 +1,54 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::fold::Linker;
-use super::{Exp, ExpKind, Grammar};
+use super::Grammar;
+use super::exp::{Exp, ExpKind};
 use std::rc::Rc;
+
+pub trait Linker {
+    fn link(&mut self, exp: &mut Exp) {
+        self.walk(exp);
+    }
+
+    fn walk(&mut self, exp: &mut Exp) {
+        match &mut exp.kind {
+            ExpKind::Call { .. } => self.link_call(exp),
+            ExpKind::RuleInclude { .. } => self.link_rule_include(exp),
+
+            ExpKind::Named(_, exp)
+            | ExpKind::NamedList(_, exp)
+            | ExpKind::Override(exp)
+            | ExpKind::OverrideList(exp)
+            | ExpKind::Group(exp)
+            | ExpKind::SkipGroup(exp)
+            | ExpKind::Lookahead(exp)
+            | ExpKind::NegativeLookahead(exp)
+            | ExpKind::SkipTo(exp)
+            | ExpKind::Alt(exp)
+            | ExpKind::Optional(exp)
+            | ExpKind::Closure(exp)
+            | ExpKind::PositiveClosure(exp) => self.walk(exp),
+
+            ExpKind::Sequence(items) | ExpKind::Choice(items) => {
+                for item in items.iter_mut() {
+                    self.walk(item);
+                }
+            }
+
+            ExpKind::Join { exp, sep }
+            | ExpKind::PositiveJoin { exp, sep }
+            | ExpKind::Gather { exp, sep }
+            | ExpKind::PositiveGather { exp, sep } => {
+                self.walk(exp);
+                self.walk(sep);
+            }
+            _ => {}
+        }
+    }
+
+    fn link_call(&mut self, _exp: &mut Exp) {}
+    fn link_rule_include(&mut self, _exp: &mut Exp) {}
+}
 
 impl Linker for Grammar {
     fn link_call(&mut self, exp: &mut Exp) {

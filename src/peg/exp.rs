@@ -4,7 +4,7 @@
 pub use super::build;
 use super::error::ParseError;
 pub use super::lookahead;
-use super::parser::{ParseResult, Parser, F, S};
+use super::parser::{F, ParseResult, Parser, S};
 use super::rule::RuleRef;
 use crate::state::Ctx;
 use crate::trees::Tree;
@@ -67,7 +67,7 @@ impl Exp {
         <Self as Parser<C>>::parse(self, ctx)
     }
 
-    pub fn link<L: super::fold::Linker + ?Sized>(&mut self, linker: &mut L) {
+    pub fn link<L: super::linker::Linker + ?Sized>(&mut self, linker: &mut L) {
         linker.link(self);
     }
 }

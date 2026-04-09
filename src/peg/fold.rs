@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::exp::Exp;
-use super::exp::ExpKind;
 use crate::trees;
 use crate::trees::Tree;
 
@@ -18,58 +17,4 @@ pub trait Compiles: trees::fold::Translates<Exp> {
     fn compile_with<V: Compiler + ?Sized>(&self, compiler: &mut V) -> Exp {
         self.translate_with(compiler)
     }
-}
-
-pub trait Linker {
-    fn link(&mut self, exp: &mut Exp) {
-        self.walk(exp);
-    }
-
-    fn walk(&mut self, exp: &mut Exp) {
-        match &mut exp.kind {
-            ExpKind::Call { .. } => self.link_call(exp),
-            ExpKind::RuleInclude { .. } => self.link_rule_include(exp),
-
-            ExpKind::Named(_, exp)
-            | ExpKind::NamedList(_, exp)
-            | ExpKind::Override(exp)
-            | ExpKind::OverrideList(exp)
-            | ExpKind::Group(exp)
-            | ExpKind::SkipGroup(exp)
-            | ExpKind::Lookahead(exp)
-            | ExpKind::NegativeLookahead(exp)
-            | ExpKind::SkipTo(exp)
-            | ExpKind::Alt(exp)
-            | ExpKind::Optional(exp)
-            | ExpKind::Closure(exp)
-            | ExpKind::PositiveClosure(exp) => self.walk(exp),
-
-            ExpKind::Sequence(items) | ExpKind::Choice(items) => {
-                for item in items.iter_mut() {
-                    self.walk(item);
-                }
-            }
-
-            ExpKind::Join { exp, sep }
-            | ExpKind::PositiveJoin { exp, sep }
-            | ExpKind::Gather { exp, sep }
-            | ExpKind::PositiveGather { exp, sep } => {
-                self.walk(exp);
-                self.walk(sep);
-            }
-            _ => {} // ExpKind::Nil
-                    // | ExpKind::Cut
-                    // | ExpKind::Void
-                    // | ExpKind::Fail
-                    // | ExpKind::Dot
-                    // | ExpKind::Eof
-                    // | ExpKind::Token(_)
-                    // | ExpKind::Pattern(_)
-                    // | ExpKind::Constant(_)
-                    // | ExpKind::Alert(_, _) => {}
-        }
-    }
-
-    fn link_call(&mut self, _exp: &mut Exp) {}
-    fn link_rule_include(&mut self, _exp: &mut Exp) {}
 }
