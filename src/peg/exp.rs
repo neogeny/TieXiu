@@ -77,6 +77,7 @@ where
     #[track_caller]
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
+        let was_cut = ctx.cut_seen();
         match &self.kind {
             ExpKind::Nil => Ok(Succ(ctx, Tree::Nil)),
             ExpKind::RuleInclude { name, exp } => match exp {
@@ -87,18 +88,18 @@ where
                 None => Err(ctx.failure(start, ParseError::RuleNotLinked(name.clone()))),
                 Some(rule) => match ctx.call_rule(name, rule.as_ref()) {
                     Ok(Succ(mut ctx, tree)) => {
-                        ctx.uncut();
+                        ctx.restore_cut(was_cut);
                         Ok(Succ(ctx, tree))
                     }
                     Err(mut f) => {
-                        f.uncut();
+                        f.take_cut();
                         Err(f)
                     }
                 },
             },
             ExpKind::Cut => {
                 // TODO: self.tracer.trace_cut(self.cursor)
-                ctx.cut();
+                ctx.setcut();
                 Ok(Succ(ctx, Tree::Nil))
             }
             ExpKind::Void => Ok(Succ(ctx, Tree::Nil)),
@@ -200,16 +201,15 @@ where
             ExpKind::Alt(exp) => exp.parse(ctx),
             ExpKind::Choice(options) => {
                 let mut furthest: Option<Fail> = None;
-
                 for option in options.iter() {
+                    ctx.uncut();
                     match option.parse(ctx.clone()) {
                         Ok(Succ(mut new_ctx, tree)) => {
-                            new_ctx.uncut();
+                            new_ctx.restore_cut(was_cut);
                             return Ok(Succ(new_ctx, tree));
                         }
                         Err(mut f) => {
-                            if f.cutseen {
-                                f.uncut();
+                            if f.take_cut() {
                                 return Err(f);
                             }
 
@@ -224,19 +224,22 @@ where
                 ))
             }
 
-            ExpKind::Optional(exp) => match exp.parse(ctx.clone()) {
-                Ok(Succ(new_ctx, tree)) => Ok(Succ(new_ctx, tree)),
-                Err(mut f) => {
-                    // If the expression committed with a cut, we cannot be optional.
-                    if f.cutseen {
-                        f.uncut();
-                        return Err(f);
+            ExpKind::Optional(exp) => {
+                ctx.uncut();
+                match exp.parse(ctx.clone()) {
+                    Ok(Succ(mut new_ctx, tree)) => {
+                        new_ctx.restore_cut(was_cut);
+                        Ok(Succ(new_ctx, tree))
                     }
-                    // Otherwise, we forgive the failure and return the original ctx.
-                    ctx.uncut();
-                    Ok(Succ(ctx, Tree::Nil))
+                    Err(mut f) => {
+                        if f.take_cut() {
+                            return Err(f);
+                        }
+                        ctx.restore_cut(was_cut);
+                        Ok(Succ(ctx, Tree::Nil))
+                    }
                 }
-            },
+            }
 
             ExpKind::Closure(exp) => {
                 let mut res = Vec::new();
@@ -354,5 +357,115 @@ mod tests {
 
         assert_eq!(err.mark, 2);
         assert_eq!(err.source, ParseError::ExpectedToken("d".into()).into());
+    }
+
+    #[test]
+    fn choice_restores_entered_cut_on_success() {
+        let grammar =
+            crate::peg::Grammar::new("test", &[Rule::new("start", &[], Exp::token("abc"))]);
+        let _ = grammar;
+        let mut ctx = StrCtx::new(StrCursor::new("abc"));
+        ctx.setcut();
+        assert!(ctx.cut_seen(), "ctx should have cut set before choice");
+
+        let exp = Exp::choice(vec![Exp::token("abc"), Exp::token("xyz")]);
+        let result = exp.parse(ctx);
+        assert!(result.is_ok(), "choice should succeed");
+        let succ = result.unwrap();
+        assert!(
+            succ.0.cut_seen(),
+            "cut should be restored after choice success"
+        );
+    }
+
+    #[test]
+    fn choice_returns_err_when_all_options_fail() {
+        let grammar =
+            crate::peg::Grammar::new("test", &[Rule::new("start", &[], Exp::token("xyz"))]);
+        let _ = grammar;
+        let mut ctx = StrCtx::new(StrCursor::new("abc"));
+        ctx.setcut();
+        assert!(ctx.cut_seen(), "ctx should have cut set before choice");
+
+        let exp = Exp::choice(vec![Exp::token("xyz"), Exp::token("123")]);
+        let result = exp.parse(ctx);
+        assert!(
+            result.is_err(),
+            "choice should return Err when all options fail"
+        );
+    }
+
+    #[test]
+    fn choice_clears_when_no_cut_enters() {
+        let grammar =
+            crate::peg::Grammar::new("test", &[Rule::new("start", &[], Exp::token("abc"))]);
+        let _ = grammar;
+        let ctx = StrCtx::new(StrCursor::new("abc"));
+        assert!(!ctx.cut_seen(), "ctx should not have cut set");
+
+        let exp = Exp::choice(vec![Exp::token("abc"), Exp::token("xyz")]);
+        let result = exp.parse(ctx);
+        assert!(result.is_ok(), "choice should succeed");
+        let succ = result.unwrap();
+        assert!(
+            !succ.0.cut_seen(),
+            "cut should be cleared when not set on entry"
+        );
+    }
+
+    #[test]
+    fn optional_restores_entered_cut_on_success() {
+        let grammar =
+            crate::peg::Grammar::new("test", &[Rule::new("start", &[], Exp::token("abc"))]);
+        let _ = grammar;
+        let mut ctx = StrCtx::new(StrCursor::new("abc"));
+        ctx.setcut();
+        assert!(ctx.cut_seen(), "ctx should have cut set before optional");
+
+        let exp = Exp::optional(Exp::token("abc"));
+        let result = exp.parse(ctx);
+        assert!(result.is_ok(), "optional should succeed");
+        let succ = result.unwrap();
+        assert!(
+            succ.0.cut_seen(),
+            "cut should be restored after optional success"
+        );
+    }
+
+    #[test]
+    fn optional_restores_entered_cut_on_failure() {
+        let grammar =
+            crate::peg::Grammar::new("test", &[Rule::new("start", &[], Exp::token("xyz"))]);
+        let _ = grammar;
+        let mut ctx = StrCtx::new(StrCursor::new("abc"));
+        ctx.setcut();
+        assert!(ctx.cut_seen(), "ctx should have cut set before optional");
+
+        let exp = Exp::optional(Exp::token("xyz"));
+        let result = exp.parse(ctx);
+        assert!(result.is_ok(), "optional failure returns Ok with nil");
+        let succ = result.unwrap();
+        assert!(
+            succ.0.cut_seen(),
+            "cut should be restored after optional failure"
+        );
+    }
+
+    #[test]
+    fn optional_clears_when_no_cut_enters() {
+        let grammar =
+            crate::peg::Grammar::new("test", &[Rule::new("start", &[], Exp::token("abc"))]);
+        let _ = grammar;
+        let ctx = StrCtx::new(StrCursor::new("abc"));
+        assert!(!ctx.cut_seen(), "ctx should not have cut set");
+
+        let exp = Exp::optional(Exp::token("abc"));
+        let result = exp.parse(ctx);
+        assert!(result.is_ok(), "optional should succeed");
+        let succ = result.unwrap();
+        assert!(
+            !succ.0.cut_seen(),
+            "cut should be cleared when not set on entry"
+        );
     }
 }

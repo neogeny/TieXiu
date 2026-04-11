@@ -126,15 +126,16 @@ where
     fn cut_seen(&self) -> bool {
         self.state.cutseen
     }
-    #[inline]
-    fn uncut(&mut self) {
-        self.state_mut().cutseen = false;
-    }
 
-    fn cut(&mut self) {
+    fn setcut(&mut self) {
         // TODO: self.tracer.trace_cut(self.cursor)
         self.state_mut().cutseen = true;
         self.prune_cache();
+    }
+
+    #[inline]
+    fn uncut(&mut self) {
+        self.state_mut().cutseen = false;
     }
 
     fn prune_cache(&mut self) {

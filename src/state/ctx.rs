@@ -69,9 +69,16 @@ pub trait Ctx: Clone + Debug {
     fn memoize(&mut self, key: &Key, tree: &Tree);
 
     fn cut_seen(&self) -> bool;
+    fn setcut(&mut self);
     fn uncut(&mut self);
-    fn cut(&mut self);
 
+    fn restore_cut(&mut self, was_cut: bool) {
+        if was_cut {
+            self.setcut();
+        } else {
+            self.uncut();
+        }
+    }
     fn prune_cache(&mut self);
 
     fn call_rule(mut self, name: &str, rule: &Rule) -> ParseResult<Self> {

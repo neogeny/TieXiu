@@ -59,8 +59,16 @@ impl Fail {
         self.cutseen = true;
     }
 
-    pub fn uncut(&mut self) {
+    pub fn take_cut(&mut self) -> bool {
+        let was_cut = self.cutseen;
         self.cutseen = false;
+        was_cut
+    }
+
+    pub fn restore_cut(&mut self, was_cut: bool) {
+        if !was_cut {
+            self.cutseen = false;
+        }
     }
 }
 
