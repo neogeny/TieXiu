@@ -8,9 +8,9 @@ TieXiu is a Rust port of TatSu PEG parser generator with Python bindings via PyO
 
 - AI Agents will study `README.md`, `SYNTAX.md`, `./tatsu/README.rst` and all the `*.rst` documents in `./tatsu/docs/` to gain context about the projects.
 - AI Agents will study all the files belonging to the current Rust project to understand its structure and semantics.
-- AI Agents will study the Python source code for TatSu found in the modules under `./tatsu/tatsu/` and `./tatsu/tests/` to understand the background of the TieXiu project and its goals. 
-- AI Agents will study the document `./corpus/SESSIONS.md` at the start of each session to learn from past work.
-- AI Agents will read and study all the files under `./corpus/sessions`, summarize their content, and update the document `./corpus/SESSIONS.md` so it includes any new summaries, consolidation of knowledge, or ammendments. 
+- AI Agents will study the Python source code for TatSu found in the modules under `./tatsu/tatsu/` and `./tatsu/tests/` to understand the background of the TieXiu project and its goals.
+- AI Agents will read and study all the files under `./corpus/sessions/` to gain
+  context from previous work sessions.
 
 ## Dev Commands
 
