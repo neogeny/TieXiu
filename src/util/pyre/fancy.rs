@@ -8,7 +8,6 @@
 //!
 //! The implementation currently relies on the fancy_regex crate
 
-use std::borrow::Cow;
 use fancy_regex;
 use fancy_regex::{Captures, Match as FMatch, Regex};
 use thiserror::Error;
@@ -32,7 +31,7 @@ pub struct Match<'a> {
 }
 
 pub fn escape(pattern: &str) -> Box<str> {
-    fancy_regex::escape(pattern).into() 
+    fancy_regex::escape(pattern).into()
 }
 
 impl Pattern {
