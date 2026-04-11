@@ -74,7 +74,7 @@ impl<C> Parser<C> for Exp
 where
     C: Ctx,
 {
-    #[track_caller]
+    // #[track_caller]
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
         let was_cut = ctx.cut_seen();
@@ -122,7 +122,7 @@ where
             }
 
             ExpKind::Token(token) => {
-                if ctx.token(token) {
+                if ctx.match_token(token) {
                     // TODO: self.tracer.trace_match(self.cursor, token)
                     Ok(Succ(ctx, Tree::Text(token.deref().into())))
                 } else {
@@ -131,7 +131,7 @@ where
                 }
             }
             ExpKind::Pattern(pattern) => {
-                if let Some(matched) = ctx.pattern(pattern) {
+                if let Some(matched) = ctx.match_pattern(pattern) {
                     // TODO: self.tracer.trace_match(self.cursor, token, pattern)
                     Ok(Succ(ctx, Tree::Text(matched.into())))
                 } else {
@@ -213,7 +213,7 @@ where
                                 return Err(f);
                             }
 
-                            if furthest.as_ref().is_none_or(|prev| f.mark > prev.mark) {
+                            if furthest.as_ref().is_none_or(|prev| f.mark >= prev.mark) {
                                 furthest = Some(f);
                             }
                         }
@@ -339,23 +339,43 @@ mod tests {
 
     #[test]
     fn choice_keeps_furthest_failure() {
-        let grammar = crate::peg::Grammar::new(
-            "test",
-            &[Rule::new(
-                "start",
-                &[],
-                Exp::choice(vec![
-                    Exp::sequence(vec![Exp::token("a"), Exp::token("b")]),
-                    Exp::sequence(vec![Exp::token("a"), Exp::token("c"), Exp::token("d")]),
-                ]),
-            )],
-        );
-        let _ = grammar;
-        let ctx = StrCtx::new(StrCursor::new("acx"));
+        let token_a = Exp::token("a");
+        let cursor = StrCursor::new("a");
+        println!("cursor on 'a': {:?}", cursor);
+        let result_a = token_a.parse(StrCtx::new(cursor));
+        println!("token('a') on 'a': {:?}", result_a);
+        assert!(result_a.is_ok(), "token('a') should match 'a'");
 
-        let err = grammar.parse(ctx).unwrap_err();
+        let exp1 = Exp::sequence(vec![Exp::token("a"), Exp::token("b")]);
+        let result1_ok = exp1.parse(StrCtx::new(StrCursor::new("a b")));
+        println!("exp1 on 'a b': {:?}", result1_ok);
+        assert!(result1_ok.is_ok(), "sequence 1 should succeed on 'a b'");
 
-        assert_eq!(err.mark, 2);
+        let result1_err = exp1.parse(StrCtx::new(StrCursor::new("a c x")));
+        println!("exp1 on 'a c x': {:?}", result1_err);
+        let err1 = result1_err.unwrap_err();
+        assert_eq!(err1.mark, 2);
+        assert_eq!(err1.source, ParseError::ExpectedToken("b".into()).into());
+
+        let exp2 = Exp::sequence(vec![Exp::token("a"), Exp::token("c"), Exp::token("d")]);
+        let result2_ok = exp2.parse(StrCtx::new(StrCursor::new("a c d")));
+        println!("exp2 on 'a c d': {:?}", result2_ok);
+        assert!(result2_ok.is_ok(), "sequence 2 should succeed on 'a c d'");
+
+        let result2_err = exp2.parse(StrCtx::new(StrCursor::new("a c x")));
+        println!("exp2 on 'a c x': {:?}", result2_err);
+        let err2 = result2_err.unwrap_err();
+        assert_eq!(err2.mark, 4);
+        assert_eq!(err2.source, ParseError::ExpectedToken("d".into()).into());
+
+        let exp = Exp::choice(vec![exp1, exp2]);
+        let ctx = StrCtx::new(StrCursor::new("a c x"));
+
+        let result = exp.parse(ctx);
+        println!("choice on 'a c x': {:?}", result);
+        let err = result.unwrap_err();
+
+        assert_eq!(err.mark, 4);
         assert_eq!(err.source, ParseError::ExpectedToken("d".into()).into());
     }
 

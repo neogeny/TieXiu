@@ -7,12 +7,12 @@ use crate::state::Ctx;
 use crate::state::memo::{Key, Memo, MemoCache};
 use crate::state::trace::{NullTracer, Tracer};
 use crate::trees::Tree;
-use crate::util::pyre::Pattern as Regex;
+use crate::util::pyre::Pattern;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-type RegexCache = HashMap<String, Regex>;
+type PatternCache = HashMap<String, Pattern>;
 
 #[derive(Clone, Debug)]
 pub struct State<U: Cursor> {
@@ -24,7 +24,7 @@ pub struct State<U: Cursor> {
 #[derive(Clone, Debug)]
 pub struct HeavyState<'c, T: Tracer> {
     pub memos: MemoCache,
-    pub regex: RegexCache,
+    pub patterns: PatternCache,
     pub tracer: T,
     pub marker: std::marker::PhantomData<&'c ()>,
 }
@@ -54,7 +54,7 @@ where
             .into(),
             heavy: RefCell::new(HeavyState {
                 memos: MemoCache::new(),
-                regex: RegexCache::new(),
+                patterns: PatternCache::new(),
                 tracer: T::default(),
                 marker: std::marker::PhantomData,
             })
@@ -101,12 +101,12 @@ where
         self.state_mut().callstack = stack.insert(name);
     }
 
-    fn regex(&self, pattern: &str) -> Regex {
+    fn get_pattern(&self, pattern: &str) -> Pattern {
         self.with_heavy_mut(|heavy| {
             heavy
-                .regex
+                .patterns
                 .entry(pattern.to_string())
-                .or_insert_with(|| Regex::new(pattern).unwrap())
+                .or_insert_with(|| Pattern::new(pattern).unwrap())
                 .clone()
         })
     }

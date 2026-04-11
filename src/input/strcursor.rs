@@ -1,29 +1,40 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::Cursor;
 use super::error::Error;
-use crate::util::pyre::Pattern as Regex;
+use super::Cursor;
+use crate::util::pyre::Pattern;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 struct Patterns {
-    pub wsp: Regex,
-    pub cmt: Regex,
-    pub eol: Regex,
+    pub wsp: Pattern,
+    pub cmt: Pattern,
+    pub eol: Pattern,
 }
 
 impl Patterns {
     const DEFAULT_WSP: &'static str = r"\s+";
     const DEFAULT_EOL: &'static str = r"//.*$";
-    const DEFAULT_CMT: &'static str = r"";
+    const DEFAULT_CMT: &'static str = r"/\*\*/";
 
-    fn compile(kind: &'static str, pattern: &str) -> Result<Regex, Error> {
-        Regex::new(pattern).map_err(|source| Error::InvalidRegex {
+    fn compile(kind: &'static str, pattern: &str) -> Result<Pattern, Error> {
+        let p = Pattern::new(pattern).map_err(|source| Error::InvalidRegex {
             kind,
             pattern: pattern.to_string(),
             source,
-        })
+        })?;
+        Self::validate_no_empty_match(&p, kind);
+        Ok(p)
+    }
+
+    fn validate_no_empty_match(pattern: &Pattern, kind: &str) {
+        assert!(
+            pattern.search("").is_none(),
+            "pattern '{}' for {} matches empty string, which would cause infinite loop",
+            pattern.pattern(),
+            kind
+        );
     }
 
     pub fn try_new(ws: &str, cmt: &str, eol: &str) -> Result<Self, Error> {
@@ -74,11 +85,9 @@ impl<'a> StrCursor<'a> {
     }
 
     #[inline]
-    fn eat_regex(&mut self, re: &Regex) -> bool {
+    fn eat_pattern(&mut self, pat: &Pattern) -> bool {
         let text = &self.text[self.offset..];
-        if let Some(mat) = re.search(text)
-            && mat.start(Option::<usize>::None) == 0
-        {
+        if let Some(mat) = pat.match_(text) {
             self.offset += mat.end(Option::<usize>::None) as usize;
             return true;
         }
@@ -110,8 +119,9 @@ impl<'a> Cursor for StrCursor<'a> {
         Some(c)
     }
 
-    fn token(&mut self, token: &str) -> bool {
-        if self.text[self.offset..].starts_with(token) {
+    fn match_token(&mut self, token: &str) -> bool {
+        let text = &self.text[self.offset..];
+        if text.starts_with(token) {
             self.offset += token.len();
             true
         } else {
@@ -119,19 +129,12 @@ impl<'a> Cursor for StrCursor<'a> {
         }
     }
 
-    fn pattern_re(&mut self, re: &Regex) -> Option<String> {
+    fn match_pattern(&mut self, pat: &Pattern) -> Option<String> {
         let text = &self.text[self.offset..];
-        let matches = re.finditer(text);
-        let first = matches.into_iter().next()?;
-        if first.start(Option::<usize>::None) != 0 {
-            return None;
-        }
+        let m = pat.match_(text)?;
 
-        self.offset += first.end(Option::<usize>::None) as usize;
-        let matched = first
-            .group(1)
-            .unwrap_or_else(|| first.group(0).unwrap_or(""));
-        Some(matched.to_string())
+        self.offset += m.end(Option::<usize>::None) as usize;
+        m.group(1).or(m.group(0)).map(|s| s.to_string())
     }
 
     fn next_token(&mut self) {
@@ -140,14 +143,48 @@ impl<'a> Cursor for StrCursor<'a> {
 
         while self.offset != last_offset {
             last_offset = self.offset;
-            self.eat_regex(&p.wsp);
+            self.eat_pattern(&p.wsp);
             if self.at_end() {
                 break;
             }
-            if self.eat_regex(&p.eol) {
-                self.eat_regex(&p.wsp);
+            if self.eat_pattern(&p.eol) {
+                self.eat_pattern(&p.wsp);
             }
-            self.eat_regex(&p.cmt);
+            let cmt_text = p.cmt.pattern();
+            if !cmt_text.is_empty() {
+                self.eat_pattern(&p.cmt);
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "matches empty string")]
+    fn whitespace_pattern_cannot_match_empty() {
+        let _ = Patterns::try_new("", "/* */", "//.*$");
+    }
+
+    #[test]
+    #[should_panic(expected = "matches empty string")]
+    fn comment_pattern_cannot_match_empty() {
+        let _ = Patterns::try_new(r"\s+", "", "//.*$");
+    }
+
+    #[test]
+    #[should_panic(expected = "matches empty string")]
+    fn eol_pattern_cannot_match_empty() {
+        let _ = Patterns::try_new(r"\s+", "/* */", "");
+    }
+
+    #[test]
+    fn default_patterns_are_valid() {
+        let patterns = Patterns::default();
+        assert!(patterns.wsp.search("").is_none());
+        assert!(patterns.cmt.search("").is_none());
+        assert!(patterns.eol.search("").is_none());
     }
 }

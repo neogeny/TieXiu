@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::util::pyre::Pattern as Regex;
+use crate::util::pyre::Pattern;
 use std::fmt::Debug;
 
 pub trait Cursor: Debug {
@@ -10,8 +10,8 @@ pub trait Cursor: Debug {
     fn textstr(&self) -> &str;
     fn at_end(&self) -> bool;
     fn next(&mut self) -> Option<char>;
-    fn token(&mut self, token: &str) -> bool;
-    fn pattern_re(&mut self, re: &Regex) -> Option<String>;
+    fn match_token(&mut self, token: &str) -> bool;
+    fn match_pattern(&mut self, pattern: &Pattern) -> Option<String>;
     fn next_token(&mut self);
 
     // // Character classification
