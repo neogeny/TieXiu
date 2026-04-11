@@ -6,6 +6,7 @@ use crate::state::Ctx;
 use crate::trees::Tree;
 pub use crate::util::tokenlist::TokenList;
 use std::fmt::Debug;
+use std::panic::Location;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Succ<C: Ctx>(pub C, pub Tree);
@@ -14,9 +15,10 @@ pub struct Succ<C: Ctx>(pub C, pub Tree);
 pub struct Fail {
     pub start: usize,
     pub mark: usize, // The position where the disaster occurred
-    pub cut: bool,
-    pub source: ParseError,
+    pub cutseen: bool,
     pub callstack: TokenList,
+    pub source: Box<ParseError>,
+    pub location: &'static Location<'static>,
 }
 
 pub type ParseResult<C> = Result<Succ<C>, Fail>;
@@ -41,22 +43,24 @@ impl std::error::Error for Fail {
 }
 
 impl Fail {
+    #[track_caller]
     pub fn new(start: usize, mark: usize, cut: bool, error: ParseError, stack: TokenList) -> Self {
         Self {
             start,
             mark,
-            cut,
-            source: error,
+            cutseen: cut,
+            source: error.into(),
             callstack: stack,
+            location: Location::caller(),
         }
     }
 
     pub fn setcut(&mut self) {
-        self.cut = true;
+        self.cutseen = true;
     }
 
     pub fn uncut(&mut self) {
-        self.cut = false;
+        self.cutseen = false;
     }
 }
 
@@ -79,5 +83,25 @@ impl<C: Ctx> Succ<C> {
     #[inline]
     pub fn cst_ref(&self) -> &Tree {
         &self.1
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::state::StrCtx;
+    use super::*;
+
+    const TARGET: usize = 64;
+
+    #[test]
+    fn test_succ_size() {
+        let size = size_of::<Succ<StrCtx>>();
+        assert!(size <= TARGET, "Succ size is {} > {} bytes", size, TARGET);
+    }
+    
+    #[test]
+    fn test_fail_size() {
+        let size = size_of::<Fail>();
+        assert!(size <= TARGET, "Fail size is {} > {} bytes", size, TARGET);
     }
 }

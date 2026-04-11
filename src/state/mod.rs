@@ -10,3 +10,4 @@ pub mod trace;
 
 pub use ctx::*;
 pub use error::Error;
+pub use strctx::StrCtx;

@@ -31,7 +31,7 @@ impl Exp {
             match Self::add_exp(ctx.clone(), exp, res) {
                 Ok(new_ctx) => ctx = new_ctx,
                 Err((ctx, mut f)) => {
-                    if f.cut {
+                    if f.cutseen {
                         f.uncut();
                         return Err(f);
                     }
@@ -60,7 +60,7 @@ impl Exp {
                         ctx = repeat_ctx;
                     }
                     Err(mut f) => {
-                        if f.cut {
+                        if f.cutseen {
                             f.uncut();
                             return Err(f);
                         }

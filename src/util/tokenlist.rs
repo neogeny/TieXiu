@@ -83,3 +83,21 @@ impl TokenList {
         atoms
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TARGET: usize = 24;
+
+    #[test]
+    fn test_tokelist_size() {
+        let size = size_of::<TokenList>();
+        assert!(
+            size <= TARGET,
+            "TokenList size is {} > {} bytes",
+            size,
+            TARGET
+        );
+    }
+}

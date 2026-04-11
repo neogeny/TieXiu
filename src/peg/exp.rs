@@ -76,6 +76,7 @@ impl<C> Parser<C> for Exp
 where
     C: Ctx,
 {
+    #[track_caller]
     fn parse(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
         match &self.kind {
@@ -209,7 +210,7 @@ where
                             return Ok(Succ(new_ctx, tree));
                         }
                         Err(mut f) => {
-                            if f.cut {
+                            if f.cutseen {
                                 f.uncut();
                                 return Err(f);
                             }
@@ -229,7 +230,7 @@ where
                 Ok(Succ(new_ctx, tree)) => Ok(Succ(new_ctx, tree)),
                 Err(mut f) => {
                     // If the expression committed with a cut, we cannot be optional.
-                    if f.cut {
+                    if f.cutseen {
                         f.uncut();
                         return Err(f);
                     }
@@ -327,6 +328,14 @@ mod tests {
     use crate::peg::Rule;
     use crate::state::strctx::StrCtx;
 
+    const TARGET: usize = 48;
+
+    #[test]
+    fn test_exp_size() {
+        let size = size_of::<Exp>();
+        assert!(size <= TARGET, "Exp size is {} > {} bytes", size, TARGET);
+    }
+
     #[test]
     fn choice_keeps_furthest_failure() {
         let grammar = crate::peg::Grammar::new(
@@ -346,6 +355,6 @@ mod tests {
         let err = grammar.parse(ctx).unwrap_err();
 
         assert_eq!(err.mark, 2);
-        assert_eq!(err.source, ParseError::ExpectedToken("d".into()));
+        assert_eq!(err.source, ParseError::ExpectedToken("d".into()).into());
     }
 }
