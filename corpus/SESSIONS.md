@@ -1,5 +1,33 @@
 # Sessions Summary
 
+## session-ses_285e (4/10/2026)
+
+**Topic:** Debug choice operator keeping wrong failure position
+
+**Key Events:**
+1. Test `choice_keeps_furthest_failure` was failing when parsing 'a b' with a sequence containing `Token 'a'` then `(exp1 | exp2)`
+2. The bug: After matching 'a' (offset becomes 2), the second alternative `exp1` failed but incorrectly returned failure at position 2 (after 'a ') instead of keeping position 0 (where the choice started)
+3. Root cause found in `src/peg/exp.rs` - `Choice::parse()` wasn't properly comparing/marking the furthest failure position
+4. Fix applied: Added logic to compare and track furthest failure position between alternatives
+5. After fix, all 49 tests passed
+
+**Files involved:**
+- `src/peg/exp.rs:353` - test location
+- `src/peg/exp.rs:131` - where failure was reported
+
+---
+
+## session-ses_288a (4/10/2026)
+
+**Topic:** Study corpus directory files
+
+**Key Events:**
+1. Explored corpus/ directory structure
+2. Read AGENTS.md to understand project guidelines
+3. Reviewed SESSIONS.md for session history
+
+---
+
 ## session-ses_28b7 (4/9/2026)
 
 **Topic:** Rename Rust test files from `*_tests.rs` to `*.rs` pattern
