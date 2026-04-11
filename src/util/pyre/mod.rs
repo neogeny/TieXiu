@@ -1,5 +1,5 @@
-mod fancy;
-mod traits;
+pub mod fancy;
+pub mod traits;
 
 pub use fancy::*;
 
@@ -30,7 +30,7 @@ pub fn split(pattern: &str, text: &str, maxsplit: Option<usize>) -> Vec<String> 
     }
 }
 
-pub fn findall(pattern: &str, text: &str) -> Vec<String> {
+pub fn findall(pattern: &str, text: &str) -> Vec<Vec<String>> {
     match Pattern::new(pattern) {
         Ok(p) => p.findall(text),
         Err(_) => vec![],

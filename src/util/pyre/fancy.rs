@@ -43,11 +43,10 @@ impl Pattern {
     }
 
     pub fn search<'a>(&self, text: &'a str) -> Option<Match<'a>> {
-        self.regex
-            .find(text)
-            .as_ref()
-            .ok()
-            .and_then(|m| m.as_ref().map(|mm| create_match(text, mm)))
+        match self.regex.find(text) {
+            Ok(Some(m)) => Some(create_match(text, &m)),
+            _ => None,
+        }
     }
 
     pub fn match_<'a>(&self, text: &'a str) -> Option<Match<'a>> {
@@ -61,7 +60,7 @@ impl Pattern {
 
     pub fn fullmatch<'a>(&self, text: &'a str) -> Option<Match<'a>> {
         let m = self.match_(text)?;
-        if m.end(Option::<usize>::None) != 0 {
+        if m.end(None) != text.len() as isize {
             return None;
         }
         Some(m)
@@ -96,17 +95,27 @@ impl Pattern {
         result
     }
 
-    pub fn findall(&self, text: &str) -> Vec<String> {
+    pub fn findall(&self, text: &str) -> Vec<Vec<String>> {
         self.regex
             .captures_iter(text)
-            .filter_map(|caps_result| {
-                caps_result.ok().and_then(|caps| {
-                    if caps.len() == 1 {
-                        caps.get(0).map(|m| m.as_str().to_string())
-                    } else {
-                        caps.get(1).map(|m| m.as_str().to_string())
-                    }
-                })
+            .filter_map(|caps_result| caps_result.ok())
+            .map(|caps| {
+                // caps.len() includes the whole match at index 0.
+                if caps.len() == 1 {
+                    // No capturing groups: return the whole match as a single-element vec
+                    caps.get(0)
+                        .map(|m| vec![m.as_str().to_string()])
+                        .unwrap_or_default()
+                } else if caps.len() == 2 {
+                    // Single capturing group: return that group's text (empty string if missing)
+                    let g = caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_default();
+                    vec![g]
+                } else {
+                    // Multiple capturing groups: return each group's text (1..len)
+                    (1..caps.len())
+                        .map(|i| caps.get(i).map(|m| m.as_str().to_string()).unwrap_or_default())
+                        .collect()
+                }
             })
             .collect()
     }
@@ -155,7 +164,7 @@ impl Pattern {
 }
 
 fn create_match<'a>(haystack: &'a str, m: &FMatch) -> Match<'a> {
-    let groups = vec![Some(0..m.end())];
+    let groups = vec![Some(m.start()..m.end())];
     Match { haystack, groups }
 }
 
