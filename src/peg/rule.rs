@@ -4,8 +4,8 @@
 use super::exp::Exp;
 use super::{ParseResult, Parser, Succ};
 use crate::state::Ctx;
-use crate::trees::Tree;
 use crate::trees::tree::{FlagMap, NodeMeta, NodeMetaRef};
+use crate::trees::Tree;
 use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
@@ -33,16 +33,7 @@ where
     C: Ctx,
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
-        match self.exp.parse(ctx) {
-            Ok(Succ(ctx, tree)) => Ok(Succ(
-                ctx,
-                Tree::Node {
-                    meta: self.meta.clone(),
-                    tree: tree.normalized().into(),
-                },
-            )),
-            err => err,
-        }
+        Rule::parse(self, ctx)
     }
 }
 
@@ -129,7 +120,17 @@ impl Rule {
     }
 
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
-        (self as &dyn Parser<C>).parse(ctx)
+        let _text = ctx.cursor().textstr();
+        match self.exp.parse(ctx) {
+            Ok(Succ(ctx, tree)) => Ok(Succ(
+                ctx,
+                Tree::Node {
+                    meta: self.meta.clone(),
+                    tree: tree.normalized().into(),
+                },
+            )),
+            err => err,
+        }
     }
 
     pub fn is_left_recursive(&self) -> bool {
