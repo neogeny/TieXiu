@@ -5,7 +5,7 @@
 
 #[test]
 #[ignore = "TODO: NOT IMPLEMENTED - asjson function not found"]
-fn test_primitives() {
+fn test_asjson_primitives() {
     unimplemented!("asjson not implemented");
 }
 

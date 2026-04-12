@@ -15,9 +15,9 @@ fn test_ast_pickling() {
 
 #[test]
 #[ignore = "TODO: compile check only"]
-fn test_ast() {
-    let ast = Tree::nil();
-    let _has_items = !matches!(ast, Tree::Nil);
+fn ast() {
+    let test_ast = Tree::nil();
+    let _has_items = !matches!(test_ast, Tree::Nil);
 }
 
 #[test]
