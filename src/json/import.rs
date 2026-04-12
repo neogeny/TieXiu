@@ -17,6 +17,15 @@ impl TryFrom<TatSuModel> for ERef {
 
 impl Grammar {
     pub fn from_json(json: &str) -> Result<Self, ImportError> {
+        Self::from_serde_value_from_json(json)
+    }
+
+    pub fn from_serde_value_from_json(json: &str) -> Result<Self, ImportError> {
+        let value: serde_json::Value = serde_json::from_str(json).map_err(ImportError::from)?;
+        Self::from_serde_value(&value)
+    }
+
+    pub fn from_json_via_tatsu(json: &str) -> Result<Self, ImportError> {
         // #[cfg(debug_assertions)]
         {
             let value: serde_json::Value = serde_json::from_str(json).map_err(ImportError::from)?;
@@ -41,6 +50,11 @@ impl Grammar {
 
         let grammar = Self::try_from(model)?;
         Ok(grammar)
+    }
+
+    pub fn from_json_value(json: &str) -> Result<Self, ImportError> {
+        let value: serde_json::Value = serde_json::from_str(json).map_err(ImportError::from)?;
+        Self::from_serde_value(&value)
     }
 }
 
