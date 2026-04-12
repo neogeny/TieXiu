@@ -38,8 +38,12 @@ cli = [
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"], optional = true }
-serde_json = { version = "1.0.149", optional = true }
 serde_path_to_error = { version = "0.1", optional = true }
+serde_json = {
+    version = "1.0.149",
+    optional = true,
+    features = ["preserve_order"],
+}
 
 fancy-regex = { version = "0.17", optional = true }
 indexmap = { version = "2.13" }
