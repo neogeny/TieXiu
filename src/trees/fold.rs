@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::trees::KeyValue;
 use super::tree::Tree;
+use crate::trees::KeyValue;
 
 pub trait Translator<O> {
     fn translate(&mut self, tree: &Tree, branches: &[O]) -> O;
@@ -28,10 +28,10 @@ impl<O> Translates<O> for Tree {
                 let outputs: Vec<O> = map.entries
                     .iter()
                     .map(
-                        |(k, v)| 
+                        |(k, v)|
                             Tree::Named(
                                 KeyValue(
-                                    k.clone(), 
+                                    k.clone(),
                                     v.clone()
                                 ) .into()
                             )

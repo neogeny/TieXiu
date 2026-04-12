@@ -4,8 +4,8 @@
 use super::exp::Exp;
 use super::{ParseResult, Parser, Succ};
 use crate::state::Ctx;
-use crate::trees::tree::{FlagMap, NodeMeta, NodeMetaRef};
 use crate::trees::Tree;
+use crate::trees::tree::{FlagMap, NodeMeta, NodeMetaRef};
 use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;

@@ -421,7 +421,14 @@ mod tests {
     fn pattern_findall() {
         let p = Pattern::new(r"\d").unwrap();
         let result = p.findall("1a2b3");
-        assert_eq!(result, vec![vec!["1".to_string()], vec!["2".to_string()], vec!["3".to_string()]]);
+        assert_eq!(
+            result,
+            vec![
+                vec!["1".to_string()],
+                vec!["2".to_string()],
+                vec!["3".to_string()]
+            ]
+        );
     }
 
     #[test]

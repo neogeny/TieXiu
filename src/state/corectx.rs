@@ -3,9 +3,9 @@
 
 use crate::input::Cursor;
 use crate::peg::parser::TokenList;
+use crate::state::Ctx;
 use crate::state::memo::{Key, Memo, MemoCache};
 use crate::state::trace::{NullTracer, Tracer};
-use crate::state::Ctx;
 use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
@@ -49,10 +49,12 @@ where
         Self {
             state: Cow::Owned(
                 State {
-                cursor,
-                cutseen: false,
-                callstack: TokenList::new(),
-            }.into()),
+                    cursor,
+                    cutseen: false,
+                    callstack: TokenList::new(),
+                }
+                .into(),
+            ),
             heavy: Rc::new(RefCell::new(HeavyState {
                 memos: MemoCache::new(),
                 patterns: PatternCache::new(),
