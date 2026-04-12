@@ -11,7 +11,7 @@ use crate::util::pyre::fancy::Pattern;
 pub fn regexpp(regex: impl AsRef<str>) -> Result<String, String> {
     let pattern_text = regex.as_ref();
 
-    let ctrl_map: &[(char, &str)] = &[('\n', "\\n"), ('\r', "\\r"), ('\t', "\\t")];
+    let ctrl_map: &[(char, &str)] = &[('\n', r"\n"), ('\r', r"\r"), ('\t', r"\t")];
 
     let mut result = String::new();
     for c in pattern_text.chars() {
@@ -70,6 +70,6 @@ mod tests {
     #[test]
     fn test_regexpp_with_tab() {
         let result = regexpp("a\tb").unwrap();
-        assert!(result.contains("\\t"));
+        assert!(result.contains(r"\t"));
     }
 }
