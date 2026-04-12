@@ -67,7 +67,7 @@ impl TryFrom<TatSuModel> for Grammar {
             rules,
             directives,
             keywords,
-            analyzed,
+            analyzed: _,
         } = model
         {
             let mut rule_vec: Vec<Rule> = vec![];
@@ -98,14 +98,12 @@ impl TryFrom<TatSuModel> for Grammar {
                 .iter()
                 .map(|(k, v)| {
                     let val_str = v.as_str().map(|s| s.to_string()).unwrap_or(v.to_string());
-
                     (k.clone(), val_str)
                 })
                 .collect();
             let mut grammar = Grammar::new(name.as_str(), &rule_vec);
-            grammar.analyzed = analyzed;
             grammar.directives = str_directives;
-            grammar.keywords = keywords;
+            grammar.keywords = keywords.into_iter().collect();
             grammar.initialize();
             Ok(grammar)
         } else {
@@ -122,10 +120,13 @@ impl TryFrom<TatSuModel> for Exp {
             TatSuModel::Grammar { .. } | TatSuModel::Rule { .. } => {
                 Err(ImportError::UnsupportedModel(format!("{:?}", model)))
             }
-            TatSuModel::RuleInclude { name, exp } => {
-                let inner_exp = Exp::try_from(*exp)?;
-                Ok(Exp::rule_include_with(&name, inner_exp))
-            }
+            TatSuModel::RuleInclude { name, exp } => match exp {
+                Some(inner) => {
+                    let inner_exp = Exp::try_from(*inner)?;
+                    Ok(Exp::rule_include_with(&name, inner_exp))
+                }
+                None => Ok(Exp::rule_include(&name)),
+            },
             TatSuModel::LeftJoin { .. } => Err(ImportError::UnsupportedModel("LeftJoin".into())),
             TatSuModel::RightJoin { .. } => Err(ImportError::UnsupportedModel("RightJoin".into())),
 

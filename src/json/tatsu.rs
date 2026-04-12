@@ -17,15 +17,17 @@ pub enum TatSuModel {
     Grammar {
         name: String,
         rules: Vec<TatSuModel>,
-        // #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+        #[serde(default)]
         directives: std::collections::HashMap<String, serde_json::Value>,
-        // #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        keywords: std::collections::HashSet<String>,
+        #[serde(default)]
+        keywords: Vec<String>,
+        #[serde(default)]
         analyzed: bool,
     },
     RuleInclude {
         name: String,
-        exp: Box<TatSuModel>, // HERE
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        exp: Option<Box<TatSuModel>>,
     },
     Rule {
         name: String,
