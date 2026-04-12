@@ -8,6 +8,7 @@ pub trait Cursor: Debug {
     fn mark(&self) -> usize;
     fn reset(&mut self, mark: usize);
     fn textstr(&self) -> &str;
+    fn lookahead(&self) -> &str;
     fn at_end(&self) -> bool;
     fn next(&mut self) -> Option<char>;
     fn match_token(&mut self, token: &str) -> bool;

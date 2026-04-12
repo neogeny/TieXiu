@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn test_grammar_bootstrap() -> Result<(), ImportError> {
-        println!("{}", TATSU_GRAMMAR_JSON);
+        // println!("{}", TATSU_GRAMMAR_JSON);
         let grammar = boot_grammar()?;
 
         assert!(!grammar.name.is_empty(), "Grammar name should not be empty");

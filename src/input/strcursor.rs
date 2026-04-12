@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::Cursor;
 use super::error::Error;
+use super::Cursor;
 use crate::util::pyre::Pattern;
 use std::rc::Rc;
 
@@ -106,6 +106,10 @@ impl<'a> Cursor for StrCursor<'a> {
 
     fn textstr(&self) -> &str {
         self.text
+    }
+
+    fn lookahead(&self) -> &str {
+        &self.text[self.offset..]
     }
 
     fn at_end(&self) -> bool {
