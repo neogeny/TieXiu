@@ -14,9 +14,6 @@ pub enum ImportError {
     #[error("Root node must be a Grammar")]
     InvalidRoot,
 
-    #[error("Missing required field: {0}")]
-    MissingField(String),
-
     #[error("Invalid field: {0}")]
     InvalidField(String),
 

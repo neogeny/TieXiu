@@ -52,7 +52,7 @@ impl TryFrom<Grammar> for TatSuModel {
             name: grammar.name.as_str().into(),
             rules,
             directives,
-            keywords: grammar.keywords.into_iter().collect(),
+            keywords: grammar.keywords,
             analyzed: grammar.analyzed,
         })
     }
@@ -147,9 +147,11 @@ impl From<Exp> for TatSuModel {
                 exp: TatSuModel::from(*exp).into(),
                 sep: TatSuModel::from(*sep).into(),
             },
-            ExpKind::RuleInclude { name, .. } => TatSuModel::RuleInclude {
+            ExpKind::RuleInclude { name, exp } => TatSuModel::RuleInclude {
                 name: name.into(),
-                exp: None,
+                exp: exp
+                    .map_or(TatSuModel::Void, |e| TatSuModel::from(*e))
+                    .into(),
             },
             _ => unreachable!("Conversion for variant not implemented"),
         }

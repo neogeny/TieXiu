@@ -13,12 +13,12 @@ use crate::peg::rule::Rule;
 use serde_json::Value;
 
 #[derive(Clone)]
-struct JsonPath {
+pub struct JsonSerializationHelper {
     value: Value,
     path: Vec<String>,
 }
 
-impl JsonPath {
+impl JsonSerializationHelper {
     fn new(value: Value) -> Self {
         Self {
             value,
@@ -72,7 +72,7 @@ impl JsonPath {
         }
     }
 
-    fn get_nested(&self, field: &str) -> Result<JsonPath, ImportError> {
+    fn get_nested(&self, field: &str) -> Result<JsonSerializationHelper, ImportError> {
         let obj = self.get_obj()?;
         let value = obj
             .get(field)
@@ -99,7 +99,7 @@ impl JsonPath {
         }
     }
 
-    fn get_array(&self, field: &str) -> Result<Vec<JsonPath>, ImportError> {
+    fn get_array(&self, field: &str) -> Result<Vec<JsonSerializationHelper>, ImportError> {
         if let Ok(obj) = self.get_obj()
             && let Some(arr) = obj.get(field).and_then(|v: &Value| v.as_array()) 
         {
@@ -150,7 +150,7 @@ impl JsonPath {
 
 impl Grammar {
     pub fn from_serde_value(value: &Value) -> Result<Self, ImportError> {
-        let path = JsonPath::new(value.clone());
+        let path = JsonSerializationHelper::new(value.clone());
         let class = path.get_class()?;
 
         if class != "Grammar" {
@@ -214,11 +214,11 @@ impl Grammar {
 
 impl Rule {
     pub fn from_serde_value(value: &Value) -> Result<Self, ImportError> {
-        let path = JsonPath::new(value.clone());
+        let path = JsonSerializationHelper::new(value.clone());
         Self::from_serde_value_with_path(path)
     }
 
-    pub fn from_serde_value_with_path(path: JsonPath) -> Result<Self, ImportError> {
+    pub fn from_serde_value_with_path(path: JsonSerializationHelper) -> Result<Self, ImportError> {
         let class = path.get_class()?;
 
         if class != "Rule" {
@@ -255,11 +255,11 @@ impl Rule {
 
 impl Exp {
     pub fn from_serde_value(value: &Value) -> Result<Self, ImportError> {
-        let path = JsonPath::new(value.clone());
+        let path = JsonSerializationHelper::new(value.clone());
         Self::from_serde_value_with_path(path)
     }
 
-    pub fn from_serde_value_with_path(path: JsonPath) -> Result<Self, ImportError> {
+    pub fn from_serde_value_with_path(path: JsonSerializationHelper) -> Result<Self, ImportError> {
         let class = path.get_class()?;
 
         match class.as_str() {

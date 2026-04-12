@@ -17,15 +17,6 @@ impl TryFrom<TatSuModel> for ERef {
 
 impl Grammar {
     pub fn from_json(json: &str) -> Result<Self, ImportError> {
-        Self::from_serde_value_from_json(json)
-    }
-
-    pub fn from_serde_value_from_json(json: &str) -> Result<Self, ImportError> {
-        let value: serde_json::Value = serde_json::from_str(json).map_err(ImportError::from)?;
-        Self::from_serde_value(&value)
-    }
-
-    pub fn from_json_via_tatsu(json: &str) -> Result<Self, ImportError> {
         // #[cfg(debug_assertions)]
         {
             let value: serde_json::Value = serde_json::from_str(json).map_err(ImportError::from)?;
@@ -51,11 +42,6 @@ impl Grammar {
         let grammar = Self::try_from(model)?;
         Ok(grammar)
     }
-
-    pub fn from_json_value(json: &str) -> Result<Self, ImportError> {
-        let value: serde_json::Value = serde_json::from_str(json).map_err(ImportError::from)?;
-        Self::from_serde_value(&value)
-    }
 }
 
 impl TryFrom<TatSuModel> for Grammar {
@@ -67,7 +53,7 @@ impl TryFrom<TatSuModel> for Grammar {
             rules,
             directives,
             keywords,
-            analyzed: _,
+            analyzed,
         } = model
         {
             let mut rule_vec: Vec<Rule> = vec![];
@@ -98,12 +84,14 @@ impl TryFrom<TatSuModel> for Grammar {
                 .iter()
                 .map(|(k, v)| {
                     let val_str = v.as_str().map(|s| s.to_string()).unwrap_or(v.to_string());
+
                     (k.clone(), val_str)
                 })
                 .collect();
             let mut grammar = Grammar::new(name.as_str(), &rule_vec);
+            grammar.analyzed = analyzed;
             grammar.directives = str_directives;
-            grammar.keywords = keywords.into_iter().collect();
+            grammar.keywords = keywords;
             grammar.initialize();
             Ok(grammar)
         } else {
@@ -120,13 +108,10 @@ impl TryFrom<TatSuModel> for Exp {
             TatSuModel::Grammar { .. } | TatSuModel::Rule { .. } => {
                 Err(ImportError::UnsupportedModel(format!("{:?}", model)))
             }
-            TatSuModel::RuleInclude { name, exp } => match exp {
-                Some(inner) => {
-                    let inner_exp = Exp::try_from(*inner)?;
-                    Ok(Exp::rule_include_with(&name, inner_exp))
-                }
-                None => Ok(Exp::rule_include(&name)),
-            },
+            TatSuModel::RuleInclude { name, exp } => {
+                let inner_exp = Exp::try_from(*exp)?;
+                Ok(Exp::rule_include_with(&name, inner_exp))
+            }
             TatSuModel::LeftJoin { .. } => Err(ImportError::UnsupportedModel("LeftJoin".into())),
             TatSuModel::RightJoin { .. } => Err(ImportError::UnsupportedModel("RightJoin".into())),
 

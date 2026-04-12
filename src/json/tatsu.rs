@@ -11,23 +11,28 @@ fn default_false() -> bool {
     false
 }
 
+fn default_void() -> Box<TatSuModel> {
+    TatSuModel::Void.into()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "__class__")]
 pub enum TatSuModel {
     Grammar {
         name: String,
         rules: Vec<TatSuModel>,
-        #[serde(default)]
+        // #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
         directives: std::collections::HashMap<String, serde_json::Value>,
-        #[serde(default)]
-        keywords: Vec<String>,
-        #[serde(default)]
+        // #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        keywords: std::collections::HashSet<String>,
+        
+        #[serde(default = "default_false")]
         analyzed: bool,
     },
     RuleInclude {
         name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        exp: Option<Box<TatSuModel>>,
+        #[serde(default = "default_void")]
+        exp: Box<TatSuModel>, // HERE
     },
     Rule {
         name: String,
