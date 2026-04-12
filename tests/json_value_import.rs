@@ -23,7 +23,9 @@ fn test_grammar_from_serde_value() {
 
 #[test]
 fn test_grammar_from_json_error_reporting() {
-    let result = Grammar::from_json(RULE_INCLUDE_NO_NAME_JSON);
+    let value: Value =
+        serde_json::from_str(RULE_INCLUDE_NO_NAME_JSON).expect("Failed to parse JSON");
+    let result = Grammar::from_serde_value(&value);
 
     match result {
         Ok(g) => {
