@@ -3,7 +3,7 @@
 
 use super::exp::Exp;
 use super::parser::Succ;
-use crate::peg::{Fail, ParseResult};
+use crate::peg::{Nope, ParseResult};
 use crate::state::Ctx;
 use crate::trees::Tree;
 
@@ -15,7 +15,7 @@ impl Exp {
         }
     }
 
-    pub fn add_exp<C: Ctx>(ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> Result<C, (C, Fail)> {
+    pub fn add_exp<C: Ctx>(ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> Result<C, (C, Nope)> {
         match exp.parse(ctx.clone()) {
             Ok(Succ(new_ctx, tree)) => {
                 res.push(tree);

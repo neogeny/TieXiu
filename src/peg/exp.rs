@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::error::ParseError;
-use super::parser::{Fail, ParseResult, Parser, Succ};
+use super::parser::{Nope, ParseResult, Parser, Succ};
 use super::rule::RuleRef;
 use crate::state::Ctx;
 use crate::trees::Tree;
@@ -199,7 +199,7 @@ impl Exp {
             }
             ExpKind::Alt(exp) => exp.parse(ctx),
             ExpKind::Choice(options) => {
-                let mut furthest: Option<Fail> = None;
+                let mut furthest: Option<Nope> = None;
                 for option in options.iter() {
                     ctx.uncut();
                     match option.parse(ctx.clone()) {

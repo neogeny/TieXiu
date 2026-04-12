@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::input::Cursor;
-use crate::peg::Fail;
+use crate::peg::Nope;
 
 /// Explicit no-op implementation.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -28,7 +28,7 @@ pub trait Tracer: Default {
         let _ = cursor;
     }
 
-    fn trace_failure(&self, cursor: &dyn Cursor, f: Option<&Fail>) {
+    fn trace_failure(&self, cursor: &dyn Cursor, f: Option<&Nope>) {
         let _ = cursor;
         let _ = f;
     }

@@ -12,7 +12,7 @@ use std::panic::Location;
 pub struct Succ<C: Ctx>(pub C, pub Tree);
 
 #[derive(Debug, Clone)]
-pub struct Fail {
+pub struct Nope {
     pub start: usize,
     pub mark: usize, // The position where the disaster occurred
     pub cutseen: bool,
@@ -21,20 +21,20 @@ pub struct Fail {
     pub location: &'static Location<'static>,
 }
 
-pub type ParseResult<C> = Result<Succ<C>, Fail>;
+pub type ParseResult<C> = Result<Succ<C>, Nope>;
 
 pub trait Parser<C: Ctx>: Debug {
     fn parse(&self, ctx: C) -> ParseResult<C>;
 }
 
-impl std::fmt::Display for Fail {
+impl std::fmt::Display for Nope {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Use the three-liner style you prefer
         write!(f, "{} at {}: {}", self.source, self.mark, self.callstack)
     }
 }
 
-impl std::error::Error for Fail {
+impl std::error::Error for Nope {
     // source() is optional since ParseError is the cause,
     // but this is the "Rust Way" for chained errors.
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
@@ -42,7 +42,7 @@ impl std::error::Error for Fail {
     }
 }
 
-impl Fail {
+impl Nope {
     #[track_caller]
     pub fn new(start: usize, mark: usize, cut: bool, error: ParseError, stack: TokenList) -> Self {
         Self {
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_fail_size() {
-        let size = size_of::<Fail>();
+        let size = size_of::<Nope>();
         assert!(size <= TARGET, "Fail size is {} > {} bytes", size, TARGET);
     }
 }

@@ -20,5 +20,5 @@ pub use compile::{CompileError, CompileResult, GrammarCompiler};
 pub use error::ParseError;
 pub use exp::{Exp, ExpKind};
 pub use grammar::Grammar;
-pub use parser::{Fail, ParseResult, Parser, Succ};
+pub use parser::{Nope, ParseResult, Parser, Succ};
 pub use rule::Rule;

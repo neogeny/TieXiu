@@ -4,7 +4,7 @@
 use super::memo::{Key, Memo, MemoCache};
 use crate::input::Cursor;
 use crate::peg::error::ParseError;
-use crate::peg::{Fail, ParseResult, Rule, Succ};
+use crate::peg::{Nope, ParseResult, Rule, Succ};
 use crate::trees::tree::Tree;
 use crate::util::pyre::{Pattern, escape};
 use crate::util::tokenlist::TokenList;
@@ -20,8 +20,8 @@ pub trait Ctx: Clone + Debug {
     fn enter(&mut self, name: &str);
 
     // #[track_caller]
-    fn failure(&self, start: usize, source: ParseError) -> Fail {
-        Fail::new(start, self.mark(), self.cut_seen(), source, self.stack())
+    fn failure(&self, start: usize, source: ParseError) -> Nope {
+        Nope::new(start, self.mark(), self.cut_seen(), source, self.stack())
     }
 
     fn eof_check(&mut self) -> bool {
@@ -137,7 +137,7 @@ pub trait Ctx: Clone + Debug {
         let start_mark = self.mark();
         let mut best_cst: Option<Tree> = None;
         let mut high_water_mark = start_mark;
-        let mut last_failure: Option<Fail> = None;
+        let mut last_failure: Option<Nope> = None;
 
         loop {
             let mut ctx = self.clone();
