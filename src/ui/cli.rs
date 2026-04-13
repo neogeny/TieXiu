@@ -7,7 +7,6 @@ use clap;
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use termcolor;
 
 fn cli_styles() -> Styles {
     Styles::styled()
@@ -127,8 +126,6 @@ fn configure_color(color: clap::ColorChoice) -> bool {
                 && std::io::IsTerminal::is_terminal(&std::io::stderr())
         }
     };
-    if !use_color {
-    }
     use_color
 }
 
