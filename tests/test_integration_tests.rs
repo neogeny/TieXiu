@@ -5,7 +5,7 @@
 
 use tiexiu::input::StrCursor;
 use tiexiu::peg::Grammar;
-use tiexiu::state::Ctx;
+use tiexiu::state::CtxI;
 use tiexiu::state::corectx::CoreCtx;
 
 fn compile(grammar_text: &str) -> Grammar {

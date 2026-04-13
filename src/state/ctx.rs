@@ -9,19 +9,28 @@ use crate::trees::tree::Tree;
 use crate::util::pyre::{Pattern, escape};
 use crate::util::tokenlist::TokenList;
 use std::fmt::Debug;
+use crate::state::trace::Tracer;
 
-pub trait Ctx: Clone + Debug {
+pub trait CtxI {
     fn cursor(&self) -> &dyn Cursor;
+    fn callstack(&self) -> TokenList;
+    fn mark(&self) -> usize {
+        self.cursor().mark()
+    }
+}
 
+pub trait Ctx: CtxI + Clone + Debug {
     fn cursor_mut(&mut self) -> &mut dyn Cursor;
-
-    fn stack(&self) -> TokenList;
-
     fn enter(&mut self, name: &str);
+    fn tracer(&self) -> &dyn Tracer;
 
     // #[track_caller]
     fn failure(&self, start: usize, source: ParseError) -> Nope {
-        Nope::new(start, self.mark(), self.cut_seen(), source, self.stack())
+        Nope::new(start, self.mark(), self.cut_seen(), source, self.callstack())
+    }
+
+    fn reset(&mut self, mark: usize) {
+        self.cursor_mut().reset(mark);
     }
 
     fn eof_check(&mut self) -> bool {
@@ -62,13 +71,6 @@ pub trait Ctx: Clone + Debug {
 
     fn key(&mut self, name: &str) -> Key {
         MemoCache::key(self.mark(), name)
-    }
-    fn mark(&self) -> usize {
-        self.cursor().mark()
-    }
-
-    fn reset(&mut self, mark: usize) {
-        self.cursor_mut().reset(mark);
     }
 
     fn memo(&mut self, key: &Key) -> Option<Memo>;

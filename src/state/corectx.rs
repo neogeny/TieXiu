@@ -3,9 +3,9 @@
 
 use crate::input::Cursor;
 use crate::peg::parser::TokenList;
-use crate::state::Ctx;
+pub use crate::state::{Ctx, CtxI};
 use crate::state::memo::{Key, Memo, MemoCache};
-use crate::state::trace::{NullTracer, Tracer};
+use crate::state::trace::{Tracer, CONSOLE_TRACER, NULL_TRACER};
 use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
@@ -23,27 +23,25 @@ pub struct State<U: Cursor> {
 }
 
 #[derive(Clone, Debug)]
-pub struct HeavyState<'c, T: Tracer> {
+pub struct HeavyState<'c> {
     pub memos: MemoCache,
     pub patterns: PatternCache,
-    pub tracer: T,
+    pub tracer: Box<&'c dyn Tracer>,
     pub marker: std::marker::PhantomData<&'c ()>,
 }
 
 #[derive(Clone, Debug)]
-pub struct CoreCtx<'c, U, T: Tracer = NullTracer>
+pub struct CoreCtx<'c, U>
 where
     U: Cursor + Clone,
-    T: Tracer,
 {
     pub state: Cow<'c, Box<State<U>>>,
-    pub heavy: Rc<RefCell<HeavyState<'c, T>>>,
+    pub heavy: Rc<RefCell<HeavyState<'c>>>,
 }
 
-impl<'c, U, T: Tracer> CoreCtx<'c, U, T>
+impl<'c, U> CoreCtx<'c, U>
 where
     U: Cursor + Clone,
-    T: Tracer,
 {
     pub fn new(cursor: U) -> Self {
         Self {
@@ -58,7 +56,7 @@ where
             heavy: Rc::new(RefCell::new(HeavyState {
                 memos: MemoCache::new(),
                 patterns: PatternCache::new(),
-                tracer: T::default(),
+                tracer: Box::new(&NULL_TRACER),
                 marker: std::marker::PhantomData,
             })),
         }
@@ -72,14 +70,26 @@ where
     #[inline]
     fn with_heavy_mut<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&mut HeavyState<'c, T>) -> R,
+        F: FnOnce(&mut HeavyState<'c>) -> R,
     {
         let mut heavy = self.heavy.borrow_mut();
         f(&mut heavy)
     }
+
+    pub fn trace_with(&mut self, tracer: &'c dyn Tracer) {
+        self.heavy.borrow_mut().tracer = tracer.into();
+    }
+
+    pub fn set_trace(&mut self, on: bool) {
+        if on {
+            self.trace_with(&CONSOLE_TRACER);
+            return;
+        }
+        self.trace_with(&NULL_TRACER);
+    }
 }
 
-impl<'c, U> Ctx for CoreCtx<'c, U>
+impl<'c, U> CtxI for CoreCtx<'c, U>
 where
     U: Cursor + Clone,
 {
@@ -89,18 +99,29 @@ where
     }
 
     #[inline]
-    fn cursor_mut(&mut self) -> &mut dyn Cursor {
-        &mut self.state_mut().cursor
+    fn callstack(&self) -> TokenList {
+        self.state.callstack.clone()
     }
 
+}
+
+impl<'c, U> Ctx for CoreCtx<'c, U>
+where
+    U: Cursor + Clone,
+{
     #[inline]
-    fn stack(&self) -> TokenList {
-        self.state.callstack.clone()
+    fn cursor_mut(&mut self) -> &mut dyn Cursor {
+        &mut self.state_mut().cursor
     }
 
     fn enter(&mut self, name: &str) {
         let stack = self.state.callstack.clone();
         self.state_mut().callstack = stack.insert(name);
+        self.tracer().trace_entry(self);
+    }
+
+    fn tracer(&self) -> &dyn Tracer {
+        *self.heavy.borrow().tracer
     }
 
     fn get_pattern(&self, pattern: &str) -> Pattern {
@@ -118,7 +139,7 @@ where
     }
 
     fn memoize(&mut self, key: &Key, tree: &Tree) {
-        let mark = self.mark();
+        let mark = self.cursor().mark();
         self.with_heavy_mut(|heavy| {
             heavy.memos.memoize(key, tree, mark);
         });
@@ -146,6 +167,9 @@ where
     }
 }
 
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,7 +190,7 @@ mod tests {
 
         ctx.enter("rule");
 
-        let stack = ctx.stack();
+        let stack = ctx.callstack();
         assert!(stack.to_vec().contains(&"rule".to_string()));
     }
 

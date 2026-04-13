@@ -10,7 +10,7 @@ pub type StrCtx<'c> = CoreCtx<'c, StrCursor<'c>>;
 mod tests {
     use super::*;
     use crate::input::strcursor::StrCursor;
-    use crate::state::Ctx;
+    use crate::state::{Ctx, CtxI};
     use crate::trees::{KeyValue, Tree};
     use std::mem::size_of;
 

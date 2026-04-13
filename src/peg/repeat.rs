@@ -94,6 +94,7 @@ mod tests {
     use super::*;
     use crate::input::strcursor::StrCursor;
     use crate::peg::Grammar;
+    use crate::state::CtxI;
     use crate::state::corectx::CoreCtx;
 
     fn setup(input: &str) -> CoreCtx<'_, StrCursor<'_>> {
