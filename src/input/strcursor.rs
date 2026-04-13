@@ -113,7 +113,8 @@ impl<'a> Cursor for StrCursor<'a> {
     }
 
     fn at_end(&self) -> bool {
-        self.offset >= self.text.len()
+        self.offset >= self.text.len() 
+            || self.text[self.offset..].trim().is_empty()
     }
 
     fn next(&mut self) -> Option<char> {

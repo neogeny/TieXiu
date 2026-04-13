@@ -15,6 +15,18 @@ pub trait Cursor: Debug {
     fn match_pattern(&mut self, pattern: &Pattern) -> Option<String>;
     fn next_token(&mut self);
 
+    fn pos(&self) -> (usize, usize) {
+        self.pos_at(self.mark())
+    }
+
+    fn pos_at(&self, offset: usize) -> (usize, usize) {
+        let text = self.textstr();
+        let head = &text[0..offset];
+        let line = head.lines().count();
+        let col = head.lines().last().map_or(0, |l| l.chars().count());
+        (line, col)
+    }
+
     // // Character classification
     // fn is_name(&self, s: &str) -> bool;
     // fn is_name_char(&self, c: Option<&str>) -> bool;
