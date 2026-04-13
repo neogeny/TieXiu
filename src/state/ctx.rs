@@ -5,11 +5,11 @@ use super::memo::{Key, Memo, MemoCache};
 use crate::input::Cursor;
 use crate::peg::error::ParseError;
 use crate::peg::{Nope, ParseResult, Rule, Succ};
+use crate::state::trace::Tracer;
 use crate::trees::tree::Tree;
 use crate::util::pyre::{Pattern, escape};
 use crate::util::tokenlist::TokenList;
 use std::fmt::Debug;
-use crate::state::trace::Tracer;
 
 pub trait CtxI {
     fn cursor(&self) -> &dyn Cursor;
@@ -22,11 +22,18 @@ pub trait CtxI {
 pub trait Ctx: CtxI + Clone + Debug {
     fn cursor_mut(&mut self) -> &mut dyn Cursor;
     fn enter(&mut self, name: &str);
+    fn leave(&mut self);
     fn tracer(&self) -> &dyn Tracer;
 
     // #[track_caller]
     fn failure(&self, start: usize, source: ParseError) -> Nope {
-        Nope::new(start, self.mark(), self.cut_seen(), source, self.callstack())
+        Nope::new(
+            start,
+            self.mark(),
+            self.cut_seen(),
+            source,
+            self.callstack(),
+        )
     }
 
     fn reset(&mut self, mark: usize) {
@@ -50,19 +57,34 @@ pub trait Ctx: CtxI + Clone + Debug {
     fn match_token(&mut self, token: &str) -> bool {
         // WARNING: this may belong in Cursor, but the Ctx chain holds the regex caching
         let escaped = escape(token);
-        if *escaped == *token {
-            let bound = format!(r"{}\b", token);
-            self.match_pattern(bound.as_str()).is_some()
+        self.next_token();
+        let result = {
+            if *escaped == *token {
+                let bound = format!(r"{}\b", token);
+                self.match_pattern(bound.as_str()).is_some()
+            } else {
+                self.cursor_mut().match_token(token)
+            }
+        };
+        if result {
+            self.tracer().trace_match(self, token, "");
         } else {
-            self.next_token();
-            self.cursor_mut().match_token(token)
+            self.tracer().trace_no_match(self, token);
         }
+        result
     }
 
     fn match_pattern(&mut self, pattern: &str) -> Option<String> {
         self.next_token();
         let re = self.get_pattern(pattern);
-        self.cursor_mut().match_pattern(&re)
+        let result = self.cursor_mut().match_pattern(&re);
+        if let Some(matched) = result {
+            self.tracer().trace_match(self, matched.as_str(), pattern);
+            Some(matched)
+        } else {
+            self.tracer().trace_no_match(self, pattern);
+            None
+        }
     }
 
     fn next_token(&mut self) {
@@ -92,8 +114,8 @@ pub trait Ctx: CtxI + Clone + Debug {
 
     fn call_rule(mut self, name: &str, rule: &Rule) -> ParseResult<Self> {
         let start = self.mark();
-        // TODO: self.tracer.trace_entry(self.cursor)
         self.enter(name);
+        self.tracer().trace_entry(&self);
 
         if !rule.is_token() {
             self.next_token();
@@ -101,41 +123,54 @@ pub trait Ctx: CtxI + Clone + Debug {
 
         let key = self.key(name);
         if let Some(memo) = self.memo(&key) {
+            self.leave();
             return match memo.tree {
-                // TODO: self.tracer.trace_failure(self.cursor, e)
-                Tree::Bottom => Err(self.failure(start, ParseError::FailedParse(name.into()))),
+                Tree::Bottom => {
+                    let err = ParseError::FailedParse(name.into());
+                    self.tracer().trace_failure(&self, &err);
+                    Err(self.failure(start, err))
+                }
                 _ => {
                     self.reset(memo.mark);
+                    self.tracer().trace_success(&self);
                     Ok(Succ(self, memo.tree))
                 }
             };
         }
 
         if rule.is_left_recursive() {
-            self.call_recursive(key, rule)
+            match self.call_recursive(&key, rule) {
+                Ok(Succ(mut ctx, tree)) => {
+                    ctx.memoize(&key, &tree);
+                    ctx.leave();
+                    Ok(Succ(ctx, tree))
+                }
+                Err(nope) => Err(nope),
+            }
         } else {
             match rule.parse(self.clone()) {
                 Ok(Succ(mut ctx, tree)) => {
-                    // TODO: self.tracer.trace_success(self.cursor)
+                    self.tracer().trace_success(&self);
                     ctx.memoize(&key, &tree);
+                    ctx.leave();
                     Ok(Succ(ctx, tree))
                 }
-                Err(f) => {
-                    // TODO: self.tracer.trace_failure(self.cursor, e)
+                Err(nope) => {
+                    self.tracer().trace_failure(&self, &nope.source);
                     self.memoize(&key, &Tree::Bottom);
-                    Err(f)
+                    Err(nope)
                 }
             }
         }
     }
 
-    fn call_recursive(mut self, key: Key, rule: &Rule) -> ParseResult<Self> {
-        // TODO: self.tracer.trace_recursion(self.cursor)
+    fn call_recursive(mut self, key: &Key, rule: &Rule) -> ParseResult<Self> {
+        self.tracer().trace_recursion(&self);
         if !rule.is_left_recursive() {
             panic!("Recursive call on non-LRec rule");
         }
 
-        self.memoize(&key, &Tree::Bottom);
+        self.memoize(key, &Tree::Bottom);
         let start_mark = self.mark();
         let mut best_cst: Option<Tree> = None;
         let mut high_water_mark = start_mark;
@@ -156,7 +191,7 @@ pub trait Ctx: CtxI + Clone + Debug {
                         break;
                     }
 
-                    ctx.memoize(&key, &tree);
+                    ctx.memoize(key, &tree);
                     high_water_mark = mark;
                     best_cst = Some(tree);
                     self = ctx;
@@ -165,13 +200,14 @@ pub trait Ctx: CtxI + Clone + Debug {
         }
 
         if let Some(tree) = best_cst {
-            // TODO: self.tracer.trace_success(self.cursor)
+            self.tracer().trace_success(&self);
             Ok(Succ(self, tree))
         } else {
-            // TODO: self.tracer.trace_failure(self.cursor, e)
-            Err(last_failure.unwrap_or_else(|| {
+            let nope = last_failure.unwrap_or_else(|| {
                 self.failure(start_mark, ParseError::FailedParse(rule.meta.name.clone()))
-            }))
+            });
+            self.tracer().trace_failure(&self, &nope.source);
+            Err(nope)
         }
     }
 }

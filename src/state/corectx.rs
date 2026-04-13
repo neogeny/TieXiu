@@ -3,9 +3,9 @@
 
 use crate::input::Cursor;
 use crate::peg::parser::TokenList;
-pub use crate::state::{Ctx, CtxI};
 use crate::state::memo::{Key, Memo, MemoCache};
-use crate::state::trace::{Tracer, CONSOLE_TRACER, NULL_TRACER};
+use crate::state::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
+pub use crate::state::{Ctx, CtxI};
 use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
@@ -102,7 +102,6 @@ where
     fn callstack(&self) -> TokenList {
         self.state.callstack.clone()
     }
-
 }
 
 impl<'c, U> Ctx for CoreCtx<'c, U>
@@ -117,7 +116,14 @@ where
     fn enter(&mut self, name: &str) {
         let stack = self.state.callstack.clone();
         self.state_mut().callstack = stack.insert(name);
-        self.tracer().trace_entry(self);
+    }
+
+    fn leave(&mut self) {
+        let stack = self.state.callstack.clone();
+        self.state_mut().callstack = match stack.tail() {
+            Some(tail) => tail.clone(),
+            None => TokenList::new(),
+        }
     }
 
     fn tracer(&self) -> &dyn Tracer {
@@ -167,9 +173,6 @@ where
     }
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,7 +194,7 @@ mod tests {
         ctx.enter("rule");
 
         let stack = ctx.callstack();
-        assert!(stack.to_vec().contains(&"rule".to_string()));
+        assert!(stack.to_vec().contains(&"rule"));
     }
 
     #[test]
