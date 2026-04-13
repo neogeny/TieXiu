@@ -12,6 +12,7 @@ use std::ops::Deref;
 pub type ERef = Box<Exp>;
 pub type ERefArr = Box<[Exp]>;
 pub type Str = Box<str>;
+
 #[derive(Debug, Clone)]
 pub struct Exp {
     pub kind: ExpKind,
@@ -75,8 +76,6 @@ impl Exp {
     pub fn parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
         let was_cut = ctx.cut_seen();
-        let text = ctx.cursor().lookahead();
-        eprintln!("DEBUG Exp::parse lookahead: {:?}", text);
         match &self.kind {
             ExpKind::Nil => Ok(Succ(ctx, Tree::Nil)),
             ExpKind::RuleInclude { name, exp } => match exp {
