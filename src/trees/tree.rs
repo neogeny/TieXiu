@@ -26,9 +26,10 @@ pub type NodeMetaRef = Rc<NodeMeta>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Tree {
-    Text(Box<str>),    // Tokens or patterns
-    List(Box<[Tree]>), // Sequences of expressions
-    Map(Box<TreeMap>), // A mapping of named elements
+    Text(Box<str>),      // Tokens or patterns
+    List(Box<[Tree]>),   // Sequences of expressions
+    Closed(Box<[Tree]>), // Sequences of expressions
+    Map(Box<TreeMap>),   // A mapping of named elements
 
     Node {
         // The result of parsing a rule call
@@ -49,17 +50,28 @@ pub enum Tree {
 
 impl From<Vec<Tree>> for Tree {
     fn from(v: Vec<Tree>) -> Self {
-        Tree::List(v.into_boxed_slice())
+        let clean: Vec<Tree> = v.into_iter()
+            .filter(|item| !matches!(item, Tree::Nil))
+            .collect();
+        Tree::List(clean.into_boxed_slice())
     }
 }
 
 impl<const N: usize> From<[Tree; N]> for Tree {
     fn from(arr: [Tree; N]) -> Self {
-        Tree::List(arr.into())
+        let clean: Vec<Tree> = arr.into_iter().filter(|item| !matches!(item, Tree::Nil)).collect();
+        Tree::List(clean.into_boxed_slice())
     }
 }
 
 impl Tree {
+    pub fn closed(self) -> Self {
+        match self {
+            Tree::List(items) => Tree::Closed(items),
+            other => other,
+        }
+    }
+
     pub fn append(self, node: Self) -> Self {
         match (self, node) {
             (Self::Nil, n) => n,
@@ -113,11 +125,11 @@ impl Tree {
         let (tags, root, tree) = self._normalize();
 
         if root != Tree::Nil {
-            root
+            root.closed()
         } else if !tags.is_empty() {
             Tree::Map(tags.into())
         } else {
-            tree
+            tree.closed()
         }
     }
 
@@ -158,7 +170,7 @@ impl Tree {
             Tree::Text(text) => text.len(),
             Tree::Override(inner) | Tree::OverrideAsList(inner) => inner.width(),
             Tree::Nil | Tree::Bottom => 0,
-            Tree::List(items) => items.iter().map(|item| item.width()).sum(),
+            Tree::List(items) | Tree::Closed(items) => items.iter().map(|item| item.width()).sum(),
             Tree::Map(tags) => tags.entries.values().map(|node| node.width()).sum(),
             Tree::Named(pair) | Tree::NamedAsList(pair) => {
                 let KeyValue(_, val) = &**pair;

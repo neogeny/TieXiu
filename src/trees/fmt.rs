@@ -39,7 +39,7 @@ impl fmt::Display for Tree {
             Self::Map(tags) => write!(f, "{}", tags),
             Self::Nil => write!(f, "∅"),
             Self::Bottom => write!(f, "⊥"),
-            Self::List(items) => {
+            Self::List(items) | Self::Closed(items) => {
                 write!(f, "[")?;
                 for (i, item) in items.iter().enumerate() {
                     if i > 0 {

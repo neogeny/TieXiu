@@ -58,6 +58,9 @@ impl TreeMap {
         if let Some(current) = self.entries.get(&key) {
             new = current.clone().append_as_list(new);
         }
+        else {
+            new = Tree::List([new].into());
+        }
         self.entries.insert(key, new);
     }
 
