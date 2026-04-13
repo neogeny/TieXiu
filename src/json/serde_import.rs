@@ -17,28 +17,9 @@ impl TryFrom<TatSuModel> for ERef {
 
 impl Grammar {
     pub fn serde_from_json(json: &str) -> Result<Self, JsonError> {
-        #[cfg(debug_assertions)]
-        {
-            let value: serde_json::Value = serde_json::from_str(json).map_err(JsonError::from)?;
-
-            // Debug: If you suspect the JSON structure is wrong, you can inspect 'value' here.
-            assert!(value.is_object());
-            // println!(
-            //     "DEBUG: Raw JSON Root Type: {:?}",
-            //     value.as_object().map(|_| "Object").unwrap_or("Other")
-            // );
-            println!("DEBUG: Raw JSON Root Type: {:#}", value);
-        }
-
-        // Use a Deserializer to track the path to the error
         let mut deserializer = serde_json::Deserializer::from_str(json);
-
         let model: TatSuModel = serde_path_to_error::deserialize(&mut deserializer)
             .map_err(|err| JsonError::JsonPath(err.path().to_string(), err.into_inner()))?;
-
-        #[cfg(debug_assertions)]
-        println!("{:?}", model);
-
         let grammar = Self::try_from(model)?;
         Ok(grammar)
     }
