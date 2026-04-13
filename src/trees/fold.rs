@@ -41,7 +41,7 @@ impl<O> Translates<O> for Tree {
                 trans.translate(self, outputs.as_slice())
             }
             Tree::Node {
-                meta: _,
+                typename: _,
                 tree,
             } => {
                 let child = vec![tree.translate_with(trans)];

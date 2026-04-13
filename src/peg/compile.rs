@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::{Grammar, Rule};
-use crate::trees::{NodeMeta, Tree, TreeMap};
+use super::{Exp, Grammar, Rule};
+use crate::trees::{Tree, TreeMap};
 use indexmap::IndexMap;
 use thiserror::Error;
 
@@ -55,52 +55,45 @@ pub enum CompileError {
 
 #[derive(Debug, Default)]
 pub struct GrammarCompiler {
-    rulemap: IndexMap<Box<str>, Rule>,
+    pub rulemap: IndexMap<Box<str>, Rule>,
 }
 
-fn parse_node(node: &Tree) -> CompileResult<(&NodeMeta, &Tree)> {
-    let Tree::Node { meta, tree } = node else {
+fn parse_node(node: &Tree) -> CompileResult<(Box<str>, &Tree)> {
+    let Tree::Node { typename, tree } = node else {
         return Err(CompileError::ExpectedNode(format!("{:?}", node)));
     };
-    Ok((meta, tree))
+    Ok((typename.clone(), tree))
 }
 
 fn parse_node_check<'n>(
     node: &'n Tree,
-    name: &'static str,
     typename: &'static str,
-) -> CompileResult<(&'n NodeMeta, &'n Tree)> {
-    let (meta, tree) = parse_node(node)?;
-    if *meta.name != *name {
+) -> CompileResult<(Box<str>, &'n Tree)> {
+    let (name, tree) = parse_node(node)?;
+    if *name != *typename {
         return Err(CompileError::UnexpectedNodeName {
-            expected: name,
-            found: meta.name.clone(),
+            expected: typename,
+            found: name.clone(),
         });
     }
-    if !typename.is_empty() && *meta.params[0] != *typename {
-        return Err(CompileError::UnexpectedTypeName {
-            expected: typename.into(),
-            found: meta.params[0].clone(),
-        });
-    }
-    Ok((meta, tree))
+    Ok((name, tree))
 }
 
-fn parse_map(node: &Tree) -> CompileResult<&TreeMap> {
+fn _parse_map(node: &Tree) -> CompileResult<&TreeMap> {
     let Tree::Map(map) = node else {
         return Err(CompileError::ExpectedMap(format!("{:?}", node)));
     };
     Ok(map)
 }
 
-fn parse_list(node: &Tree) -> CompileResult<&[Tree]> {
+fn _parse_list(node: &Tree) -> CompileResult<&[Tree]> {
     match node {
         Tree::List(list) | Tree::Closed(list) => Ok(list),
         _ => Err(CompileError::ExpectedList(format!("{:?}", node))),
     }
 }
 
-fn map_get<'m>(
+fn _map_get<'m>(
     map: &'m TreeMap,
     context: &'static str,
     key: &'static str,
@@ -133,13 +126,13 @@ impl GrammarCompiler {
         //  Some `Tree::Node` have an associated node type in `node.meta.params[0]`
         //  and that too can be verified
 
-        let (_, tree) = parse_node_check(tree, "start", "")?;
-        let (_meta, tree) = parse_node_check(tree, "grammar", "Grammar")?;
-        let map = parse_map(tree)?;
-        let rules_node = map_get(map, "grammar", "rules")?;
-        // let rules = parse_list(rules_node)?;
-        eprintln!("{:?}", map);
-        panic!("SEE THE TREE");
+        eprintln!("{:?}", tree);
+        let (_, tree) = parse_node_check(tree, "start")?;
+        let (_meta, _tree) = parse_node_check(tree, "Grammar")?;
+        // let map = parse_map(tree)?;
+        // let rules_node = map_get(map, "grammar", "rules")?;
+        // let rule_trees = parse_list(rules_node)?;
+        // panic!("SEE THE TREE");
         // if *meta.name != *"Grammar" {
         //     return Err(CompileError::UnexpectedNodeName {
         //         expected: "Grammar",
@@ -158,6 +151,15 @@ impl GrammarCompiler {
         // grammar.directives = directives;
         // grammar.keywords = keywords;
         Ok(grammar)
+    }
+
+    pub fn compile_rule(&self, _tree: &Tree) -> CompileResult<Rule> {
+        // let (_meta, tree) = parse_node_check(tree, "rule", "Rule")?;
+        // let map = parse_map(tree)?;
+        // let name = map_get(map, "rule", "name")?;
+        // let params = map_get(map, "rule", "params")?;
+        // let body = map_get(map, "rule", "body")?;
+        Ok(Rule::new("rule", &[], Exp::nil()))
     }
 }
 

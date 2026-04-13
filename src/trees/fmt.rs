@@ -49,9 +49,8 @@ impl fmt::Display for Tree {
                 }
                 write!(f, "]")
             }
-            Self::Node { meta, tree } => {
-                let params = meta.params.join(", ");
-                write!(f, "{}[{}]: {}", meta.name, params, tree)
+            Self::Node { typename, tree } => {
+                write!(f, "[{}]: {}", typename, tree)
             }
         }
     }
@@ -59,9 +58,8 @@ impl fmt::Display for Tree {
 
 #[cfg(test)]
 mod tests {
-    use crate::trees::{FlagMap, KeyValue, MapEntries, NodeMeta, Tree, TreeMap};
+    use crate::trees::{KeyValue, MapEntries, Tree, TreeMap};
     use indexmap::IndexMap;
-    use std::rc::Rc;
 
     #[test]
     fn test_tree_tags_display() {
@@ -135,19 +133,10 @@ mod tests {
         );
         assert_eq!(node.to_string(), "[a, b, [c]]");
 
-        // Pruned
-        let meta = Rc::new(NodeMeta {
-            name: "MyRule".into(),
-            params: ["param1", "param2"].map(|s| s.into()).into(),
-            flags: FlagMap::new(),
-        });
         let pruned_tree = Tree::Node {
-            meta,
+            typename: "MyRule".into(),
             tree: Tree::Text("pruned_content".into()).into(),
         };
-        assert_eq!(
-            pruned_tree.to_string(),
-            "MyRule[param1, param2]: pruned_content"
-        );
+        assert_eq!(pruned_tree.to_string(), "[MyRule]: pruned_content");
     }
 }

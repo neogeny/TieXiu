@@ -15,11 +15,21 @@ pub fn keyval(name: &str, tree: Tree) -> KeyValue {
 
 pub type FlagMap = IndexMap<Box<str>, bool>;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct NodeMeta {
     pub name: Box<str>,
     pub params: Box<[Box<str>]>,
     pub flags: FlagMap,
+}
+
+impl NodeMeta {
+    pub fn new(name: &str, params: &[Box<str>]) -> Self {
+        Self {
+            name: name.into(),
+            params: params.into(),
+            ..Default::default()
+        }
+    }
 }
 
 pub type NodeMetaRef = Rc<NodeMeta>;
@@ -33,8 +43,8 @@ pub enum Tree {
 
     Node {
         // The result of parsing a rule call
-        meta: NodeMetaRef, // Metadata
-        tree: Box<Tree>,   // The result of parsing a rule
+        typename: Box<str>,
+        tree: Box<Tree>, // The result of parsing a rule
     },
 
     // INTERNAL
@@ -69,6 +79,43 @@ impl<const N: usize> From<[Tree; N]> for Tree {
 }
 
 impl Tree {
+    pub fn value(&self) -> Box<str> {
+        match self {
+            Tree::Text(text) => text.clone(),
+            _ => format!("{:#?}", self).into(),
+        }
+    }
+
+    pub fn value_list(&self) -> Box<[Box<str>]> {
+        match self {
+            Tree::List(items) | Tree::Closed(items) => items
+                .iter()
+                .map(|item| item.value())
+                .collect::<Vec<_>>()
+                .into_boxed_slice(),
+            _ => [].into(),
+        }
+    }
+
+    pub fn get(&self, key: &str) -> Option<&Tree> {
+        match self {
+            Tree::Map(map) => map.get(key),
+            _ => None,
+        }
+    }
+
+    pub fn get_value(&self, key: &str) -> Box<str> {
+        self.get(key)
+            .map(|n| n.value())
+            .unwrap_or_else(|| "".into())
+    }
+
+    pub fn get_list(&self, key: &str) -> Box<[Box<str>]> {
+        self.get(key)
+            .map(|n| n.value_list())
+            .unwrap_or_else(|| [].into())
+    }
+
     pub fn closed(self) -> Self {
         match self {
             Tree::List(items) => Tree::Closed(items),
@@ -180,7 +227,7 @@ impl Tree {
                 let KeyValue(_, val) = &**pair;
                 val.width()
             }
-            Tree::Node { meta: _, tree } => tree.width(),
+            Tree::Node { typename: _, tree } => tree.width(),
         }
     }
 }
@@ -221,7 +268,7 @@ mod tests {
         let raw = Tree::List([Tree::Bottom, Tree::Nil, Tree::Bottom].into());
         let result = raw.normalized();
 
-        if let Tree::List(v) = result {
+        if let Tree::Closed(v) = result {
             assert_eq!(v.len(), 2); // Nil is gone, only the two Bottoms remain
             assert_eq!(v[0], Tree::Bottom);
             assert_eq!(v[1], Tree::Bottom);

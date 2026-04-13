@@ -58,10 +58,10 @@ impl Tree {
                 [("tree", tree.as_ref().to_serde_json_value())],
             ),
             Tree::Map(m) => tagged("Map", [("entries", map_entries_value(m))]),
-            Tree::Node { meta, tree } => tagged(
+            Tree::Node { typename, tree } => tagged(
                 "Node",
                 [
-                    ("meta", node_meta_value(meta)),
+                    ("typename", Value::String(typename.to_string())),
                     ("tree", tree.as_ref().to_serde_json_value()),
                 ],
             ),
@@ -98,7 +98,7 @@ impl Tree {
                 map_from_entries(field(object, "entries")?)?.into(),
             )),
             "Node" => Ok(Tree::Node {
-                meta: node_meta_from_value(field(object, "meta")?)?.into(),
+                typename: expect_string(field(object, "typename")?, "typename")?.into(),
                 tree: Tree::from_serde_json_value(field(object, "tree")?)?.into(),
             }),
             other => Err(TreeJsonError::UnknownVariant(other.to_string())),
@@ -143,7 +143,7 @@ fn map_entries_value(m: &TreeMap) -> Value {
     )
 }
 
-fn node_meta_value(meta: &NodeMeta) -> Value {
+fn _node_meta_value(meta: &NodeMeta) -> Value {
     tagged(
         "NodeMeta",
         [
@@ -157,12 +157,12 @@ fn node_meta_value(meta: &NodeMeta) -> Value {
                         .collect(),
                 ),
             ),
-            ("flags", flag_entries_value(&meta.flags)),
+            ("flags", _flag_entries_value(&meta.flags)),
         ],
     )
 }
 
-fn flag_entries_value(flags: &FlagMap) -> Value {
+fn _flag_entries_value(flags: &FlagMap) -> Value {
     Value::Array(
         flags
             .iter()
@@ -196,14 +196,14 @@ fn map_from_entries(value: &Value) -> Result<TreeMap, TreeJsonError> {
     Ok(m)
 }
 
-fn node_meta_from_value(value: &Value) -> Result<NodeMeta, TreeJsonError> {
+fn _node_meta_from_value(value: &Value) -> Result<NodeMeta, TreeJsonError> {
     let object = expect_object(value, "meta")?;
     let name = expect_string(field(object, "name")?, "name")?;
     let params = expect_array(field(object, "params")?, "params")?
         .iter()
         .map(|param| expect_string(param, "param").map(Into::into))
         .collect::<Result<Vec<Box<str>>, _>>()?;
-    let flags = flags_from_value(field(object, "flags")?)?;
+    let flags = _flags_from_value(field(object, "flags")?)?;
 
     Ok(NodeMeta {
         name: name.into(),
@@ -212,12 +212,12 @@ fn node_meta_from_value(value: &Value) -> Result<NodeMeta, TreeJsonError> {
     })
 }
 
-fn flags_from_value(value: &Value) -> Result<FlagMap, TreeJsonError> {
+fn _flags_from_value(value: &Value) -> Result<FlagMap, TreeJsonError> {
     let mut flags = FlagMap::new();
     for entry in expect_array(value, "flags")? {
         let object = expect_object(entry, "flag")?;
         let key = expect_string(field(object, "key")?, "key")?;
-        let value = expect_bool(field(object, "value")?, "value")?;
+        let value = _expect_bool(field(object, "value")?, "value")?;
         flags.insert(key.into(), value);
     }
     Ok(flags)
@@ -255,7 +255,7 @@ fn expect_string<'a>(value: &'a Value, expected: &'static str) -> Result<&'a str
         .ok_or(TreeJsonError::ExpectedString(expected))
 }
 
-fn expect_bool(value: &Value, expected: &'static str) -> Result<bool, TreeJsonError> {
+fn _expect_bool(value: &Value, expected: &'static str) -> Result<bool, TreeJsonError> {
     value.as_bool().ok_or(TreeJsonError::ExpectedBool(expected))
 }
 
@@ -264,21 +264,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tree_json_round_trip() {
+    fn test_tree_json_roundtrip() {
         let mut m = TreeMap::new();
         m.insert("name", Tree::Text("value".into()));
         m.insert_as_list("items", Tree::Text("a".into()));
         m.insert_as_list("items", Tree::Text("b".into()));
 
         let tree = Tree::Node {
-            meta: NodeMeta {
-                name: "Rule".into(),
-                params: ["p"].map(Into::into).into(),
-                flags: [("is_name".into(), true), ("no_memo".into(), false)]
-                    .into_iter()
-                    .collect(),
-            }
-            .into(),
+            typename: "Rule".into(),
             tree: Tree::Map(m.into()).into(),
         };
 

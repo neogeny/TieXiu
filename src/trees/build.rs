@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::map::TreeMap;
-use super::tree::{FlagMap, KeyValue, NodeMeta, Tree};
+use super::tree::{KeyValue, Tree};
 
 impl Tree {
     pub fn text(value: &str) -> Tree {
@@ -35,14 +35,9 @@ impl Tree {
         Self::OverrideAsList(tree.into())
     }
 
-    pub fn node(name: &str, params: &[String], tree: Tree) -> Tree {
-        let pi = NodeMeta {
-            name: name.into(),
-            params: params.iter().map(|p| p.as_str().into()).collect(),
-            flags: FlagMap::new(),
-        };
+    pub fn node(typename: &str, tree: Tree) -> Tree {
         Self::Node {
-            meta: pi.into(),
+            typename: typename.into(),
             tree: tree.into(),
         }
     }

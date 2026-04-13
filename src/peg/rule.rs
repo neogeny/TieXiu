@@ -123,9 +123,13 @@ impl Rule {
         match self.exp.parse(ctx) {
             Ok(Succ(ctx, tree)) => Ok(Succ(
                 ctx,
-                Tree::Node {
-                    meta: self.meta.clone(),
-                    tree: tree.normalized().into(),
+                if self.meta.params.is_empty() {
+                    tree
+                } else {
+                    Tree::Node {
+                        typename: self.meta.params[0].clone(),
+                        tree: tree.normalized().into(),
+                    }
                 },
             )),
             err => err,
