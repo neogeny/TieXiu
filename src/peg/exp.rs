@@ -72,6 +72,15 @@ impl Exp {
         linker.link(self);
     }
 
+    pub fn lookahead_str(&self) -> Box<str> {
+        self.lookahead
+            .iter()
+            .map(|s| &**s) // Deref Box<str> to &str
+            .collect::<Vec<_>>() // Join needs a slice
+            .join(" ")
+            .into_boxed_str()
+    }
+
     // #[track_caller]
     pub fn parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
@@ -167,7 +176,7 @@ impl Exp {
             }
             ExpKind::NegativeLookahead(exp) => {
                 if let Ok(Succ(_, _)) = exp.parse(ctx.clone()) {
-                    Err(ctx.failure(start, ParseError::UnexpectedLookahead))
+                    Err(ctx.failure(start, ParseError::NotExpecting(self.lookahead_str())))
                 } else {
                     Ok(Succ(ctx, Tree::Nil))
                 }
