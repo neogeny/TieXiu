@@ -35,7 +35,7 @@ impl Tree {
             .map_err(|_| TreeJsonError::ExpectedObject("tree JSON document"))?;
         Self::from_serde_json_value(&value)
     }
-    
+
     pub fn to_serde_json_value(&self) -> Value {
         match self {
             Tree::Nil => tagged("Nil", []),
@@ -50,10 +50,13 @@ impl Tree {
             ),
             Tree::Named(keyval) => named_value("Named", keyval),
             Tree::NamedAsList(keyval) => named_value("NamedAsList", keyval),
-            Tree::Override(tree) => tagged("Override", [("tree", tree.as_ref().to_serde_json_value())]),
-            Tree::OverrideAsList(tree) => {
-                tagged("OverrideAsList", [("tree", tree.as_ref().to_serde_json_value())])
+            Tree::Override(tree) => {
+                tagged("Override", [("tree", tree.as_ref().to_serde_json_value())])
             }
+            Tree::OverrideAsList(tree) => tagged(
+                "OverrideAsList",
+                [("tree", tree.as_ref().to_serde_json_value())],
+            ),
             Tree::Map(m) => tagged("Map", [("entries", map_entries_value(m))]),
             Tree::Node { meta, tree } => tagged(
                 "Node",
@@ -64,7 +67,7 @@ impl Tree {
             ),
         }
     }
-    
+
     pub fn from_serde_json_value(value: &Value) -> Result<Self, TreeJsonError> {
         let object = expect_object(value, "tree")?;
         let kind = expect_string(field(object, "type")?, "type")?;

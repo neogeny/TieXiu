@@ -85,7 +85,6 @@ impl TokenList {
         }
     }
 
-
     pub fn to_vec(&self) -> Vec<&str> {
         let mut atoms = Vec::new();
         let mut stack = vec![self];

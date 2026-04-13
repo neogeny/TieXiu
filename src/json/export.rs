@@ -6,14 +6,13 @@
 //! This module serializes Grammar to serde_json::Value,
 //! allowing easy tweaking of the output before final serialization.
 
+use super::error::{JsonError, Result};
 use crate::peg::exp::{Exp, ExpKind};
 use crate::peg::grammar::Grammar;
 use crate::peg::rule::Rule;
 use serde_json::{Map, Value};
-use super::error::{JsonError, Result};
 
-
-pub trait ToJson  {
+pub trait ToJson {
     fn to_serde_value(&self) -> Value;
 
     fn to_json_string(&self) -> Result<String> {
@@ -26,7 +25,7 @@ pub trait ToJson  {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.to_json_string() {
             Ok(json) => write!(f, "{}", json),
-            Err(_) => Err(std::fmt::Error)
+            Err(_) => Err(std::fmt::Error),
         }
     }
 }
@@ -41,14 +40,12 @@ impl ToJson for Rule {
     fn to_serde_value(&self) -> Value {
         Rule::to_serde_value(self)
     }
-
 }
 
 impl ToJson for Exp {
     fn to_serde_value(&self) -> Value {
         Exp::to_serde_value(self)
     }
-
 }
 
 impl Grammar {

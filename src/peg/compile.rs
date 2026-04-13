@@ -11,10 +11,10 @@ pub type CompileResult<T> = Result<T, CompileError>;
 #[derive(Debug, Error, Clone, PartialEq)]
 pub enum CompileError {
     #[error("expected {0} to be a Tree::Node")]
-    ExpectedNode(&'static str),
+    ExpectedNode(String),
 
     #[error("expected {0} to contain a Tree::Map")]
-    ExpectedNodeMap(&'static str),
+    ExpectedMap(String),
 
     #[error("expected {0} to be Tree::Text")]
     ExpectedText(&'static str),
@@ -64,10 +64,16 @@ impl GrammarCompiler {
         expected: &'static str,
     ) -> CompileResult<(&'a str, &'a TreeMap)> {
         let Tree::Node { meta, tree } = tree else {
-            return Err(CompileError::ExpectedNode(expected));
+            return Err(CompileError::ExpectedNode(format!(
+                "'{}': {:?}",
+                expected, tree
+            )));
         };
         let Tree::Map(map) = tree.as_ref() else {
-            return Err(CompileError::ExpectedNodeMap(expected));
+            return Err(CompileError::ExpectedMap(format!(
+                "'{}': {:?}",
+                expected, tree
+            )));
         };
         Ok((meta.name.as_ref(), map.as_ref()))
     }

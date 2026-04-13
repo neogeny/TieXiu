@@ -118,15 +118,14 @@ fn cli_color_strategy() -> clap::ColorChoice {
 }
 
 fn configure_color(color: clap::ColorChoice) -> bool {
-    let use_color = match color {
+    match color {
         clap::ColorChoice::Always => true,
         clap::ColorChoice::Never => false,
         clap::ColorChoice::Auto => {
             std::io::IsTerminal::is_terminal(&std::io::stdout())
                 && std::io::IsTerminal::is_terminal(&std::io::stderr())
         }
-    };
-    use_color
+    }
 }
 
 pub fn pygmentize(content: &str, extension: &str, use_color: bool) {

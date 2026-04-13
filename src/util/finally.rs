@@ -21,5 +21,5 @@ impl<F: FnOnce()> Drop for Finally<F> {
 }
 
 pub fn finally<F: FnOnce()>(f: F) -> Finally<F> {
-    Finally ( Some(f) )
+    Finally(Some(f))
 }

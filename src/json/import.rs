@@ -101,14 +101,16 @@ impl JsonSerializationHelper {
 
     fn get_array(&self, field: &str) -> Result<Vec<JsonSerializationHelper>, JsonError> {
         if let Ok(obj) = self.get_obj()
-            && let Some(arr) = obj.get(field).and_then(|v: &Value| v.as_array()) 
+            && let Some(arr) = obj.get(field).and_then(|v: &Value| v.as_array())
         {
             return Ok(arr
                 .iter()
                 .enumerate()
                 .map(|(i, v)| {
                     let label = if let Some(child_obj) = v.as_object() {
-                        if let Some(class) = child_obj.get("__class__").and_then(|v: &Value| v.as_str()) {
+                        if let Some(class) =
+                            child_obj.get("__class__").and_then(|v: &Value| v.as_str())
+                        {
                             format!("{}[{}]:{}", field, i, class)
                         } else {
                             format!("{}[{}]", field, i)
@@ -279,7 +281,9 @@ impl Exp {
                     .collect();
                 Ok(Exp::choice(exprs?.as_slice().into()))
             }
-            "Option" => Ok(Exp::alt(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
+            "Option" => Ok(Exp::alt(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
             "Named" => Ok(Exp::named(
                 &path.get_string("name")?,
                 Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
@@ -296,18 +300,30 @@ impl Exp {
                 path.opt_str("literal").unwrap_or(""),
                 path.opt_u64("level").unwrap_or(0) as u8,
             )),
-            "Group" => Ok(Exp::group(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
-            "Optional" => Ok(Exp::optional(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
-            "Closure" => Ok(Exp::closure(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
+            "Group" => Ok(Exp::group(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
+            "Optional" => Ok(Exp::optional(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
+            "Closure" => Ok(Exp::closure(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
             "PositiveClosure" => Ok(Exp::positive_closure(Exp::from_serde_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "Lookahead" => Ok(Exp::lookahead(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
+            "Lookahead" => Ok(Exp::lookahead(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
             "NegativeLookahead" => Ok(Exp::negative_lookahead(Exp::from_serde_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "SkipGroup" => Ok(Exp::skip_group(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
-            "SkipTo" => Ok(Exp::skip_to(Exp::from_serde_json_with_path(path.get_nested("exp")?)?)),
+            "SkipGroup" => Ok(Exp::skip_group(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
+            "SkipTo" => Ok(Exp::skip_to(Exp::from_serde_json_with_path(
+                path.get_nested("exp")?,
+            )?)),
             "Override" => Ok(Exp::override_node(Exp::from_serde_json_value(
                 &path.get_nested("exp")?.value,
             )?)),
