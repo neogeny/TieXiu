@@ -50,7 +50,8 @@ pub enum Tree {
 
 impl From<Vec<Tree>> for Tree {
     fn from(v: Vec<Tree>) -> Self {
-        let clean: Vec<Tree> = v.into_iter()
+        let clean: Vec<Tree> = v
+            .into_iter()
             .filter(|item| !matches!(item, Tree::Nil))
             .collect();
         Tree::List(clean.into_boxed_slice())
@@ -59,7 +60,10 @@ impl From<Vec<Tree>> for Tree {
 
 impl<const N: usize> From<[Tree; N]> for Tree {
     fn from(arr: [Tree; N]) -> Self {
-        let clean: Vec<Tree> = arr.into_iter().filter(|item| !matches!(item, Tree::Nil)).collect();
+        let clean: Vec<Tree> = arr
+            .into_iter()
+            .filter(|item| !matches!(item, Tree::Nil))
+            .collect();
         Tree::List(clean.into_boxed_slice())
     }
 }
