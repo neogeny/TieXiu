@@ -10,60 +10,55 @@ description = "A port of the TatSu PEG parser generator to Rust"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/neogeny/tiexiu"
 readme = "README.md"
-exclude = [
-    "pyproject.toml",
-    "__pycache__",
-]
+exclude = ["pyproject.toml", "__pycache__"]
 
-[features]
-bootstrap = ["default"]
-default = ["fancy-regex", "serde", "serde_json", "cli"]
-transient = ["fancy-regex", "serde", "serde_json", "cli"]
-
-fancy-regex = ["dep:fancy-regex"]
-serde = ["dep:serde"]
-serde_json = [
-    "dep:serde",
-    "dep:serde_json",
-    "dep:serde_path_to_error",
-]
-
-cli = [
-    "dep:clap",
-    "dep:syntect",
-    "dep:termcolor",
-    "dep:console",
-]
-
-[dependencies]
-serde = { version = "1.0", features = ["derive"], optional = true }
-serde_path_to_error = { version = "0.1", optional = true }
-serde_json = {
-    version = "1.0.149",
-    optional = true,
-    features = ["preserve_order"],
-}
-
-fancy-regex = { version = "0.17", optional = true }
-indexmap = { version = "2.13" }
-thiserror = "2.0.18"
-
-clap = { version = "4.6", features = ["derive"], optional = true }
-syntect = { version = "5.3.0", optional = true }
-termcolor = { version = "1.4.1", optional = true }
-console = { version = "0.16.3", optional = true }
-
-pyo3 = { version = "0.28", features = ["extension-module"] }
+[lib]
+name = "tiexiu"
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "tiexiu"
 path = "src/main.rs"
 required-features = ["cli"]
 
-[lib]
-name = "tiexiu"
-crate-type = ["cdylib", "rlib"]
+# --- Features ---
+[features]
+bootstrap = ["default"]
+default = ["serde", "serde_json", "cli"]
 
+# Specific feature groupings
+serde = ["dep:serde"]
+serde_json = [
+    "dep:serde",
+    "dep:serde_json",
+    "dep:serde_path_to_error",
+]
+cli = [
+    "dep:clap",
+    "dep:syntect",
+]
+
+# --- Core Library Dependencies ---
+[dependencies]
+indexmap = "2.13"
+thiserror = "2.0.18"
+fancy-regex = "0.17"
+console = "0.16.3"
+termcolor = "1.4.1"
+
+# --- PyO3 Dependencies ---
+pyo3 = { version = "0.28", features = ["extension-module"] }
+
+# --- CLI Dependencies (Optional) ---
+clap = { version = "4.6", features = ["derive"], optional = true }
+syntect = { version = "5.3.0", optional = true }
+
+# --- Serialization (Optional) ---
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0.149", features = ["preserve_order"], optional = true }
+serde_path_to_error = { version = "0.1", optional = true }
+
+# --- Debug & Benchmarking ---
 [dev-dependencies]
 criterion = { version = "4.4.1", package = "codspeed-criterion-compat" }
 
