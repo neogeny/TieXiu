@@ -116,6 +116,14 @@ impl Tree {
         }
     }
 
+    pub fn aslist(self) -> Self {
+        let norm = self.normalized();
+        match &norm {
+            Tree::List(_) | Tree::Closed(_) => norm,
+            _ => Tree::List([norm].into()),
+        }
+    }
+
     pub fn append(self, node: Self) -> Self {
         match (self, node) {
             (Self::Nil, n) => n,
