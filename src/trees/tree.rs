@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::map::TreeMap;
-use crate::peg::rule::NodeMeta;
 use indexmap::IndexMap;
 use std::ops::Deref;
-use std::rc::Rc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValue(pub Box<str>, pub Tree);
@@ -15,8 +13,6 @@ pub fn keyval(name: &str, tree: Tree) -> KeyValue {
 }
 
 pub type FlagMap = IndexMap<Box<str>, bool>;
-
-pub type NodeMetaRef = Rc<NodeMeta>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Tree {

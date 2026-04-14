@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::peg::rule::NodeMeta;
 use crate::trees::{FlagMap, KeyValue, Tree, TreeMap};
 use serde_json::{Map, Value};
 
@@ -144,25 +143,6 @@ fn map_entries_value(m: &TreeMap) -> Value {
     )
 }
 
-fn _node_meta_value(meta: &NodeMeta) -> Value {
-    tagged(
-        "NodeMeta",
-        [
-            ("name", Value::String(meta.name.to_string())),
-            (
-                "params",
-                Value::Array(
-                    meta.params
-                        .iter()
-                        .map(|param| Value::String(param.to_string()))
-                        .collect(),
-                ),
-            ),
-            ("flags", _flag_entries_value(&meta.flags)),
-        ],
-    )
-}
-
 fn _flag_entries_value(flags: &FlagMap) -> Value {
     Value::Array(
         flags
@@ -195,33 +175,6 @@ fn map_from_entries(value: &Value) -> Result<TreeMap, TreeJsonError> {
         m.entries.insert(key.into(), tree);
     }
     Ok(m)
-}
-
-fn _node_meta_from_value(value: &Value) -> Result<NodeMeta, TreeJsonError> {
-    let object = expect_object(value, "meta")?;
-    let name = expect_string(field(object, "name")?, "name")?;
-    let params = expect_array(field(object, "params")?, "params")?
-        .iter()
-        .map(|param| expect_string(param, "param").map(Into::into))
-        .collect::<Result<Vec<Box<str>>, _>>()?;
-    let flags = _flags_from_value(field(object, "flags")?)?;
-
-    Ok(NodeMeta {
-        name: name.into(),
-        params: params.into(),
-        flags,
-    })
-}
-
-fn _flags_from_value(value: &Value) -> Result<FlagMap, TreeJsonError> {
-    let mut flags = FlagMap::new();
-    for entry in expect_array(value, "flags")? {
-        let object = expect_object(entry, "flag")?;
-        let key = expect_string(field(object, "key")?, "key")?;
-        let value = _expect_bool(field(object, "value")?, "value")?;
-        flags.insert(key.into(), value);
-    }
-    Ok(flags)
 }
 
 fn field<'a>(

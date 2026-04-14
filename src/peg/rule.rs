@@ -16,7 +16,6 @@ pub const FLAG_NO_MEMO: &str = "no_memo";
 pub const FLAG_IS_MEMO: &str = "is_memo";
 pub const FLAG_IS_LREC: &str = "is_lrec";
 
-pub type RuleMeta = NodeMeta;
 pub type RuleRef = Rc<Rule>;
 pub type RuleIndex = HashMap<Box<str>, usize>;
 
