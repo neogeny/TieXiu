@@ -19,9 +19,10 @@ pub trait Cursor: Debug {
         self.pos_at(self.mark())
     }
 
-    fn pos_at(&self, offset: usize) -> (usize, usize) {
+    fn pos_at(&self, mut mark: usize) -> (usize, usize) {
+        mark = mark.min(self.textstr().len());
         let text = self.textstr();
-        let head = &text[0..offset];
+        let head = &text[0..mark];
         let line = head.lines().count();
         let col = head.lines().last().map_or(0, |l| l.chars().count());
         (line, col)
@@ -31,9 +32,6 @@ pub trait Cursor: Debug {
     // fn is_name(&self, s: &str) -> bool;
     // fn is_name_char(&self, c: Option<&str>) -> bool;
     //
-    // /// The full source text from the provider.
-    // fn source(&self) -> &'a str;
-    //
     // // Navigation
     // fn goto(&mut self, pos: usize);
     // fn move_by(&mut self, n: i64);
@@ -42,26 +40,4 @@ pub trait Cursor: Debug {
     //
     // // Movement and Peeking
     // fn next(&mut self) -> Option<&'a str>;
-    // fn lookahead(&self) -> &'a str;
-    // fn lookahead_pos(&self) -> &'a str;
-    //
-    // // Tokenization Logic
-    // fn current(&self) -> Option<&'a str>;
-    // fn match_str(&mut self, token: &str) -> Option<&'a str>;
-    // fn match_re(&mut self, pattern: &str) -> Option<&'a str>;
-    //
-    // // Simplified coordinates
-    // fn line_at(&self, pos: Option<usize>) -> usize;
-    //
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn cursor_trait_has_core_methods() {
-        // Compile-time check that Cursor trait exists with required methods
-        // This test ensures the trait compiles correctly
-        use super::Cursor;
-        fn _check_trait<T: Cursor>() {}
-    }
 }
