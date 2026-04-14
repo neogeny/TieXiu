@@ -6,6 +6,7 @@ pub mod error;
 pub mod input;
 pub mod json;
 pub mod peg;
+pub mod python;
 pub mod state;
 pub mod trees;
 pub mod ui;
