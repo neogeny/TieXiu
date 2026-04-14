@@ -224,10 +224,7 @@ impl GrammarCompiler {
             }
             "Override" => Exp::nil(),
             "OverrideList" => Exp::nil(),
-            "Pattern" => {
-                let inner = map_get(tree, "exp", "exp")?;
-                Exp::pattern(&inner.value())
-            }
+            "Pattern" => Exp::pattern(&tree.value()),
             "Patterns" => {
                 let items = tree.get_list("tree");
                 let exps: Vec<Exp> = items
@@ -261,8 +258,11 @@ impl GrammarCompiler {
                 Exp::rule_include(&name)
             }
             "Sequence" => {
-                let items = tree.value_list();
-                let exps: Vec<Exp> = items
+                let tree_inner = tree
+                    .get("tree")
+                    .map(|t| t.value_list())
+                    .unwrap_or_else(|| tree.value_list());
+                let exps: Vec<Exp> = tree_inner
                     .iter()
                     .map(|t| self.parse_exp(t))
                     .collect::<CompileResult<_>>()?;

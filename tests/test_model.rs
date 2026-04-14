@@ -18,7 +18,6 @@ fn _parse_input(grammar: &Grammar, input: &str) -> tiexiu::trees::Tree {
 }
 
 #[test]
-#[ignore = "TODO: BUG - user grammar parses as TatSu bootstrap"]
 fn test_children() {
     let grammar = r#"
         @@grammar::Calc
@@ -33,7 +32,6 @@ fn test_children() {
 }
 
 #[test]
-#[ignore = "TODO: BUG - user grammar parses as TatSu bootstrap"]
 fn test_node_kwargs() {
     let grammar = r#"
         start = 'value' ;

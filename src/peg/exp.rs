@@ -250,7 +250,7 @@ impl Exp {
             ExpKind::Closure(exp) => {
                 let mut res = Vec::new();
                 match Self::repeat(ctx, exp, &mut res) {
-                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res))),
+                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res).closed())),
                     err => err,
                 }
             }
@@ -265,7 +265,7 @@ impl Exp {
                 };
 
                 match Self::repeat(ctx, exp, &mut res) {
-                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res))),
+                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res).closed())),
                     err => err,
                 }
             }
@@ -274,7 +274,7 @@ impl Exp {
 
                 match Self::add_exp(ctx, exp, &mut res) {
                     Ok(new_ctx) => match Self::repeat_with_pre(new_ctx, exp, sep, &mut res, true) {
-                        Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res))),
+                        Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res).closed())),
                         err => err,
                     },
                     Err((_actx, f)) => Err(f),
@@ -292,7 +292,7 @@ impl Exp {
                 };
 
                 match Self::repeat_with_pre(ctx, exp, sep, &mut res, true) {
-                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res))),
+                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res).closed())),
                     err => err,
                 }
             }
@@ -301,7 +301,7 @@ impl Exp {
                 match Self::add_exp(ctx, exp, &mut res) {
                     Ok(new_ctx) => {
                         match Self::repeat_with_pre(new_ctx, exp, sep, &mut res, false) {
-                            Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res))),
+                            Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res).closed())),
                             err => err,
                         }
                     }
@@ -320,7 +320,7 @@ impl Exp {
                 };
 
                 match Self::repeat_with_pre(ctx, exp, sep, &mut res, false) {
-                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res))),
+                    Ok(Succ(new_ctx, _)) => Ok(Succ(new_ctx, Tree::from(res).closed())),
                     err => err,
                 }
             }

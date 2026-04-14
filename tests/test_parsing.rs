@@ -81,7 +81,6 @@ fn test_start() {
 // ============================================================================
 
 #[test]
-#[ignore = "TODO: BUG - user grammar parses as TatSu bootstrap"]
 fn test_skip_whitespace() {
     let grammar = r#"
         statement = 'FOO' subject $ ;
@@ -93,7 +92,6 @@ fn test_skip_whitespace() {
 }
 
 #[test]
-#[ignore = "TODO: BUG - user grammar parses as TatSu bootstrap"]
 fn test_node_parseinfo() {
     let grammar = r#"
         @@grammar::Test
