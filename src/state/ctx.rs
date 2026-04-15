@@ -35,6 +35,9 @@ pub trait Ctx: CtxI + Clone + Debug {
         self.cursor_mut().reset(mark);
     }
 
+    fn at_end(&mut self) -> bool {
+        self.cursor().at_end()
+    }
     fn eof_check(&mut self) -> bool {
         self.next_token();
         self.cursor().at_end()
@@ -135,28 +138,22 @@ pub trait Ctx: CtxI + Clone + Debug {
             };
         }
 
-        if rule.is_left_recursive() {
-            match self.call_recursive(&key, rule) {
-                Ok(Succ(mut ctx, tree)) => {
-                    ctx.memoize(&key, &tree);
-                    ctx.leave();
-                    Ok(Succ(ctx, tree))
-                }
-                Err(nope) => Err(nope),
-            }
+        let doppelganger = self.clone();
+        match if rule.is_left_recursive() {
+            doppelganger.call_recursive(&key, rule)
         } else {
-            match rule.parse(self.clone()) {
-                Ok(Succ(mut ctx, tree)) => {
-                    self.tracer().trace_success(&self);
-                    ctx.memoize(&key, &tree);
-                    ctx.leave();
-                    Ok(Succ(ctx, tree))
-                }
-                Err(nope) => {
-                    self.tracer().trace_failure(&self, &nope.source);
-                    self.memoize(&key, &Tree::Bottom);
-                    Err(nope)
-                }
+            rule.parse(doppelganger)
+        } {
+            Ok(Succ(mut neogenus, tree)) => {
+                neogenus.tracer().trace_success(&neogenus);
+                neogenus.memoize(&key, &tree);
+                neogenus.leave();
+                Ok(Succ(neogenus, tree))
+            }
+            Err(nope) => {
+                self.tracer().trace_failure(&self, &nope.source);
+                self.memoize(&key, &Tree::Bottom);
+                Err(nope)
             }
         }
     }
