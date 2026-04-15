@@ -109,29 +109,33 @@ impl GrammarCompiler {
 
     pub fn compile_grammar(&mut self, tree: &Tree) -> CompileResult<Grammar> {
         let map = parse_node_check(tree, "Grammar")?;
-        eprintln!("GRAMMAR {:?}", map);
 
         let rule_trees = map_get(map, "Grammar", "rules")?.value_list();
-
         let mut rulemap: IndexMap<Box<str>, Rule> = IndexMap::new();
         for rtree in rule_trees {
             let rule = self.compile_rule(&rtree)?;
-            eprintln!("{:?}", &rule);
             rulemap.insert(rule.name.clone(), rule);
         }
 
         let rules: Vec<Rule> = rulemap.into_iter().map(|(_, r)| r).collect();
-        eprintln!("{:?}", rules);
-        let name = map_get_default(map, "name", "grammar");
-        let grammar = Grammar::new(&name, rules.as_slice());
+        let name = map_get_default(map, "name", "__COMPILED__");
+        
+        if let Ok(_directive_tree) = map_get(map, "Grammar", "directives") {
+            unimplemented!();
+        }
+        
+        if let Ok(_keywords_tree) = map_get(map, "Grammar", "keywords") {
+            unimplemented!();
+        }
 
+
+        let grammar = Grammar::new(&name, rules.as_slice());
         Ok(grammar)
     }
 
     pub fn compile_rule(&self, tree: &Tree) -> CompileResult<Rule> {
         let ctx = "Rule";
         let map = parse_node_check(tree, ctx)?;
-        eprintln!("RULE {:?}", map);
         let name = map_get(map, ctx, "name")?.value();
 
         let _flags = FlagMap::new();
@@ -145,7 +149,6 @@ impl GrammarCompiler {
 
     pub fn parse_exp(&self, tree: &Tree) -> CompileResult<Exp> {
         let (typename, tree) = parse_node(tree)?;
-        eprintln!("EXP {} {:?}", typename, tree);
         let exp: Exp = match &*typename {
             "Alert" => Exp::alert(&map_get(tree, "exp", "msg")?.value(), 0),
             "BasedRule" => Exp::nil(),
