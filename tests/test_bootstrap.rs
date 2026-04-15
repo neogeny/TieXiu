@@ -99,7 +99,6 @@ mod parse_grammar {
     use super::*;
 
     #[test]
-    #[ignore]
     fn simple_grammar() {
         let tree = tiexiu::api::parse_grammar(
             r#"
@@ -114,7 +113,6 @@ mod parse_grammar {
     }
 
     #[test]
-    #[ignore]
     fn multiple_rules() {
         let boot = boot_grammar();
         let grammar = r#"
@@ -130,7 +128,6 @@ mod parse_grammar {
     }
 
     #[test]
-    #[ignore]
     fn directive() {
         let boot = boot_grammar();
         let grammar = r#"
@@ -152,7 +149,6 @@ mod parse_expressions {
     use super::*;
 
     #[test]
-    #[ignore]
     fn token() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: T start: 'foo' 'bar'"#;
@@ -162,7 +158,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn pattern() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: P start: /\d+/"#;
@@ -172,7 +167,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn sequence() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: S start: 'a' 'b' 'c'"#;
@@ -182,7 +176,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn choice() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: C start: 'a' | 'b' | 'c'"#;
@@ -192,7 +185,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn optional() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: O start: 'a' 'b'? 'c'"#;
@@ -202,7 +194,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn closure() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: Cl start: 'a'*"#;
@@ -212,7 +203,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn positive_closure() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: PC start: 'a'+"#;
@@ -222,7 +212,6 @@ mod parse_expressions {
     }
 
     #[test]
-    #[ignore]
     fn group() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: G start: ('a' 'b')*"#;
@@ -240,7 +229,6 @@ mod parse_constraints {
     use super::*;
 
     #[test]
-    #[ignore]
     fn lookahead() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: L start: &'a' 'a'"#;
@@ -250,7 +238,6 @@ mod parse_constraints {
     }
 
     #[test]
-    #[ignore]
     fn negative_lookahead() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: NL start: !'b' 'a'"#;
@@ -260,7 +247,6 @@ mod parse_constraints {
     }
 
     #[test]
-    #[ignore]
     fn cut() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: Cu start: 'a' ~ 'b'"#;
@@ -278,7 +264,6 @@ mod parse_naming {
     use super::*;
 
     #[test]
-    #[ignore]
     fn named() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: N start: name='a'"#;
@@ -289,7 +274,6 @@ mod parse_naming {
     }
 
     #[test]
-    #[ignore]
     fn rule_call() {
         let boot = boot_grammar();
         let grammar = r#"
@@ -303,7 +287,6 @@ mod parse_naming {
     }
 
     #[test]
-    #[ignore]
     fn rule_include() {
         let boot = boot_grammar();
         let grammar = r#"
@@ -317,7 +300,6 @@ mod parse_naming {
     }
 
     #[test]
-    #[ignore]
     fn rule_with_params() {
         let boot = boot_grammar();
         let grammar = r#"
@@ -339,7 +321,6 @@ mod parse_special {
     use super::*;
 
     #[test]
-    #[ignore]
     fn void() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: V start: 'a' () 'b'"#;
@@ -349,7 +330,6 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn eof() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: E start: 'a' $"#;
@@ -369,7 +349,6 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn constant() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: Cst start: `constant`"#;
@@ -379,7 +358,6 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn join() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: J start: ','%{'a'}*"#;
@@ -389,7 +367,6 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn gather() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: Gt start: ','.{'a'}*"#;
@@ -399,7 +376,6 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn skip_group() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: Sk start: (?: 'a' 'b')*"#;
@@ -409,7 +385,6 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn alert() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: Al start: ^^`danger`"#;
@@ -427,7 +402,6 @@ mod integration {
     use super::*;
 
     #[test]
-    #[ignore]
     fn complex_grammar() {
         let boot = boot_grammar();
         let grammar = r#"
@@ -478,7 +452,6 @@ mod compilation {
     use fixtures::all_rules_linked;
 
     #[test]
-    #[ignore]
     fn simple_grammar_links() {
         let grammar = compile(
             r#"
@@ -496,7 +469,6 @@ mod compilation {
     }
 
     #[test]
-    #[ignore]
     fn compiled_grammar_parses_input() {
         let grammar = compile(
             r#"
@@ -520,7 +492,6 @@ mod round_trips {
     use std::hash::{Hash, Hasher};
 
     #[test]
-    #[ignore]
     fn parse_round_trip() {
         let grammar_text = r#"
             @@grammar :: RoundTrip

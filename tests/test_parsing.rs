@@ -100,7 +100,6 @@ fn test_node_parseinfo() {
 }
 
 #[test]
-#[ignore]
 fn test_parseinfo_directive() {
     let grammar = r#"
         @@parseinfo :: True
@@ -111,7 +110,6 @@ fn test_parseinfo_directive() {
 }
 
 #[test]
-#[ignore = "TODO: BUG - user grammar parses as TatSu bootstrap"]
 fn test_parseinfo_false_directive() {
     let grammar = r#"
         @@parseinfo :: False
@@ -122,7 +120,6 @@ fn test_parseinfo_false_directive() {
 }
 
 #[test]
-#[ignore = "TODO: evaluate - cut scope requires full support"]
 fn test_cut_scope() {
     let grammar = r#"
         start =

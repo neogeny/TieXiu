@@ -62,7 +62,6 @@ pub fn check_exp_for_unlinked(exp: &Exp, path: &str, grammar: &Grammar) {
 }
 
 #[test]
-#[ignore]
 fn test_linker_debug() {
     let boot = tiexiu::json::boot::boot_grammar().expect("Failed to load boot grammar");
 

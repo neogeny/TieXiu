@@ -5,8 +5,8 @@
 
 use tiexiu::input::StrCursor;
 use tiexiu::peg::Grammar;
-use tiexiu::state::CtxI;
 use tiexiu::state::corectx::CoreCtx;
+use tiexiu::state::CtxI;
 
 fn compile(grammar_text: &str) -> Grammar {
     let tree = tiexiu::parse_grammar(grammar_text, &[]).expect("Failed to parse grammar");
@@ -42,7 +42,6 @@ mod basic_grammar {
     }
 
     #[test]
-    #[ignore]
     fn multiple_rules() {
         let grammar = r#"
             @@grammar :: Test
@@ -57,7 +56,6 @@ mod basic_grammar {
     }
 
     #[test]
-    #[ignore]
     fn rule_references() {
         let grammar = r#"
             @@grammar :: Test
@@ -72,7 +70,6 @@ mod basic_grammar {
     }
 
     #[test]
-    #[ignore]
     fn empty_input() {
         let grammar = r#"
             @@grammar :: Test
@@ -92,7 +89,6 @@ mod directives {
     use super::*;
 
     #[test]
-    #[ignore]
     fn grammar_directive() {
         let grammar = r#"
             @@grammar :: MyGrammar
@@ -103,7 +99,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn whitespace_directive() {
         let grammar = r#"
             @@whitespace :: /[\t ]+/
@@ -116,7 +111,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn whitespace_none_directive() {
         let grammar = r#"
             @@whitespace :: None
@@ -130,7 +124,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn default_whitespace() {
         let grammar = r#"
             start: 'a' 'b'
@@ -142,7 +135,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn left_recursion_directive() {
         let grammar = r#"
             @@left_recursion :: False
@@ -154,7 +146,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn parseinfo_directive() {
         let grammar = r#"
             @@parseinfo :: True
@@ -168,7 +159,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn nameguard_directive() {
         let grammar = r#"
             @@nameguard :: False
@@ -180,7 +170,6 @@ mod directives {
     }
 
     #[test]
-    #[ignore]
     fn comments_directive() {
         let grammar = r#"
             @@comments :: /#[^\n]*/
@@ -200,7 +189,6 @@ mod patterns {
     use super::*;
 
     #[test]
-    #[ignore]
     fn simple_pattern() {
         let grammar = r#"
             @@grammar :: Test
@@ -212,7 +200,6 @@ mod patterns {
     }
 
     #[test]
-    #[ignore]
     fn pattern_with_letters() {
         let grammar = r#"
             @@grammar :: Test
@@ -224,7 +211,6 @@ mod patterns {
     }
 
     #[test]
-    #[ignore]
     fn pattern_with_anchors() {
         let grammar = r#"
             @@grammar :: Test
@@ -236,7 +222,6 @@ mod patterns {
     }
 
     #[test]
-    #[ignore]
     fn pattern_case_insensitive() {
         let grammar = r#"
             @@ignorecase :: True
@@ -248,7 +233,6 @@ mod patterns {
     }
 
     #[test]
-    #[ignore]
     fn regex_character_classes() {
         let grammar = r#"
             start: /[A-Za-z_]\w*/
@@ -267,7 +251,6 @@ mod tokens_and_sequences {
     use super::*;
 
     #[test]
-    #[ignore]
     fn token_sequence() {
         let grammar = r#"
             start: 'hello' 'world'
@@ -279,7 +262,6 @@ mod tokens_and_sequences {
     }
 
     #[test]
-    #[ignore]
     fn optional_token() {
         let grammar = r#"
             start: 'a' 'b'?
@@ -296,7 +278,6 @@ mod tokens_and_sequences {
     }
 
     #[test]
-    #[ignore]
     fn closure_tokens() {
         let grammar = r#"
             start: 'a'*
@@ -307,7 +288,6 @@ mod tokens_and_sequences {
     }
 
     #[test]
-    #[ignore]
     fn positive_closure() {
         let grammar = r#"
             start: 'a'+
@@ -320,7 +300,6 @@ mod tokens_and_sequences {
     }
 
     #[test]
-    #[ignore]
     fn choice_alternatives() {
         let grammar = r#"
             start: 'a' | 'b' | 'c'
@@ -350,7 +329,6 @@ mod naming {
     use super::*;
 
     #[test]
-    #[ignore]
     fn named_capture() {
         let grammar = r#"
             start: name='hello'
@@ -362,7 +340,6 @@ mod naming {
     }
 
     #[test]
-    #[ignore]
     fn named_list() {
         let grammar = r#"
             start: names+:'a'
@@ -374,7 +351,6 @@ mod naming {
     }
 
     #[test]
-    #[ignore]
     fn override_singleton() {
         let grammar = r#"
             start: ='hello'
@@ -385,7 +361,6 @@ mod naming {
     }
 
     #[test]
-    #[ignore]
     fn override_list() {
         let grammar = r#"
             start: @+:'a'
@@ -397,7 +372,6 @@ mod naming {
     }
 
     #[test]
-    #[ignore]
     fn rule_include() {
         let grammar = r#"
             start: >base
@@ -417,7 +391,6 @@ mod constraints {
     use super::*;
 
     #[test]
-    #[ignore]
     fn positive_lookahead() {
         let grammar = r#"
             start: &'a' 'a'
@@ -428,7 +401,6 @@ mod constraints {
     }
 
     #[test]
-    #[ignore]
     fn negative_lookahead() {
         let grammar = r#"
             start: !'b' 'a'
@@ -439,7 +411,6 @@ mod constraints {
     }
 
     #[test]
-    #[ignore]
     fn cut() {
         let grammar = r#"
             start: 'a' ~ 'b'
@@ -458,7 +429,6 @@ mod special_forms {
     use super::*;
 
     #[test]
-    #[ignore]
     fn group() {
         let grammar = r#"
             start: ('a' 'b')*
@@ -469,7 +439,6 @@ mod special_forms {
     }
 
     #[test]
-    #[ignore]
     fn skip_group() {
         let grammar = r#"
             start: (?: 'a' 'b')*
@@ -480,7 +449,6 @@ mod special_forms {
     }
 
     #[test]
-    #[ignore]
     fn void() {
         let grammar = r#"
             start: 'a' () 'b'
@@ -491,7 +459,6 @@ mod special_forms {
     }
 
     #[test]
-    #[ignore]
     fn eof() {
         let grammar = r#"
             start: 'a' $
@@ -502,7 +469,6 @@ mod special_forms {
     }
 
     #[test]
-    #[ignore]
     fn dot() {
         let grammar = r#"
             start: /./ 'b'
@@ -513,7 +479,6 @@ mod special_forms {
     }
 
     #[test]
-    #[ignore]
     fn constant() {
         let grammar = r#"
             start: `constant`
@@ -532,7 +497,6 @@ mod complex_grammars {
     use super::*;
 
     #[test]
-    #[ignore]
     fn calculator_grammar() {
         let grammar = r#"
             @@grammar :: Calc
@@ -564,7 +528,6 @@ mod complex_grammars {
     }
 
     #[test]
-    #[ignore]
     fn json_like_grammar() {
         let grammar = r#"
             @@grammar :: MiniJSON
@@ -600,7 +563,6 @@ mod complex_grammars {
     }
 
     #[test]
-    #[ignore]
     fn lisp_like_grammar() {
         let grammar = r#"
             @@grammar :: Lisp
@@ -634,7 +596,6 @@ mod grammar_structure {
     use super::*;
 
     #[test]
-    #[ignore]
     fn grammar_has_rules() {
         let grammar = r#"
             start: 'a'
@@ -649,7 +610,6 @@ mod grammar_structure {
     }
 
     #[test]
-    #[ignore]
     fn first_rule_is_default() {
         let grammar = r#"
             start: 'a'
@@ -661,7 +621,6 @@ mod grammar_structure {
     }
 
     #[test]
-    #[ignore]
     fn pretty_print() {
         let grammar = r#"
             @@grammar :: Test
@@ -681,7 +640,6 @@ mod round_trips {
     use super::*;
 
     #[test]
-    #[ignore]
     fn grammar_to_json_round_trip() {
         let grammar_text = r#"
             @@grammar :: Test
@@ -700,7 +658,6 @@ mod round_trips {
     }
 
     #[test]
-    #[ignore]
     fn pretty_print_round_trip() {
         let grammar_text = r#"
             @@grammar :: Test
@@ -727,7 +684,6 @@ mod input_positions {
     use super::*;
 
     #[test]
-    #[ignore]
     fn basic_position_tracking() {
         let grammar = r#"
             start: 'hello'
@@ -750,7 +706,6 @@ mod input_positions {
     }
 
     #[test]
-    #[ignore]
     fn multiline_input() {
         let grammar = r#"
             start: 'hello' 'world'
@@ -770,7 +725,6 @@ mod error_handling {
     use super::*;
 
     #[test]
-    #[ignore]
     fn invalid_input_fails() {
         let grammar = r#"
             start: 'a'
@@ -785,7 +739,6 @@ mod error_handling {
     }
 
     #[test]
-    #[ignore]
     fn partial_match_fails() {
         let grammar = r#"
             start: 'a' 'b'
@@ -800,7 +753,6 @@ mod error_handling {
     }
 
     #[test]
-    #[ignore]
     fn empty_input_fails_when_required() {
         let grammar = r#"
             start: 'a'
@@ -823,7 +775,6 @@ mod pretty_print {
     use super::*;
 
     #[test]
-    #[ignore]
     fn pretty_contains_grammar_name() {
         let grammar = r#"
             @@grammar :: MyTest
@@ -835,7 +786,6 @@ mod pretty_print {
     }
 
     #[test]
-    #[ignore]
     fn pretty_contains_rules() {
         let grammar = r#"
             @@grammar :: Test
