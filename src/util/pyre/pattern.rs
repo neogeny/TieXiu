@@ -8,6 +8,20 @@
 
 use crate::util::pyre::fancy::Pattern;
 
+pub fn truncate_pattern(pattern: &str, max: usize) -> Box<str> {
+    if pattern.len() <= max {
+        return pattern.into();
+    }
+
+    let end = pattern
+        .char_indices()
+        .map(|(i, _)| i)
+        .nth(max)
+        .unwrap_or(pattern.len());
+
+    format!("{}...", &pattern[..end]).into_boxed_str()
+}
+
 pub fn regexpp(regex: impl AsRef<str>) -> Result<String, String> {
     let pattern_text = regex.as_ref();
 
