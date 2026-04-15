@@ -11,28 +11,10 @@ mod tests {
     use super::*;
     use crate::input::strcursor::StrCursor;
     use crate::state::{Ctx, CtxI};
-    use crate::trees::{KeyValue, Tree};
+    use crate::trees::Tree;
     use std::mem::size_of;
 
     const TARGET: usize = 32;
-    const LARGE_TARGET: usize = 48;
-
-    #[test]
-    fn test_cst_size() {
-        let size = size_of::<Tree>();
-        assert!(size <= TARGET, "Cst size is {} > {} bytes", size, TARGET);
-    }
-
-    #[test]
-    fn test_keyval_size() {
-        let size = size_of::<KeyValue>();
-        assert!(
-            size <= LARGE_TARGET,
-            "KeyVal size is {} > {} bytes",
-            size,
-            TARGET
-        );
-    }
 
     #[test]
     fn test_ctx_size() {

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::error::ParseError;
+use crate::input::memento::Memento;
 use crate::state::{Ctx, CtxI};
 use crate::trees::Tree;
 pub use crate::util::tokenlist::TokenList;
@@ -17,6 +18,7 @@ pub struct DisasterReport {
     pub la: Box<str>,
     pub callstack: TokenList,
     pub location: &'static Location<'static>,
+    pub memento: Memento,
 }
 
 #[derive(Debug)]
@@ -61,6 +63,12 @@ impl Nope {
             la: ctx.cursor().lookahead(start).into(),
             callstack: ctx.callstack(),
             location: Location::caller(),
+            memento: Memento::new(
+                ctx.cursor().textstr(),
+                start,
+                ctx.mark(),
+                error.to_string().as_str(),
+            ),
         };
         Self {
             start,

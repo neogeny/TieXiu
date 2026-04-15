@@ -53,14 +53,14 @@ fn to_python(tree: &Tree, py: Python<'_>) -> PyResult<Py<PyAny>> {
         }
         Tree::Nil => Ok(py.None()),
         Tree::Named(kv) => {
-            let KeyValue(name, tree) = &**kv;
+            let KeyValue(name, tree) = kv;
             let key: String = (*name).clone().into();
             let dict = PyDict::new(py);
             dict.set_item(&key, to_python(tree, py)?)?;
             Ok(dict.into())
         }
         Tree::NamedAsList(kv) => {
-            let KeyValue(name, tree) = &**kv;
+            let KeyValue(name, tree) = kv;
             let key: String = (*name).clone().into();
             let dict = PyDict::new(py);
             dict.set_item(&key, to_python(tree, py)?)?;

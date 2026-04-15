@@ -50,7 +50,7 @@ pub trait Tracer: Debug {
             Event::NoMatch => style("≢").red(),
         }
         .to_string();
-        let lookahead = ctx.cursor().lookahead().replace(" ", "·");
+        let lookahead = ctx.cursor().lookahead(ctx.mark()).replace(" ", "·");
         let callstack = style(
             ctx.callstack()
                 .to_vec()
@@ -59,7 +59,7 @@ pub trait Tracer: Debug {
         .white()
         .bold();
         let (line, col) = ctx.cursor().pos();
-        let pos = style(format!("[{line}][{col}]→")).black().bright();
+        let pos = style(format!("[{line}:{col}]→")).black().bright();
         let source = "";
 
         let msg = format!("{event_symbol}{msg} {callstack}{source}\n{pos}{lookahead}");

@@ -1,11 +1,11 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+pub use super::ctx::{Ctx, CtxI};
+use super::memo::{Key, Memo, MemoCache};
+use super::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
 use crate::input::Cursor;
 use crate::peg::parser::TokenList;
-use crate::state::memo::{Key, Memo, MemoCache};
-use crate::state::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
-pub use crate::state::{Ctx, CtxI};
 use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
@@ -102,6 +102,11 @@ where
     fn callstack(&self) -> TokenList {
         self.state.callstack.clone()
     }
+
+    #[inline]
+    fn cut_seen(&self) -> bool {
+        self.state.cutseen
+    }
 }
 
 impl<'c, U> Ctx for CoreCtx<'c, U>
@@ -149,11 +154,6 @@ where
         self.with_heavy_mut(|heavy| {
             heavy.memos.memoize(key, tree, mark);
         });
-    }
-
-    #[inline]
-    fn cut_seen(&self) -> bool {
-        self.state.cutseen
     }
 
     fn setcut(&mut self) {

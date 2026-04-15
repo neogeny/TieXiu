@@ -105,18 +105,15 @@ impl Exp {
                 },
             },
             ExpKind::Cut => {
-                // TODO: self.tracer.trace_cut(self.cursor)
                 ctx.setcut();
                 Ok(Succ(ctx, Tree::Nil))
             }
             ExpKind::Void => Ok(Succ(ctx, Tree::Nil)),
             ExpKind::Fail => Err(ctx.failure(start, ParseError::Fail)),
             ExpKind::Dot => {
-                if ctx.next().is_some() {
-                    // TODO: self.tracer.trace_match(self.cursor, c)
-                    Ok(Succ(ctx, Tree::Nil))
+                if let Some(c) = ctx.next() {
+                    Ok(Succ(ctx, Tree::text(c.to_string().as_str())))
                 } else {
-                    // TODO: self.tracer.trace_match(self.cursor, c, failed=True)
                     Err(ctx.failure(start, ParseError::NoMoreInput))
                 }
             }
@@ -130,20 +127,16 @@ impl Exp {
 
             ExpKind::Token(token) => {
                 if ctx.match_token(token) {
-                    // TODO: self.tracer.trace_match(self.cursor, token)
                     Ok(Succ(ctx, Tree::Text(token.deref().into())))
                 } else {
-                    // TODO: self.tracer.trace_match(self.cursor, token, failed=True)
                     Err(ctx.failure(start, ParseError::ExpectedToken(token.deref().into())))
                 }
             }
             ExpKind::Pattern(pattern) => {
                 if let Some(matched) = ctx.match_pattern(pattern) {
-                    // TODO: self.tracer.trace_match(self.cursor, token, pattern)
                     Ok(Succ(ctx, Tree::Text(matched.into())))
                 } else {
-                    // TODO: self.tracer.trace_match(self.cursor, '', pattern, failed=True)
-                    Err(ctx.failure(start, ParseError::ExpectedPattern(pattern.deref().into())))
+                    Err(ctx.failure(start, ParseError::ExpectedPattern(pattern.to_string())))
                 }
             }
             ExpKind::Constant(literal) => Ok(Succ(ctx, Tree::Text(literal.deref().into()))),
@@ -220,7 +213,7 @@ impl Exp {
                                 return Err(f);
                             }
 
-                            if furthest.as_ref().is_none_or(|prev| f.mark >= prev.mark) {
+                            if furthest.as_ref().is_none_or(|prev| f.start >= prev.start) {
                                 furthest = Some(f);
                             }
                         }
@@ -333,6 +326,7 @@ mod tests {
     use super::*;
     use crate::input::StrCursor;
     use crate::peg::Rule;
+    use crate::state::prelude::*;
     use crate::state::strctx::StrCtx;
 
     const TARGET: usize = 48;

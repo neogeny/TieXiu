@@ -4,10 +4,14 @@
 pub mod corectx;
 pub mod ctx;
 pub mod error;
-mod memo;
+pub mod memo;
 pub mod strctx;
 pub mod trace;
 
 pub use ctx::*;
 pub use error::Error;
 pub use strctx::StrCtx;
+
+pub mod prelude {
+    pub use super::ctx::*;
+}

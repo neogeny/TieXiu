@@ -17,6 +17,7 @@ pub trait CtxI {
     fn mark(&self) -> usize {
         self.cursor().mark()
     }
+    fn cut_seen(&self) -> bool;
 }
 
 pub trait Ctx: CtxI + Clone + Debug {
@@ -25,15 +26,9 @@ pub trait Ctx: CtxI + Clone + Debug {
     fn leave(&mut self);
     fn tracer(&self) -> &dyn Tracer;
 
-    // #[track_caller]
+    #[track_caller]
     fn failure(&self, start: usize, source: ParseError) -> Nope {
-        Nope::new(
-            start,
-            self.mark(),
-            self.cut_seen(),
-            source,
-            self.callstack(),
-        )
+        Nope::new(start, self, source)
     }
 
     fn reset(&mut self, mark: usize) {
@@ -41,6 +36,7 @@ pub trait Ctx: CtxI + Clone + Debug {
     }
 
     fn eof_check(&mut self) -> bool {
+        self.next_token();
         self.cursor().at_end()
     }
 
@@ -56,10 +52,11 @@ pub trait Ctx: CtxI + Clone + Debug {
 
     fn match_token(&mut self, token: &str) -> bool {
         // WARNING: this may belong in Cursor, but the Ctx chain holds the regex caching
-        let escaped = escape(token);
         self.next_token();
         let result = {
-            if *escaped == *token {
+            let wordlike = token.chars().all(|c| c.is_alphanumeric());
+            let escaped = escape(token);
+            if wordlike && *escaped == *token {
                 let bound = format!(r"{}\b", token);
                 self.match_pattern(bound.as_str()).is_some()
             } else {
@@ -99,7 +96,6 @@ pub trait Ctx: CtxI + Clone + Debug {
 
     fn memoize(&mut self, key: &Key, tree: &Tree);
 
-    fn cut_seen(&self) -> bool;
     fn setcut(&mut self);
     fn uncut(&mut self);
 
@@ -123,16 +119,17 @@ pub trait Ctx: CtxI + Clone + Debug {
 
         let key = self.key(name);
         if let Some(memo) = self.memo(&key) {
-            self.leave();
             return match memo.tree {
                 Tree::Bottom => {
                     let err = ParseError::FailedParse(name.into());
                     self.tracer().trace_failure(&self, &err);
+                    self.leave();
                     Err(self.failure(start, err))
                 }
                 _ => {
                     self.reset(memo.mark);
                     self.tracer().trace_success(&self);
+                    self.leave();
                     Ok(Succ(self, memo.tree))
                 }
             };

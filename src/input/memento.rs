@@ -2,28 +2,30 @@ use console::style;
 use std::fmt;
 
 pub struct Memento {
-    /// Absolute line number and content of captured lines, frozen in a boxed slice.
+    /// The specific error message (e.g., "expected semicolon")
+    msg: Box<str>,
+    /// Absolute line number and content of captured lines
     window: Box<[(usize, Box<str>)]>,
     /// (Absolute Line, Absolute Column) - 1-indexed
     abs_start: (usize, usize),
     /// (Absolute Line, Absolute Column) - 1-indexed
     abs_mark: (usize, usize),
-    /// The index within the `window` slice where the error starts and ends.
-    _rel_start_idx: usize,
+    /// Indices within the `window` slice for annotation
+    rel_start_idx: usize,
     rel_mark_idx: usize,
 }
 
 impl Memento {
-    pub fn new(text: &str, start: usize, mark: usize) -> Self {
-        // 1. Get absolute positions using platform-independent logic
+    pub fn new(text: &str, start: usize, mark: usize, msg: &str) -> Self {
+        // 1. Get absolute positions (1-indexed)
         let abs_start = Self::pos_at(text, start);
         let abs_mark = Self::pos_at(text, mark);
 
-        // 2. Determine the boundaries for our context window
+        // 2. Define window boundaries (4 lines before the mark line)
         let mark_line_idx = abs_mark.0.saturating_sub(1);
         let start_line_idx = mark_line_idx.saturating_sub(4);
 
-        // 3. Capture the lines into a Vec first to handle dynamic growth
+        // 3. Capture lines into the boxed window
         let window_vec: Vec<(usize, Box<str>)> = text
             .lines()
             .enumerate()
@@ -32,21 +34,21 @@ impl Memento {
             .map(|(i, line)| (i + 1, Box::from(line)))
             .collect();
 
-        // 4. Calculate relative indices for highlighting within the window
-        // These tell us which element in our Boxed slice to annotate
+        // 4. Map absolute positions to window-relative indices
         let rel_start_idx = abs_start.0.saturating_sub(start_line_idx + 1);
         let rel_mark_idx = abs_mark.0.saturating_sub(start_line_idx + 1);
 
         Self {
-            window: window_vec.into_boxed_slice(), // Freeze into the final storage
+            msg: Box::from(msg),
+            window: window_vec.into_boxed_slice(),
             abs_start,
             abs_mark,
-            _rel_start_idx: rel_start_idx,
+            rel_start_idx,
             rel_mark_idx,
         }
     }
 
-    /// Retrieve 1-indexed line and column positions
+    /// Platform-independent 1-indexed position retrieval
     fn pos_at(text: &str, mut mark: usize) -> (usize, usize) {
         mark = mark.min(text.len());
         let head = &text[0..mark];
@@ -60,15 +62,22 @@ impl Memento {
         let blue_pipe = style("|").blue().bold();
         let arrow = style("-->").blue().bold();
 
-        // Header: error: description
-        writeln!(f, "{}: syntax error detected", err_label)?;
+        // 1. Main Error Line: error: <msg>
+        writeln!(f, "\n{}: {}", err_label, style(&self.msg).bold())?;
 
-        // Location: --> input:line:col
-        writeln!(f, "  {} :{}:{}", arrow, self.abs_start.0, self.abs_start.1)?;
-        writeln!(f,1, "   {}", blue_pipe)?;
+        let filepath = "input";
+        // 2. Location Line: --> input:line:col
+        writeln!(
+            f,
+            "  {} {}:{}:{}",
+            arrow, filepath, self.abs_start.0, self.abs_start.1
+        )?;
 
+        // 3. Leading Pipe
+        writeln!(f, "   {}", blue_pipe)?;
+
+        // 4. Code Window
         for (idx, (num, content)) in self.window.iter().enumerate() {
-            // Print the line number and code content
             writeln!(
                 f,
                 "{:>2} {} {}",
@@ -77,10 +86,17 @@ impl Memento {
                 content
             )?;
 
-            // If this line is the "mark" point, draw the caret
+            // If this is the 'mark' line, render the caret and the specific message
             if idx == self.rel_mark_idx {
                 let padding = " ".repeat(self.abs_mark.1.saturating_sub(1));
-                writeln!(f, "   {} {}{}", blue_pipe, padding, style("^").red().bold())?;
+                writeln!(
+                    f,
+                    "   {} {}{} {}",
+                    blue_pipe,
+                    padding,
+                    style("^").red().bold(),
+                    style(&self.msg).red()
+                )?;
             }
         }
 
