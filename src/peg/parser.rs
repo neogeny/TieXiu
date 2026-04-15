@@ -11,14 +11,19 @@ use std::panic::Location;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Succ<C: Ctx>(pub C, pub Tree);
 
-#[derive(Debug, Clone)]
-pub struct Nope {
+#[derive(Debug)]
+pub struct FailureContext {
     pub start: usize,
+    pub callstack: TokenList,
+    pub location: &'static Location<'static>,
+}
+
+#[derive(Debug)]
+pub struct Nope {
     pub mark: usize, // The position where the disaster occurred
     pub cutseen: bool,
-    pub callstack: TokenList,
     pub source: Box<ParseError>,
-    pub location: &'static Location<'static>,
+    pub context: Box<FailureContext>,
 }
 
 pub type ParseResult<C> = Result<Succ<C>, Nope>;
@@ -30,7 +35,11 @@ pub trait Parser<C: Ctx>: Debug {
 impl std::fmt::Display for Nope {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Use the three-liner style you prefer
-        write!(f, "{} at {}: {}", self.source, self.mark, self.callstack)
+        write!(
+            f,
+            "{} at {}: {}",
+            self.source, self.mark, self.context.callstack,
+        )
     }
 }
 
@@ -45,13 +54,16 @@ impl std::error::Error for Nope {
 impl Nope {
     #[track_caller]
     pub fn new(start: usize, mark: usize, cut: bool, error: ParseError, stack: TokenList) -> Self {
-        Self {
+        let context = FailureContext {
             start,
+            callstack: stack,
+            location: Location::caller(),
+        };
+        Self {
             mark,
             cutseen: cut,
             source: error.into(),
-            callstack: stack,
-            location: Location::caller(),
+            context: context.into(),
         }
     }
 
