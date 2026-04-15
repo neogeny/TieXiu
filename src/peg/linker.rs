@@ -75,7 +75,7 @@ impl Grammar {
         let len = self.rules.len();
         let mut all_exps: Vec<*mut Exp> = Vec::with_capacity(len);
 
-        for rule_ref in self.rules.iter_mut() {
+        for rule_ref in self.rules.values_mut() {
             let rule = Rc::make_mut(rule_ref);
             all_exps.push(&mut rule.exp as *mut Exp);
         }
