@@ -108,10 +108,6 @@ impl<'a> Cursor for StrCursor<'a> {
         self.text
     }
 
-    fn lookahead(&self) -> &str {
-        &self.text[self.offset..]
-    }
-
     fn at_end(&self) -> bool {
         self.offset >= self.text.len() || self.text[self.offset..].trim().is_empty()
     }
