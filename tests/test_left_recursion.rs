@@ -4,7 +4,6 @@
 //! Tests for left recursion - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap, left recursion not implemented"]
 fn test_direct_left_recursion() {
     let grammar = r#"
         start = expr ;

@@ -5,8 +5,8 @@
 
 use tiexiu::input::StrCursor;
 use tiexiu::peg::Grammar;
-use tiexiu::state::corectx::CoreCtx;
 use tiexiu::state::CtxI;
+use tiexiu::state::corectx::CoreCtx;
 
 fn compile(grammar_text: &str) -> Grammar {
     let tree = tiexiu::parse_grammar(grammar_text, &[]).expect("Failed to parse grammar");

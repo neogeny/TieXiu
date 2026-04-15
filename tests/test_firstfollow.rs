@@ -4,7 +4,6 @@
 //! Tests for first/follow - requires grammar internals
 
 #[test]
-#[ignore = "TODO: requires grammar internals not exposed"]
 fn test_firstfollow() {
     unimplemented!("firstfollow tests require rule internals");
 }

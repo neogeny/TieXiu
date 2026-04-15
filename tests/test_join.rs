@@ -4,7 +4,6 @@
 //! Tests for join - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap instead of user grammar"]
 fn test_positive_join() {
     let grammar = r#"
         start = ','%{'x' 'y'}+ ;

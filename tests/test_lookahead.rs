@@ -4,7 +4,6 @@
 //! Tests for lookahead - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap instead of user grammar"]
 fn test_skip_to() {
     let grammar = r#"
         start = 'x' ab $ ;

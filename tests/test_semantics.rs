@@ -4,7 +4,6 @@
 //! Tests for semantics - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap instead of user grammar"]
 fn test_semantics_not_class() {
     let grammar = r#"
         start::sum = {number}+ $ ;

@@ -4,7 +4,6 @@
 //! Misc tests
 
 #[test]
-#[ignore = "TODO: compile check only"]
 fn test_mapping() {
     use std::collections::HashMap;
     fn _check_mapping<V>(_: &HashMap<String, V>) {}

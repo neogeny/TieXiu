@@ -4,7 +4,6 @@
 //! Tests for pattern - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap instead of user grammar"]
 fn test_patterns_with_newlines() {
     let grammar = r#"
         @@whitespace :: /[ \t]/

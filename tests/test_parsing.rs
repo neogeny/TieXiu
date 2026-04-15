@@ -18,7 +18,6 @@ fn _parse_input(grammar: &Grammar, input: &str) -> tiexiu::trees::Tree {
 }
 
 #[test]
-#[ignore = "TODO: BUG - @@include not implemented but doesn't fail, returns bootstrap grammar instead"]
 fn test_include() {
     let grammar = r#"
         @@include :: "included.ebnf"
@@ -62,7 +61,6 @@ fn test_escape_sequences() {
 // ============================================================================
 
 #[test]
-#[ignore = "TODO: evaluate - @: override syntax"]
 fn test_start() {
     let grammar = r#"
         @@grammar :: Test

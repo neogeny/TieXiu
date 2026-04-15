@@ -4,13 +4,11 @@
 //! Tests for util/strtools - NOT IMPLEMENTED
 
 #[test]
-#[ignore = "TODO: NOT IMPLEMENTED - strtools module not found"]
 fn test_visible_width() {
     unimplemented!("strtools not implemented");
 }
 
 #[test]
-#[ignore = "TODO: NOT IMPLEMENTED"]
 fn test_visual_linecount() {
     unimplemented!("strtools not implemented");
 }

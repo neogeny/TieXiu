@@ -61,7 +61,6 @@ fn test_update_ast() {
 }
 
 #[test]
-#[ignore = "TODO: evaluate - @: and @+: override syntax"]
 fn test_ast_assignment() {
     let grammar = r#"
         n  = @: {"a"}* $ ;
@@ -76,7 +75,6 @@ fn test_ast_assignment() {
 }
 
 #[test]
-#[ignore = "TODO: evaluate - closure with override"]
 fn test_optional_closure() {
     let grammar = r#"
         start = foo+:"x" foo:{"y"}* {foo:"z"}* ;
@@ -87,7 +85,6 @@ fn test_optional_closure() {
 }
 
 #[test]
-#[ignore = "TODO: evaluate - optional sequence"]
 fn test_optional_sequence() {
     let grammar = r#"
         start = '1' ['2' '3'] '4' $ ;
@@ -98,7 +95,6 @@ fn test_optional_sequence() {
 }
 
 #[test]
-#[ignore = "TODO: evaluate - group parsing"]
 fn test_group_ast() {
     let grammar = r#"
         start = '1' ('2' '3') '4' $ ;
@@ -109,7 +105,6 @@ fn test_group_ast() {
 }
 
 #[test]
-#[ignore = "TODO: evaluate - partial options"]
 fn test_partial_options() {
     let grammar = r#"
         start = [a] ['A' 'A' | 'A' 'B'] $ ;

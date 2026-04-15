@@ -6,7 +6,6 @@
 use tiexiu::trees::Tree;
 
 #[test]
-#[ignore = "TODO: compile check only"]
 fn test_ast_pickling() {
     let a = Tree::nil();
     let b = Tree::nil();
@@ -14,21 +13,18 @@ fn test_ast_pickling() {
 }
 
 #[test]
-#[ignore = "TODO: compile check only"]
 fn ast() {
     let test_ast = Tree::nil();
     let _has_items = !matches!(test_ast, Tree::Nil);
 }
 
 #[test]
-#[ignore = "TODO: compile check only"]
 fn test_tree_text() {
     let t = Tree::text("hello");
     assert_eq!(t.to_string(), "hello");
 }
 
 #[test]
-#[ignore = "TODO: compile check only"]
 fn test_tree_list() {
     let t = Tree::list(&[Tree::text("a"), Tree::text("b")]);
     assert!(matches!(t, Tree::List(_)));

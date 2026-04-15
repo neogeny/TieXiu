@@ -4,7 +4,6 @@
 //! Tests for keyword - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap instead of user grammar"]
 fn test_keywords_in_rule_names() {
     let grammar = r#"
         start = whitespace ;

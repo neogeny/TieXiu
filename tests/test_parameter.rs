@@ -4,7 +4,6 @@
 //! Tests for parameters - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap, parameterized rules not implemented"]
 fn test_keyword_params() {
     let grammar = r#"
         start = rule[param] ;

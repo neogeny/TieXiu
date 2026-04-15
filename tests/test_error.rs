@@ -4,7 +4,6 @@
 //! Tests for error handling
 
 #[test]
-#[ignore = "TODO: compile check only - uses compile() which has BUG"]
 fn test_missing_rule() {
     let grammar = r#"
         @@grammar::TestGrammar
@@ -15,7 +14,6 @@ fn test_missing_rule() {
 }
 
 #[test]
-#[ignore = "TODO: compile check only"]
 fn test_error_exists() {
     // Simple check that Error type exists
     fn _check_error(_: tiexiu::Error) {}

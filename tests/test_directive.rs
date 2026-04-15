@@ -4,7 +4,6 @@
 //! Tests for directives - uses compile() which has BUG
 
 #[test]
-#[ignore = "TODO: BUG - compile returns bootstrap instead of user grammar"]
 fn test_whitespace_directive() {
     let grammar = r#"
         @@whitespace :: /[\t ]+/

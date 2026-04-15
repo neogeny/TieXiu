@@ -339,12 +339,12 @@ mod parse_special {
     }
 
     #[test]
-    #[ignore]
     fn dot() {
         let boot = boot_grammar();
         let grammar = r#"@@grammar :: D start: /./"#;
         let tree = parse_ebnf(&boot, grammar);
         let json = tree.to_json_string().unwrap();
+        eprintln!("{:#}", json);
         assert!(json.contains("Dot"));
     }
 
@@ -429,7 +429,6 @@ mod integration {
     }
 
     #[test]
-    #[ignore]
     fn tatsu_own_grammar() {
         let boot = boot_grammar();
         let tatsu_grammar = std::fs::read_to_string("grammar/tatsu.tatsu")
@@ -522,7 +521,6 @@ mod round_trips {
     }
 
     #[test]
-    #[ignore]
     fn pretty_print_round_trip() {
         let grammar_text = r#"
             @@grammar :: Pretty
