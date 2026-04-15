@@ -6,9 +6,9 @@ use super::parser::{Nope, ParseResult, Parser, Succ};
 use super::rule::RuleRef;
 use crate::state::Ctx;
 use crate::trees::Tree;
+use crate::util::pyre;
 use std::fmt::Debug;
 use std::ops::Deref;
-use crate::util::pyre;
 
 pub type ERef = Box<Exp>;
 pub type ERefArr = Box<[Exp]>;
@@ -137,8 +137,12 @@ impl Exp {
                 if let Some(matched) = ctx.match_pattern(pattern) {
                     Ok(Succ(ctx, Tree::Text(matched.into())))
                 } else {
-                    Err(ctx.failure(start, ParseError::ExpectedPattern(
-                        pyre::truncate_pattern(pattern, 16).to_string())))
+                    Err(ctx.failure(
+                        start,
+                        ParseError::ExpectedPattern(
+                            pyre::truncate_pattern(pattern, 16).to_string(),
+                        ),
+                    ))
                 }
             }
             ExpKind::Constant(literal) => Ok(Succ(ctx, Tree::Text(literal.deref().into()))),
