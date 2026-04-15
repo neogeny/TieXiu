@@ -7,7 +7,7 @@ use crate::json::{ToJson, boot_grammar};
 use crate::peg::{Grammar, Succ};
 use crate::state::corectx::CoreCtx;
 use crate::trees::Tree;
-use crate::util::cfg::CfgA;
+use crate::util::cfg::{Cfg, CfgA};
 use crate::{Error, Result};
 
 pub fn parse_grammar(grammar: &str, cfg: CfgA) -> Result<Tree> {
@@ -25,7 +25,10 @@ where
 {
     let _ = cfg;
     let boot = boot_grammar()?;
-    let ctx = CoreCtx::new(cursor);
+    let mut ctx = CoreCtx::new(cursor);
+    if Cfg::new(cfg).is_enabled("trace") {
+        ctx.set_trace(true);
+    }
 
     match boot.parse(ctx) {
         Ok(Succ(_, tree)) => Ok(tree),
@@ -129,11 +132,8 @@ pub fn boot_grammar_pretty(cfg: CfgA) -> Result<String> {
 pub fn parse_input(parser: &Grammar, text: &str, cfg: CfgA) -> Result<Tree> {
     let cursor = StrCursor::new(text);
     let mut ctx = CoreCtx::new(cursor);
-
-    for (key, value) in cfg {
-        if *key == "trace" {
-            ctx.set_trace(value == &"true");
-        }
+    if Cfg::new(cfg).is_enabled("trace") {
+        ctx.set_trace(true);
     }
 
     match parser.parse(ctx) {
