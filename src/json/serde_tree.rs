@@ -86,8 +86,8 @@ impl Tree {
                     .collect::<Result<Vec<_>, _>>()?
                     .into(),
             )),
-            "Named" => Ok(Tree::Named(named_keyval(object)?.into())),
-            "NamedAsList" => Ok(Tree::NamedAsList(named_keyval(object)?.into())),
+            "Named" => Ok(Tree::Named(named_keyval(object)?)),
+            "NamedAsList" => Ok(Tree::NamedAsList(named_keyval(object)?)),
             "Override" => Ok(Tree::Override(
                 Tree::from_serde_json_value(field(object, "tree")?)?.into(),
             )),
@@ -163,7 +163,7 @@ fn _flag_entries_value(flags: &FlagMap) -> Value {
 fn named_keyval(object: &Map<String, Value>) -> Result<KeyValue, TreeJsonError> {
     let name = expect_string(field(object, "name")?, "name")?;
     let tree = Tree::from_serde_json_value(field(object, "tree")?)?;
-    Ok(KeyValue(name.into(), tree))
+    Ok(KeyValue(name.into(), tree.into()))
 }
 
 fn map_from_entries(value: &Value) -> Result<TreeMap, TreeJsonError> {
