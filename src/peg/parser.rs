@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::error::ParseError;
-use crate::state::Ctx;
+use crate::state::{Ctx, CtxI};
 use crate::trees::Tree;
 pub use crate::util::tokenlist::TokenList;
 use std::fmt::Debug;
@@ -12,18 +12,20 @@ use std::panic::Location;
 pub struct Succ<C: Ctx>(pub C, pub Tree);
 
 #[derive(Debug)]
-pub struct FailureContext {
-    pub start: usize,
+pub struct DisasterReport {
+    pub pos: (usize, usize),
+    pub la: Box<str>,
     pub callstack: TokenList,
     pub location: &'static Location<'static>,
 }
 
 #[derive(Debug)]
 pub struct Nope {
+    pub start: usize,
     pub mark: usize, // The position where the disaster occurred
     pub cutseen: bool,
     pub source: Box<ParseError>,
-    pub context: Box<FailureContext>,
+    pub report: Box<DisasterReport>,
 }
 
 pub type ParseResult<C> = Result<Succ<C>, Nope>;
@@ -38,7 +40,7 @@ impl std::fmt::Display for Nope {
         write!(
             f,
             "{} at {}: {}",
-            self.source, self.mark, self.context.callstack,
+            self.source, self.mark, self.report.callstack,
         )
     }
 }
@@ -53,17 +55,19 @@ impl std::error::Error for Nope {
 
 impl Nope {
     #[track_caller]
-    pub fn new(start: usize, mark: usize, cut: bool, error: ParseError, stack: TokenList) -> Self {
-        let context = FailureContext {
-            start,
-            callstack: stack,
+    pub fn new(start: usize, ctx: &dyn CtxI, error: ParseError) -> Self {
+        let context = DisasterReport {
+            pos: ctx.cursor().pos(),
+            la: ctx.cursor().lookahead(start).into(),
+            callstack: ctx.callstack(),
             location: Location::caller(),
         };
         Self {
-            mark,
-            cutseen: cut,
+            start,
+            mark: ctx.mark(),
+            cutseen: ctx.cut_seen(),
             source: error.into(),
-            context: context.into(),
+            report: context.into(),
         }
     }
 
