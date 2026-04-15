@@ -23,7 +23,8 @@ TieXiu is a Rust port of TatSu PEG parser generator with Python bindings via PyO
 * AI Agents will learn to use `ast-grep` by experimentation and by studying the
   documentation available at https://ast-grep.github.io
 
-* AI Agents will follow strictly the rules describe in `./corpus/RULES.md`
+* AI Agents will follow strictly the rules described in `./corpus/RULES.md`
+* AI Agents will follow strictly the rules described all files in `./.aiassistant/rules/*.md`
 
 
 ## Dev Commands
