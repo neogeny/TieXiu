@@ -5,81 +5,37 @@ apply: always
 # AGENTS
 
 ## Project Overview
+**TieXiu** is a Rust port of the **TatSu** PEG parser generator, providing Python bindings via **PyO3/maturin**.
 
-TieXiu is a Rust port of TatSu PEG parser generator with Python bindings via PyO3/maturin.
+## Core Operational Rules
+* **Research Phase:** Study [README.md](README.md), [SYNTAX.md](SYNTAX.md), and [./tatsu/README.rst](./tatsu/README.rst). Read all `*.rst` documents in [./tatsu/docs/](./tatsu/docs/) to establish PEG/TatSu domain context.
+* **Context Gathering:** Analyze the current Rust project structure. Read all files in [./corpus/sessions/](./corpus/sessions/) to understand the history and current trajectory of the work.
+* **Project Summary**: Study [./corpus/SUMMARY.md](./corpus/SUMMARY.md) for a brief project description created for collaborators. 
+* **Source Mapping:** Cross-reference the Python source in [./tatsu/tatsu/](./tatsu/tatsu/) and [./tatsu/tests/](./tatsu/tests/) to ensure the Rust implementation aligns with TatSu's logic and goals.
+* **Code Modification:** Do not use `sed` or `awk` for bulk directory/glob modifications. Target specific files one-by-one only when structural tools are insufficient.
+* **Strict Compliance:** Adhere strictly to [RULES.md](RULES.md).
 
-## Rules
+## Rust Implementation Standards
+* **Error Handling:** Return `Result` for invalid parameter values. Reserve `panic!` for internal logic bugs or unrecoverable state.
+* **String Allocation:** Use `Box<str>` for dynamic error messages within error enums to maintain a small memory footprint for the `Result` type.
+* **Future-Proofing:** Always use `.into()` for string-to-heap conversions to ensure compatibility with a future migration to `Cow<'a, str>`.
+* **Deref Handling:** When iterating over references, use pattern matching (e.g., `for (&name, _) in pairs`) to simplify access to underlying data.
+* **Tests:** Use the `unindent` utility when inlining EBNF strings. Utilize `boot_grammar()` and `parse_ebnf()` from `tests/fixtures.rs`.
+* **Other**: Study [RULES.md](RULES.md) for more detailed guidelines.
 
-* AI Agents will study `README.md`, `SYNTAX.md`, `./tatsu/README.rst` and all the
-  `*.rst` documents in `./tatsu/docs/` to gain context about the projects.
+## Development Workflow
 
-* AI Agents will study all the files belonging to the current Rust project to understand its structure and semantics.
-
-* AI Agents will study the Python source code for TatSu found in the modules under `./tatsu/tatsu/` and `./tatsu/tests/` to understand the background of the TieXiu project and its goals.
-
-* AI Agents will read and study all the files under `./corpus/sessions/` to gain
-  context from previous work sessions.
-
-* AI Agents will not use text modification tools like `sed` or awk to modify program
-  code. If done, the tool will be pointed to specific files, one by one, and
-  never run then over a directory of a glob pattern.
-
-* AI Agents will learn to use `ast-grep` by experimentation and by studying the
-  documentation available at https://ast-grep.github.io
-
-* AI Agents will follow strictly the rules described in `RULES.md`
-* AI Agents will follow strictly the rules described all files in `./.aiassistant/rules/*.md`
-
-
-## Dev Commands
+There is a [Justfile](Justfile) defined for the project with targets for common, version control, and integration. The Python environment is managed using `uv`. 
 
 ```bash
-# Quality gates (used by `just pre-push`)
-cargo fmt --all                          # format check
-cargo clippy --all-targets --all-features -- -D warnings  # strict lint
-cargo test --verbose                     # tests
+# Quality gates (mandatory before submission)
+just fmt                                       # Format check
+just clippy                                    # Strict lint
+just test                                      # Lint and run tests with nextest
 
-# All checks in order (default target)
+# Full verification pipeline
 just pre-push
 
-# Other commands
-cargo build --release                    # release build
-cargo bench                              # benchmarks
-cargo run                                # run CLI (requires cli feature)
-maturin develop                           # build & install Python package
-```
-
-## Testing
-
-- Tests use `cargo test --verbose` (not `cargo nextest` locally; CI uses default)
-- Benchmark harness is criterion-based with codspeed compat
-- Test fixtures in `tests/fixtures.rs` provide `boot_grammar()` and `parse_ebnf()`
-
-## Python Bindings
-
-- Build system: maturin (configured in `pyproject.toml`)
-- `.cargo/config.toml` sets `PYO3_PYTHON` to `.venv/bin/python` for local venv
-- Create venv: `uv venv`
-- Install package: `maturin develop`
-
-## Architecture
-
-- `src/api.rs`: High-level API (`parse`, `compile`, `load`, `pretty`)
-- `src/peg/`: Grammar model (Exp, Grammar, Rule)
-- `src/state/`: Parser context and memoization
-- `src/input/`: Cursor trait for text/byte streams
-- `src/trees/`: CST/AST tree types
-- `src/json/`: TatSu JSON grammar import
-
-## Key Conventions
-
-- Rust edition 2024
-- Features: `default`, `bootstrap`, `transient`, `serde`, `serde_json`, `cli`, `fancy-regex`
-- Python requires >=3.12
-- Use `unindent` utility when inlining EBNF strings in tests
-
-## CI Workflows
-
-- `default.yml`: fmt → clippy → test (sequential)
-- `codspeed.yml`: benchmark on main/PR
-- `publish.yml`: PyPI release
+# Build & Integration
+cargo build --release                          # Release build
+maturin develop                                # Build Python package via uv
