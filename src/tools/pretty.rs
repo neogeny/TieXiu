@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::peg::exp::{Exp, ExpKind};
+use crate::peg::{Grammar, Rule};
 use crate::util::indent::IndentWriter;
 use std::fmt;
-use crate::peg::{Grammar, Rule};
 
 impl fmt::Display for Grammar {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -35,7 +35,6 @@ impl fmt::Display for Rule {
         write!(f, "{}{}:{}{}", self.name, params_str, start_str, rhs_str)
     }
 }
-
 
 impl Exp {
     pub fn pretty_print(&self, f: &mut IndentWriter) -> String {
