@@ -4,6 +4,7 @@
 use crate::Result;
 use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
 pub use crate::json::export::*;
+pub use crate::tools::rails::*;
 use clap;
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
@@ -15,6 +16,16 @@ fn cli_styles() -> Styles {
         .usage(AnsiColor::Yellow.on_default().bold())
         .literal(AnsiColor::Green.on_default().bold())
         .placeholder(AnsiColor::Cyan.on_default())
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+pub enum OutputFormat {
+    /// Output the grammar as a minified JSON object
+    Json,
+    /// Output the grammar using the pretty-printed EBNF format
+    Pretty,
+    /// Output a Railroad Diagram (using APL-style characters)
+    Railroads,
 }
 
 #[derive(Parser)]
@@ -69,17 +80,21 @@ pub enum Commands {
 
     /// Grammar transformations
     Grammar {
-        /// Path to the compiled TatSu JSON grammar.
+        /// Path to the compiled grammar (.ebnf or .json)
         #[arg(required = true)]
         grammar: PathBuf,
 
-        /// Print the boot grammar in JSON format
-        #[arg(short, long, default_value_t = true)]
+        /// Print the grammar in JSON format
+        #[arg(short, long, group = "format")]
         json: bool,
 
-        /// Pretty-print the boot grammar
-        #[arg(short, long)]
+        /// Pretty-print the grammar (EBNF)
+        #[arg(short, long, group = "format")]
         pretty: bool,
+
+        /// Print a railroad diagram
+        #[arg(short, long, group = "format")]
+        railroads: bool,
     },
 }
 
@@ -114,24 +129,26 @@ pub fn cli() -> Result<()> {
         }
         Commands::Grammar {
             grammar,
-            pretty,
             json,
+            pretty,
+            railroads,
             ..
         } => {
             let parser = load_grammar_from_path(&grammar)?;
             if pretty {
                 let pretty_str = parser.to_string();
                 pygmentize(&pretty_str, "ebnf", use_color);
-                return Ok(());
-            } else {
-                if json {
-                    let json_str = parser.to_json_string()?;
-                    pygmentize(&json_str, "json", use_color);
-                }
+            }
+            if json {
+                let json_str = parser.to_json_string()?;
+                pygmentize(&json_str, "json", use_color);
+            }
+            if railroads {
+                let railroad_str = parser.railroads();
+                pygmentize(&railroad_str, "apl", use_color);
             }
         }
     }
-
     Ok(())
 }
 
