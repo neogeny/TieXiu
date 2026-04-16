@@ -130,23 +130,20 @@ pub fn cli() -> Result<()> {
         Commands::Grammar {
             grammar,
             json,
-            pretty,
             railroads,
-            ..
+            .. // 'pretty' is implied if others are false
         } => {
             let parser = load_grammar_from_path(&grammar)?;
-            if pretty {
-                let pretty_str = parser.to_string();
-                pygmentize(&pretty_str, "ebnf", use_color);
-            }
-            if json {
-                let json_str = parser.to_json_string()?;
-                pygmentize(&json_str, "json", use_color);
-            }
-            if railroads {
-                let railroad_str = parser.railroads();
-                pygmentize(&railroad_str, "apl", use_color);
-            }
+
+            let (content, lang) = if json {
+                (parser.to_json_string()?, "json")
+            } else if railroads {
+                (parser.railroads(), "apl")
+            } else {
+                (parser.to_string(), "ebnf")
+            };
+
+            pygmentize(&content, lang, use_color);
         }
     }
     Ok(())
