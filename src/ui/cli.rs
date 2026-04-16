@@ -1,10 +1,10 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{boot_grammar, Result};
 use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
 pub use crate::json::export::*;
 pub use crate::tools::rails::*;
+use crate::{Result, boot_grammar};
 use clap;
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
@@ -111,7 +111,9 @@ pub fn cli() -> Result<()> {
     let use_color = configure_color(cli.color);
 
     let (content, lang) = match cli.command {
-        Commands::Boot { pretty, railroads, .. } => {
+        Commands::Boot {
+            pretty, railroads, ..
+        } => {
             if pretty {
                 (boot_grammar_pretty(&[])?, "ebnf")
             } else if railroads {
@@ -121,7 +123,9 @@ pub fn cli() -> Result<()> {
                 (boot_grammar_json(&[])?, "json")
             }
         }
-        Commands::Run { grammar, inputs, .. } => {
+        Commands::Run {
+            grammar, inputs, ..
+        } => {
             let parser = load_grammar_from_path(&grammar)?;
             let mut output = String::new();
             for input in inputs {
@@ -132,7 +136,12 @@ pub fn cli() -> Result<()> {
             }
             (output, "text")
         }
-        Commands::Grammar { grammar, json, railroads, .. } => {
+        Commands::Grammar {
+            grammar,
+            json,
+            railroads,
+            ..
+        } => {
             let parser = load_grammar_from_path(&grammar)?;
             if json {
                 (parser.to_json_string()?, "json")
