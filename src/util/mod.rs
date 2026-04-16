@@ -7,6 +7,7 @@ pub mod fold;
 pub mod indent;
 pub mod pyre;
 pub mod tokenlist;
+pub mod into;
 
 pub use cfg::Cfg;
 pub use finally::finally;
