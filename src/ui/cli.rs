@@ -3,6 +3,7 @@
 
 use crate::Result;
 use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
+pub use crate::json::export::*;
 use clap;
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
@@ -65,6 +66,21 @@ pub enum Commands {
         #[arg(short, long)]
         trace: bool,
     },
+
+    /// Grammar transformations
+    Grammar {
+        /// Path to the compiled TatSu JSON grammar.
+        #[arg(required = true)]
+        grammar: PathBuf,
+
+        /// Print the boot grammar in JSON format
+        #[arg(short, long, default_value_t = true)]
+        json: bool,
+
+        /// Pretty-print the boot grammar
+        #[arg(short, long)]
+        pretty: bool,
+    },
 }
 
 pub fn cli() -> Result<()> {
@@ -87,17 +103,7 @@ pub fn cli() -> Result<()> {
         Commands::Run {
             grammar, inputs, ..
         } => {
-            let grammar_text = std::fs::read_to_string(&grammar)?;
-            let parser = if grammar
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
-            {
-                load(&grammar_text, &[])?
-            } else {
-                compile(&grammar_text, &[])?
-            };
-
+            let parser = load_grammar_from_path(&grammar)?;
             for input in inputs {
                 let text = std::fs::read_to_string(&input)?;
                 match parse_input(&parser, &text, &[]) {
@@ -106,9 +112,41 @@ pub fn cli() -> Result<()> {
                 }
             }
         }
+        Commands::Grammar {
+            grammar,
+            pretty,
+            json,
+            ..
+        } => {
+            let parser = load_grammar_from_path(&grammar)?;
+            if pretty {
+                let pretty_str = parser.to_string();
+                pygmentize(&pretty_str, "ebnf", use_color);
+                return Ok(());
+            } else {
+                if json {
+                    let json_str = parser.to_json_string()?;
+                    pygmentize(&json_str, "json", use_color);
+                }
+            }
+        }
     }
 
     Ok(())
+}
+
+fn load_grammar_from_path(grammar: &PathBuf) -> Result<crate::peg::Grammar> {
+    let grammar_text = std::fs::read_to_string(grammar)?;
+    let parser = if grammar
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
+    {
+        load(&grammar_text, &[])?
+    } else {
+        compile(&grammar_text, &[])?
+    };
+    Ok(parser)
 }
 
 // Optional: Tells clap which global color setting to use for its own help text

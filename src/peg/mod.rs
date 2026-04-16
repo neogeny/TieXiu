@@ -3,17 +3,17 @@
 
 mod build;
 mod compiler;
+mod leftrec;
+mod linker;
+mod lookahead;
+mod nullability;
+mod repeat;
+
 pub mod error;
 pub mod exp;
 pub mod fold;
 pub mod grammar;
-mod leftrec;
-pub mod linker;
-mod lookahead;
-mod nullability;
 pub mod parser;
-mod pretty;
-mod repeat;
 pub mod rule;
 
 pub use compiler::{CompileError, CompileResult, GrammarCompiler};

@@ -146,8 +146,8 @@ impl Grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::peg::rule::Rule;
     use crate::peg::Exp;
+    use crate::peg::rule::Rule;
 
     #[test]
     fn new_grammar() {
