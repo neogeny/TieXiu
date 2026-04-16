@@ -3,12 +3,16 @@
 
 use crate::input::Cursor;
 use crate::input::StrCursor;
-use crate::json::{ToJson, boot_grammar};
+use crate::json::{ToJson};
 use crate::peg::{Grammar, Succ};
 use crate::state::corectx::CoreCtx;
 use crate::trees::Tree;
 use crate::util::cfg::{Cfg, CfgA};
 use crate::{Error, Result};
+
+pub fn boot_grammar() -> Result<Grammar> {
+    Ok(crate::json::boot::boot_grammar()?)
+}
 
 pub fn parse_grammar(grammar: &str, cfg: CfgA) -> Result<Tree> {
     parse_grammar_with(StrCursor::new(grammar), cfg)

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::Result;
+use crate::{boot_grammar, Result};
 use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
 pub use crate::json::export::*;
 pub use crate::tools::rails::*;
@@ -41,6 +41,10 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 
+    /// Output to a file instead of stdout
+    #[arg(short, long, global = true, value_name = "FILE")]
+    pub output: Option<PathBuf>,
+
     /// Control when to use color in output.
     #[arg(
         long,
@@ -62,6 +66,10 @@ pub enum Commands {
         /// Pretty-print the boot grammar
         #[arg(short, long)]
         pretty: bool,
+
+        /// Print a railroad diagram
+        #[arg(short, long, group = "format")]
+        railroads: bool,
     },
     /// Execute a grammar against one or more input files.
     Run {
@@ -100,52 +108,49 @@ pub enum Commands {
 
 pub fn cli() -> Result<()> {
     let cli = Cli::parse();
-
     let use_color = configure_color(cli.color);
 
-    match cli.command {
-        Commands::Boot { pretty, json } => {
+    let (content, lang) = match cli.command {
+        Commands::Boot { pretty, railroads, .. } => {
             if pretty {
-                let pretty_str = boot_grammar_pretty(&[])?;
-                pygmentize(&pretty_str, "ebnf", use_color);
-                return Ok(());
-            }
-            if json {
-                let json_str = boot_grammar_json(&[])?;
-                pygmentize(&json_str, "json", use_color);
+                (boot_grammar_pretty(&[])?, "ebnf")
+            } else if railroads {
+                (boot_grammar()?.railroads(), "apl")
+            } else {
+                // Since json is default_value_t = true, this is the fallthrough
+                (boot_grammar_json(&[])?, "json")
             }
         }
-        Commands::Run {
-            grammar, inputs, ..
-        } => {
+        Commands::Run { grammar, inputs, .. } => {
             let parser = load_grammar_from_path(&grammar)?;
+            let mut output = String::new();
             for input in inputs {
                 let text = std::fs::read_to_string(&input)?;
-                match parse_input(&parser, &text, &[]) {
-                    Ok(tree) => println!("{}", tree.normalized()),
-                    Err(e) => return Err(e),
-                }
+                let tree = parse_input(&parser, &text, &[])?;
+                output.push_str(format!("{}", tree.normalized()).as_str());
+                output.push('\n');
             }
+            (output, "text")
         }
-        Commands::Grammar {
-            grammar,
-            json,
-            railroads,
-            .. // 'pretty' is implied if others are false
-        } => {
+        Commands::Grammar { grammar, json, railroads, .. } => {
             let parser = load_grammar_from_path(&grammar)?;
-
-            let (content, lang) = if json {
+            if json {
                 (parser.to_json_string()?, "json")
             } else if railroads {
                 (parser.railroads(), "apl")
             } else {
                 (parser.to_string(), "ebnf")
-            };
-
-            pygmentize(&content, lang, use_color);
+            }
         }
+    };
+
+    // Dispatch output
+    if let Some(path) = cli.output {
+        std::fs::write(path, content)?;
+    } else {
+        pygmentize(&content, lang, use_color);
     }
+
     Ok(())
 }
 
