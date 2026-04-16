@@ -30,4 +30,7 @@ pub enum Error {
 
     #[error("I/O failed: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("Library failure: {0}")]
+    Library(#[from] crate::util::Error),
 }

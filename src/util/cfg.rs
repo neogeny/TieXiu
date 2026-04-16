@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::error::{Error, Result};
 use std::ops::Index;
 use std::str::FromStr;
 use std::{env, fmt};
@@ -8,7 +9,7 @@ use std::{env, fmt};
 pub type CfgA<'c> = &'c [(&'c str, &'c str)];
 
 /// Python-style falsy values for string-based configuration.
-pub const FALSY_VALUES: &[&str] = &["false", "0", "no", "none", ""];
+pub const FALSY_VALUES: &[&str] = &["false", "0", "no", "none", "False", "No"];
 
 /// Helper to determine if a string is "falsy" in a Pythonic context.
 pub fn is_falsy(v: &str) -> bool {
@@ -30,6 +31,15 @@ impl Cfg {
             .collect::<Vec<_>>()
             .into_boxed_slice();
         Self { pairs: boxed_pairs }
+    }
+
+    pub fn check_new(pairs: CfgA, valid: &[&str]) -> Result<Self> {
+        for (name, _) in pairs {
+            if !valid.contains(name) {
+                return Err(Error::UnknownCfgOption((**name).into()));
+            }
+        }
+        Ok(Self::new(pairs))
     }
 
     pub fn fromenv(prefix: &str) -> Self {
