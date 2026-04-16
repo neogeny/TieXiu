@@ -7,7 +7,6 @@ use crate::state::Ctx;
 use crate::trees::Tree;
 use crate::trees::tree::FlagMap;
 use indexmap::IndexMap;
-use std::fmt;
 use std::rc::Rc;
 
 pub const FLAG_IS_NAME: &str = "is_name";
@@ -35,22 +34,6 @@ where
 {
     fn parse(&self, ctx: C) -> ParseResult<C> {
         Rule::parse(self, ctx)
-    }
-}
-
-impl fmt::Display for Rule {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut params_str = String::new();
-        if !self.params.is_empty() {
-            params_str = format!("[{}]", self.params.join(", "));
-        }
-        let rhs_str = self.exp.to_string();
-        let start_str = if rhs_str.lines().count() <= 1 {
-            " "
-        } else {
-            ""
-        };
-        write!(f, "{}{}:{}{}", self.name, params_str, start_str, rhs_str)
     }
 }
 

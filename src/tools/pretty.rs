@@ -4,6 +4,38 @@
 use crate::peg::exp::{Exp, ExpKind};
 use crate::util::indent::IndentWriter;
 use std::fmt;
+use crate::peg::{Grammar, Rule};
+
+impl fmt::Display for Grammar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "@@grammar:: {}", self.name)?;
+        // TODO: Write the rest of the directives
+        writeln!(f)?;
+
+        for rule in self.rules() {
+            writeln!(f, "{}", rule)?;
+            writeln!(f)?;
+        }
+        write!(f, "")
+    }
+}
+
+impl fmt::Display for Rule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut params_str = String::new();
+        if !self.params.is_empty() {
+            params_str = format!("[{}]", self.params.join(", "));
+        }
+        let rhs_str = self.exp.to_string();
+        let start_str = if rhs_str.lines().count() <= 1 {
+            " "
+        } else {
+            ""
+        };
+        write!(f, "{}{}:{}{}", self.name, params_str, start_str, rhs_str)
+    }
+}
+
 
 impl Exp {
     pub fn pretty_print(&self, f: &mut IndentWriter) -> String {

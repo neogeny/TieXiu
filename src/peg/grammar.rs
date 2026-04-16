@@ -8,7 +8,6 @@ use crate::peg::ParseError::RuleNotFound;
 use crate::state::Ctx;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
-use std::fmt;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -33,18 +32,6 @@ impl Default for Grammar {
     #[inline]
     fn default() -> Self {
         Self::new("Default", &[])
-    }
-}
-
-impl fmt::Display for Grammar {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "@@grammar:: {}", self.name)?;
-
-        for rule in self.rules() {
-            writeln!(f, "{}", rule)?;
-            writeln!(f)?;
-        }
-        write!(f, "")
     }
 }
 
