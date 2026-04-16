@@ -3,7 +3,7 @@
 
 use crate::input::Cursor;
 use crate::input::StrCursor;
-use crate::json::{ToJson};
+use crate::json::ToJson;
 use crate::peg::{Grammar, Succ};
 use crate::state::corectx::CoreCtx;
 use crate::trees::Tree;
@@ -110,7 +110,7 @@ pub fn pretty_tree_json(tree: &Tree, cfg: CfgA) -> Result<String> {
 
 pub fn load_boot(cfg: CfgA) -> Result<Grammar> {
     let _ = cfg;
-    Ok(boot_grammar()?)
+    boot_grammar()
 }
 
 pub fn load_boot_as_json(cfg: CfgA) -> Result<String> {

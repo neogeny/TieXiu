@@ -10,7 +10,6 @@ type Rails = Vec<Rc<str>>;
 
 const ETX: &str = "＄";
 
-
 pub fn tracks(grammar: &Grammar) -> Rails {
     walk_grammar(grammar)
 }
@@ -77,7 +76,13 @@ fn assert_one_length(rails: Rails) -> Rails {
     }
     let len0 = ulen(rails[0].as_ref());
     for rail in &rails {
-        assert_eq!(ulen(rail.as_ref()), len0, "lengths differ: {} vs {}", ulen(rail.as_ref()), len0);
+        assert_eq!(
+            ulen(rail.as_ref()),
+            len0,
+            "lengths differ: {} vs {}",
+            ulen(rail.as_ref()),
+            len0
+        );
     }
     rails
 }
