@@ -18,6 +18,10 @@ pub enum ParseError {
     #[error("expecting EOF/EOT")]
     ExpectingEof,
 
+    /// Corresponds to Self::Eol
+    #[error("expecting EOL")]
+    ExpectingEol,
+
     /// Corresponds to Self::Token
     #[error("{0}")]
     ExpectedToken(Box<str>),

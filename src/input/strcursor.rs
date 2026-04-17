@@ -6,6 +6,7 @@ use super::error::Error;
 use super::tokenizing::TokenizingPatterns;
 use crate::cfg::Configurable;
 use crate::util::Cfg;
+use crate::util::newlines::empty_line;
 use crate::util::pyre::Pattern;
 use std::rc::Rc;
 
@@ -123,6 +124,15 @@ impl Cursor for StrCursor {
 
     fn set_tokenizing(&mut self, patterns: &TokenizingPatterns) {
         self.patterns = patterns.clone().into();
+    }
+
+    fn match_eol(&mut self) -> bool {
+        if let Some(len) = empty_line(&self.text[self.offset..]) {
+            self.offset += len;
+            true
+        } else {
+            false
+        }
     }
 }
 

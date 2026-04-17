@@ -124,7 +124,13 @@ impl Exp {
                     Err(ctx.failure(start, ParseError::NoMoreInput))
                 }
             }
-            ExpKind::Eol => Ok(Succ(ctx, Tree::Nil)),
+            ExpKind::Eol => {
+                if ctx.match_eol() {
+                    Ok(Succ(ctx, Tree::Nil))
+                } else {
+                    Err(ctx.failure(start, ParseError::ExpectingEol))
+                }
+            }
             ExpKind::Eof => {
                 if ctx.eof_check() {
                     Ok(Succ(ctx, Tree::Nil))
@@ -160,7 +166,10 @@ impl Exp {
                 err => err,
             },
             ExpKind::NamedList(name, exp) => match exp.parse(ctx) {
-                Ok(Succ(ctx, tree)) => Ok(Succ(ctx, Tree::named_as_list(name, tree))),
+                Ok(Succ(ctx, tree)) => {
+                    eprintln!("NamedList {}=", name);
+                    Ok(Succ(ctx, Tree::named_as_list(name, tree)))
+                }
                 err => err,
             },
             ExpKind::Override(exp) => match exp.parse(ctx) {

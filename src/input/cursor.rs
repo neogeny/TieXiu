@@ -22,6 +22,7 @@ pub trait Cursor: Debug + Configurable {
     fn next(&mut self) -> Option<char>;
     fn match_token(&mut self, token: &str) -> bool;
     fn match_pattern(&mut self, pattern: &Pattern) -> Option<String>;
+    fn match_eol(&mut self) -> bool;
     fn next_token(&mut self);
 
     fn pos(&self) -> (usize, usize) {

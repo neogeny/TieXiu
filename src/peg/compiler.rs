@@ -123,21 +123,21 @@ impl GrammarCompiler {
         let rules: Vec<Rule> = rulemap.into_iter().map(|(_, r)| r).collect();
         let name = map_get_default(map, "name", "__COMPILED__");
 
-        let directives_tree = map_get(map, "Grammar", "directives")?;
-        let directives_map = parse_map(directives_tree)?;
-        let directives: GrammarDirectives = GrammarDirectives::from_iter(
-            directives_map
-                .entries
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.value().to_string())),
-        );
+        // let directives_tree = map_get(map, "Grammar", "directives")?;
+        // let directives_map = parse_map(directives_tree)?;
+        // let directives: GrammarDirectives = GrammarDirectives::from_iter(
+        //     directives_map
+        //         .entries
+        //         .iter()
+        //         .map(|(k, v)| (k.to_string(), v.value().to_string())),
+        // );
         if let Ok(_keywords_tree) = map_get(map, "Grammar", "keywords") {
             // TODO: Implement keywords
             unimplemented!();
         }
 
         let mut grammar = Grammar::new(&name, rules.as_slice());
-        grammar.set_directives(directives);
+        // grammar.set_directives(directives);
         Ok(grammar)
     }
 
@@ -179,7 +179,8 @@ impl GrammarCompiler {
             "Constant" => Exp::constant(&tree.value()),
             "Cut" => Exp::cut(),
             "Dot" => Exp::dot(),
-            "EOF" => Exp::eof(),
+            "EOF" | "Eof" => Exp::eof(),
+            "EOL" | "Eol" => Exp::eol(),
             "EOLComment" => Exp::nil(),
             "EmptyClosure" => Exp::closure(Exp::nil()),
             "Fail" => Exp::fail(),

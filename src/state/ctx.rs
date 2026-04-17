@@ -75,10 +75,6 @@ pub trait Ctx: CtxI + Clone + Debug {
         result
     }
 
-    fn match_void(&mut self) {
-        self.next_token();
-    }
-
     fn match_pattern(&mut self, pattern: &str) -> Option<String> {
         let re = self.get_pattern(pattern);
         let result = self.cursor_mut().match_pattern(&re);
@@ -89,6 +85,14 @@ pub trait Ctx: CtxI + Clone + Debug {
             self.tracer().trace_no_match(self, pattern);
             None
         }
+    }
+
+    fn match_eol(&mut self) -> bool {
+        self.cursor_mut().match_eol()
+    }
+
+    fn match_void(&mut self) {
+        self.next_token();
     }
 
     fn next_token(&mut self) {

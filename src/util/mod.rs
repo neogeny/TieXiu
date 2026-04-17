@@ -7,8 +7,8 @@ pub mod finally;
 pub mod fold;
 pub mod indent;
 pub mod into;
+pub mod newlines;
 pub mod pyre;
-pub mod strutil;
 pub mod tokenlist;
 
 pub use cfg::Cfg;
