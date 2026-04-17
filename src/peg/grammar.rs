@@ -11,14 +11,15 @@ use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-type KeywordRef = Box<str>;
-type Keywords = Box<[KeywordRef]>;
+pub type KeywordRef = Box<str>;
+pub type Keywords = Box<[KeywordRef]>;
+pub type GrammarDirectives = HashMap<Box<str>, Box<str>>;
 
 #[derive(Debug, Clone)]
 pub struct Grammar {
     pub name: String,
     pub analyzed: bool,
-    pub directives: HashMap<String, String>,
+    pub directives: GrammarDirectives,
     pub keywords: Keywords,
     pub rules: RuleMap,
 }

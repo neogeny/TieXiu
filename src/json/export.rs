@@ -62,7 +62,7 @@ impl Grammar {
         let directives: Map<String, Value> = self
             .directives
             .iter()
-            .map(|(k, v)| (k.clone(), Value::String(v.clone())))
+            .map(|(k, v)| (k.to_string(), Value::String(v.to_string())))
             .collect();
         obj.insert("directives".into(), Value::Object(directives));
 

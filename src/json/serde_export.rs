@@ -31,7 +31,7 @@ impl TryFrom<Grammar> for TatSuModel {
         let directives: HashMap<String, serde_json::Value> = grammar
             .directives
             .iter()
-            .map(|(k, v)| (k.clone(), serde_json::Value::String(v.into())))
+            .map(|(k, v)| (k.to_string(), serde_json::Value::String(v.to_string())))
             .collect();
 
         Ok(TatSuModel::Grammar {

@@ -11,6 +11,7 @@ use crate::peg::exp::Exp;
 use crate::peg::grammar::Grammar;
 use crate::peg::rule::Rule;
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct JsonSerializationHelper {
@@ -192,17 +193,17 @@ impl Grammar {
 
     fn parse_directives(
         directives: Option<&Value>,
-    ) -> Result<std::collections::HashMap<String, String>, JsonError> {
-        let mut result = std::collections::HashMap::new();
+    ) -> Result<std::collections::HashMap<Box<str>, Box<str>>, JsonError> {
+        let mut result: HashMap<Box<str>, Box<str>> = std::collections::HashMap::new();
         if let Some(Value::Object(obj)) = directives {
             for (k, v) in obj {
                 let val_str = match v {
-                    Value::String(s) => s.clone(),
+                    Value::String(s) => s.to_string(),
                     Value::Bool(b) => b.to_string(),
                     Value::Number(n) => n.to_string(),
                     _ => v.to_string(),
                 };
-                result.insert(k.clone(), val_str);
+                result.insert(k.as_str().into(), val_str.as_str().into());
             }
         }
         Ok(result)

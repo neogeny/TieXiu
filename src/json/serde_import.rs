@@ -4,7 +4,7 @@
 use crate::json::error::JsonError;
 use crate::json::tatsu::TatSuModel;
 use crate::peg::exp::{ERef, Exp};
-use crate::peg::grammar::Grammar;
+use crate::peg::grammar::{Grammar, GrammarDirectives};
 use crate::peg::rule::Rule;
 
 impl TryFrom<TatSuModel> for ERef {
@@ -61,12 +61,12 @@ impl TryFrom<TatSuModel> for Grammar {
                     rule_vec.push(rule);
                 }
             }
-            let str_directives: std::collections::HashMap<String, String> = directives
+            let str_directives: GrammarDirectives = directives
                 .iter()
                 .map(|(k, v)| {
                     let val_str = v.as_str().map(|s| s.to_string()).unwrap_or(v.to_string());
 
-                    (k.clone(), val_str)
+                    (k.as_str().into(), val_str.into())
                 })
                 .collect();
             let mut grammar = Grammar::new(name.as_str(), &rule_vec);
