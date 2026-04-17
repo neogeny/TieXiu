@@ -69,7 +69,7 @@ impl Grammar {
         let keywords: Vec<Value> = self
             .keywords
             .iter()
-            .map(|k| Value::String(k.clone()))
+            .map(|k| Value::String(k.to_string()))
             .collect();
         obj.insert("keywords".into(), Value::Array(keywords));
 

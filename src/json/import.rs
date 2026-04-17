@@ -174,23 +174,18 @@ impl Grammar {
 
         let directives =
             Self::parse_directives(path.get_obj().ok().and_then(|o| o.get("directives")))?;
-        let keywords: std::collections::HashSet<String> = path
+        let keywords: Vec<Box<str>> = path
             .get_obj()
             .ok()
             .and_then(|o| o.get("keywords"))
             .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str())
-                    .map(String::from)
-                    .collect()
-            })
+            .map(|arr| arr.iter().map(|v| v.to_string().into()).collect())
             .unwrap_or_default();
 
         let mut grammar = Grammar::new(&name, &rule_vec?);
         grammar.analyzed = analyzed;
         grammar.directives = directives;
-        grammar.keywords = keywords;
+        grammar.keywords = keywords.into();
         grammar.initialize();
         Ok(grammar)
     }

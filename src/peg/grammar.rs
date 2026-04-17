@@ -8,15 +8,18 @@ use super::rule::{Rule, RuleMap, RuleRef};
 use crate::peg::ParseError::RuleNotFound;
 use crate::state::Ctx;
 use indexmap::IndexMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
+
+type KeywordRef = Box<str>;
+type Keywords = Box<[KeywordRef]>;
 
 #[derive(Debug, Clone)]
 pub struct Grammar {
     pub name: String,
     pub analyzed: bool,
     pub directives: HashMap<String, String>,
-    pub keywords: HashSet<String>,
+    pub keywords: Keywords,
     pub rules: RuleMap,
 }
 
@@ -48,7 +51,7 @@ impl Grammar {
             analyzed: false,
             rules,
             directives: HashMap::new(),
-            keywords: HashSet::new(),
+            keywords: [].into(),
         };
         grammar.initialize();
         grammar
@@ -69,6 +72,16 @@ impl Grammar {
             .map(|r| r.as_ref())
             .or_else(|| self.rules.get_index(0).map(|(_, r)| r.as_ref()))
             .ok_or_else(|| RuleNotFound(start.into()))
+    }
+
+    pub fn set_keywords(&mut self, keywords: &[&str]) {
+        let mut vec: Vec<KeywordRef> = keywords.iter().map(|&k| k.into()).collect();
+
+        vec.sort();
+        vec.dedup();
+
+        // 3. Shrink to fit and freeze as a boxed slice
+        self.keywords = vec.into_boxed_slice();
     }
 
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
