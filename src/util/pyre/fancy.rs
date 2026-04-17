@@ -21,6 +21,7 @@ pub enum Error {
 #[derive(Debug, Clone)]
 pub struct Pattern {
     regex: Regex,
+    anchored: Regex,
     pattern: String,
 }
 
@@ -36,8 +37,10 @@ pub fn escape(pattern: &str) -> Box<str> {
 
 impl Pattern {
     pub fn new(pattern: &str) -> Result<Self, Error> {
+        let anchored = format!(r"\A(?:{})", pattern);
         Ok(Self {
             regex: Regex::new(pattern)?,
+            anchored: Regex::new(&anchored)?,
             pattern: pattern.to_string(),
         })
     }
@@ -50,12 +53,10 @@ impl Pattern {
     }
 
     pub fn match_<'a>(&self, text: &'a str) -> Option<Match<'a>> {
-        let matches = self.finditer(text);
-        let first = matches.into_iter().next()?;
-        if first.start(Option::<usize>::None) != 0 {
-            return None;
+        match self.anchored.captures(text) {
+            Ok(Some(caps)) => Some(create_match_from_captures(text, &caps)),
+            _ => None,
         }
-        Some(first)
     }
 
     pub fn fullmatch<'a>(&self, text: &'a str) -> Option<Match<'a>> {
