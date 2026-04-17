@@ -6,7 +6,7 @@
 //! These are skeletal tests - they will not compile until TieXiu
 //! implements the full EBNF parsing bootstrap.
 
-use crate::api::{compile, parse};
+use tiexiu::api::compile;
 
 // ============================================================================
 // Name in Option Tests
