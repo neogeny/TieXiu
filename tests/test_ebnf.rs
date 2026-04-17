@@ -19,7 +19,7 @@ fn test_ebnf_parsing() -> tiexiu::Result<()> {
         number := /\d+/
     "#;
 
-    let g = compile(grammar, &[])?;
+    let g = compile(grammar, &[("trace", "1")])?;
 
     assert_eq!(g.name, "EBNF");
 
