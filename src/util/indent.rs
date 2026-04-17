@@ -4,18 +4,32 @@ use std::fmt::Write;
 
 const BLACK_LEN: usize = 88;
 
-pub fn unindent(text: &str) -> Box<str> {
-    let lines: Vec<&str> = text.lines().collect();
+/// Trim text of common, leading whitespace except  the first line
+pub fn dedent(text: &str) -> Box<str> {
+    _dedent(text, false)
+}
 
-    let min_indent = lines
-        .iter()
+/// Trim text of common, leading whitespace
+pub fn dedent_all(text: &str) -> Box<str> {
+    _dedent(text, true)
+}
+
+/// Trim text of common, leading whitespace.
+/// Based on the trim algorithm of PEP 257:
+///     http://www.python.org/dev/peps/pep-0257/
+///
+fn _dedent(text: &str, all: bool) -> Box<str> {
+    let to_skip = if all { 0 } else { 1 };
+    let min_indent = text
+        .lines()
+        .skip(to_skip)
         .filter(|line| !line.trim().is_empty())
         .map(|line| line.len() - line.trim_start().len())
         .min()
         .unwrap_or(0);
 
     let mut buf = String::new();
-
+    let lines: Vec<&str> = text.lines().collect();
     for line in lines {
         if line.trim().is_empty() {
             writeln!(buf).unwrap();
