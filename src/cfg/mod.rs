@@ -3,10 +3,8 @@
 
 pub mod constants;
 
-pub use constants::*;
-
 pub use crate::util::cfg::*;
 
 pub fn cfg(input: CfgA) -> Cfg {
-    Cfg::from_env(ENV_PREFIX).merge(&Cfg::new(input))
+    Cfg::from_env(constants::ENV_PREFIX).merge(&Cfg::new(input))
 }

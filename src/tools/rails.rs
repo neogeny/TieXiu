@@ -388,7 +388,7 @@ fn walk_grammar(grammar: &Grammar) -> Rails {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cfg::CALC_GRAMMAR_JSON_PATH;
+    use crate::cfg::constants::CALC_GRAMMAR_JSON_PATH;
 
     #[test]
     fn test_make_rail() {

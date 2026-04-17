@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::cfg::Configurable;
+use crate::cfg::constants::*;
+use crate::input::Error;
 use crate::input::tokenizing::TokenizingPatterns;
 use crate::util::Cfg;
 use crate::util::pyre::Pattern;
@@ -37,11 +39,15 @@ pub trait Cursor: Debug + Configurable {
 
     fn set_tokenizing(&mut self, patterns: &TokenizingPatterns);
 
-    fn tokenizing_from_cfg(&self, cfg: &Cfg) -> TokenizingPatterns {
-        let wsp: &str = cfg.get("whitespace").map_or("", |s| s);
-        let cmt = cfg.get("comments").map_or("", |s| s);
-        let eol = cfg.get("eol_comments").map_or("", |s| s);
-        TokenizingPatterns::try_new(wsp, cmt, eol).unwrap()
+    fn tokenizing_from_cfg(&self, cfg: &Cfg) -> Result<TokenizingPatterns, Error> {
+        eprintln!("Cursor cfg {:#?}", cfg);
+        type P = TokenizingPatterns;
+        let wsp = cfg.get(WSP).map_or(P::DEFAULT_WSP, |s| s);
+        let cmt = cfg.get(CMT).map_or(P::DEFAULT_CMT, |s| s);
+        let eol = cfg.get(EOL).map_or(P::DEFAULT_EOL, |s| s);
+        let patterns = TokenizingPatterns::try_new(wsp, cmt, eol);
+        eprintln!("Cursor patterns {:#?}", patterns);
+        patterns
     }
     // // Character classification
     // fn is_name(&self, s: &str) -> bool;

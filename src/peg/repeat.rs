@@ -97,7 +97,7 @@ mod tests {
     use crate::state::CtxI;
     use crate::state::corectx::CoreCtx;
 
-    fn setup(input: &str) -> CoreCtx<'_, StrCursor<'_>> {
+    fn setup(input: &str) -> CoreCtx<'_, StrCursor> {
         let grammar = Box::leak(Box::new(Grammar::default()));
         let _ = grammar;
         CoreCtx::new(StrCursor::new(input))
