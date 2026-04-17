@@ -3,7 +3,7 @@
 
 //! Railroad diagram generation for grammars
 
-use crate::cfg::constants::{EOL_SYM, ETX_SYM};
+use crate::cfg::constants::{SYM_EOL, SYM_ETX};
 use crate::peg::{Exp, ExpKind, Grammar, Rule};
 use std::rc::Rc;
 
@@ -106,7 +106,7 @@ fn weld(a: &[Rc<str>], b: &[Rc<str>]) -> Rails {
     if b.is_empty() {
         return a.into();
     }
-    if a.iter().any(|s| s.as_ref().contains(ETX_SYM)) {
+    if a.iter().any(|s| s.as_ref().contains(SYM_ETX)) {
         return a.into();
     }
 
@@ -156,7 +156,7 @@ fn lay_out(tracks: &[Rails]) -> Rails {
         let joint = &track[0];
 
         if !is_last {
-            let first_line = if !joint.as_ref().contains(ETX_SYM) {
+            let first_line = if !joint.as_ref().contains(SYM_ETX) {
                 format!("  ├─{}─┤ ", railpad(joint.as_ref(), maxl))
             } else {
                 format!("  ├─{} │ ", blankpad(joint.as_ref(), maxl))
@@ -167,7 +167,7 @@ fn lay_out(tracks: &[Rails]) -> Rails {
                 out.push(format!("  │ {} │ ", blankpad(rail.as_ref(), maxl)).into());
             }
         } else {
-            let is_etx = joint.as_ref().contains(ETX_SYM);
+            let is_etx = joint.as_ref().contains(SYM_ETX);
             if !is_etx {
                 out.push(format!("  └─{}─┘ ", railpad(joint.as_ref(), maxl)).into());
             } else {
@@ -189,7 +189,7 @@ fn lay_out(tracks: &[Rails]) -> Rails {
         let first_track = &tracks[0];
         if !first_track.is_empty() {
             let joint = &first_track[0];
-            let first_line = if !joint.as_ref().contains(ETX_SYM) {
+            let first_line = if !joint.as_ref().contains(SYM_ETX) {
                 format!("──┬─{}─┬─", railpad(joint.as_ref(), maxl))
             } else {
                 format!("──┬─{} ┬─", blankpad(joint.as_ref(), maxl))
@@ -249,8 +249,8 @@ fn walk_exp(exp: &Exp) -> Rails {
         ExpKind::Fail => vec![make_rail(" ⚠ ")],
         ExpKind::Cut => vec![make_rail(" ✂ ")],
         ExpKind::Dot => vec![make_rail(" ∀ ")],
-        ExpKind::Eof => vec![make_rail(&format!("⇥{} ", ETX_SYM))],
-        ExpKind::Eol => vec![make_rail(&format!("⇥{} ", EOL_SYM))],
+        ExpKind::Eof => vec![make_rail(&format!("⇥{} ", SYM_ETX))],
+        ExpKind::Eol => vec![make_rail(&format!("⇥{} ", SYM_EOL))],
 
         ExpKind::Token(t) => vec![make_rail(&format!("{:?}", t))],
         ExpKind::Pattern(p) => {
@@ -388,7 +388,7 @@ fn walk_grammar(grammar: &Grammar) -> Rails {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cfg::constants::CALC_GRAMMAR_JSON_PATH;
+    use crate::cfg::constants::PATH_CALC_GRAMMAR_JSON;
 
     #[test]
     fn test_make_rail() {
@@ -491,7 +491,7 @@ mod tests {
     #[test]
     fn test_calc_json() {
         use crate::api::load;
-        let grammar_src = std::fs::read_to_string(CALC_GRAMMAR_JSON_PATH).expect("read file");
+        let grammar_src = std::fs::read_to_string(PATH_CALC_GRAMMAR_JSON).expect("read file");
         let grammar = load(&grammar_src, &[]).expect("load failed");
         let result = grammar.railroads();
         eprintln!("calc.json railroads:\n{}", result);

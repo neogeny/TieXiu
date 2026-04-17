@@ -5,7 +5,7 @@ use super::error::ParseError;
 use super::parser::{ParseResult, Parser};
 pub use super::pretty::*;
 use super::rule::{Rule, RuleMap, RuleRef};
-use crate::cfg::constants::GRAMMAR_NAME_STR;
+use crate::cfg::constants::STR_GRAMMAR_NAME;
 use crate::peg::ParseError::RuleNotFound;
 use crate::state::Ctx;
 use crate::util::Cfg;
@@ -69,7 +69,8 @@ impl Grammar {
 
     pub fn set_directives(&mut self, directives: GrammarDirectives) {
         self.directives = directives;
-        if let Some(name) = self.directives.get(GRAMMAR_NAME_STR) {
+        eprintln!("DIRECTIVES {:#?}", self.directives);
+        if let Some(name) = self.directives.get(STR_GRAMMAR_NAME) {
             self.name = name.into();
         }
     }

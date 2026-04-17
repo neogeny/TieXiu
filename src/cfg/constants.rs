@@ -5,15 +5,15 @@ pub const ENV_PREFIX: &str = "TIEXIU";
 
 // Paths for unit tests
 
-pub const TATSU_GRAMMAR_EBNF_PATH: &str = "grammar/tatsu.ebnf";
-pub const CALC_GRAMMAR_JSON_PATH: &str = "grammar/calc.json";
-pub const CALC_GRAMMAR_EBNF_PATH: &str = "grammar/calc.ebnf";
+pub const PATH_TATSU_GRAMMAR_EBNF: &str = "grammar/tatsu.ebnf";
+pub const PATH_CALC_GRAMMAR_JSON: &str = "grammar/calc.json";
+pub const PATH_CALC_GRAMMAR_EBNF: &str = "grammar/calc.ebnf";
 
-pub const GRAMMAR_NAME_STR: &str = "grammar";
+pub const STR_GRAMMAR_NAME: &str = "grammar";
 
-pub const WSP_NAME: &str = "whitespace";
-pub const CMT_NAME: &str = "comments";
-pub const EOL_NAME: &str = "eol_comments";
+pub const STR_WSP: &str = "whitespace";
+pub const STR_CMT: &str = "comments";
+pub const STR_EOL: &str = "eol_comments";
 
-pub const ETX_SYM: &str = "＄";
-pub const EOL_SYM: &str = "⏎";
+pub const SYM_ETX: &str = "＄";
+pub const SYM_EOL: &str = "⏎";
