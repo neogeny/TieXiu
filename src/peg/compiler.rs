@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::{Exp, Grammar, Rule};
+use crate::peg::grammar::GrammarDirectives;
 use crate::peg::rule::RuleName;
 use crate::trees::{FlagMap, Tree, TreeMap};
 use indexmap::IndexMap;
@@ -75,7 +76,7 @@ fn parse_node_check<'n>(node: &'n Tree, typename: &'static str) -> CompileResult
     Ok(tree)
 }
 
-fn _parse_map(node: &Tree) -> CompileResult<&TreeMap> {
+fn parse_map(node: &Tree) -> CompileResult<&TreeMap> {
     let Tree::Map(map) = node else {
         return Err(CompileError::ExpectedMap(format!("{:?}", node)));
     };
@@ -109,6 +110,7 @@ impl GrammarCompiler {
     }
 
     pub fn compile_grammar(&mut self, tree: &Tree) -> CompileResult<Grammar> {
+        eprintln!("COMPILER TREE\n{:#?}", tree);
         let map = parse_node_check(tree, "Grammar")?;
 
         let rule_trees = map_get(map, "Grammar", "rules")?.list_value();
@@ -121,16 +123,21 @@ impl GrammarCompiler {
         let rules: Vec<Rule> = rulemap.into_iter().map(|(_, r)| r).collect();
         let name = map_get_default(map, "name", "__COMPILED__");
 
-        if let Ok(_directive_tree) = map_get(map, "Grammar", "directives") {
-            unimplemented!();
-        }
-
+        let directives_tree = map_get(map, "Grammar", "directives")?;
+        let directives_map = parse_map(directives_tree)?;
+        let directives: GrammarDirectives = GrammarDirectives::from_iter(
+            directives_map
+                .entries
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.value().to_string())),
+        );
         if let Ok(_keywords_tree) = map_get(map, "Grammar", "keywords") {
+            // TODO: Implement keywords
             unimplemented!();
         }
 
-        // TODO: Implement keywords
-        let grammar = Grammar::new(&name, rules.as_slice());
+        let mut grammar = Grammar::new(&name, rules.as_slice());
+        grammar.set_directives(directives);
         Ok(grammar)
     }
 
