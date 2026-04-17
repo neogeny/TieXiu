@@ -15,13 +15,15 @@ pub const FLAG_NO_MEMO: &str = "no_memo";
 pub const FLAG_IS_MEMO: &str = "is_memo";
 pub const FLAG_IS_LREC: &str = "is_lrec";
 
+pub type RuleName = Box<str>;
 pub type RuleRef = Rc<Rule>;
 pub type RuleIndex = IndexMap<Box<str>, usize>;
-pub type RuleMap = IndexMap<Box<str>, RuleRef>;
+pub type Rules = Box<[Rule]>;
+pub type RuleMap = IndexMap<RuleName, RuleRef>;
 
 #[derive(Debug, Clone)]
 pub struct Rule {
-    pub name: Box<str>,
+    pub name: RuleName,
     pub params: Box<[Box<str>]>,
     // kwparams: dict[str, Any] = field(default_factory=dict)
     pub flags: FlagMap,
