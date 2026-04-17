@@ -23,7 +23,7 @@ pub enum ParseError {
     ExpectedToken(Box<str>),
 
     /// Corresponds to Self::Pattern
-    #[error("expected pattern: {0}")]
+    #[error("/{0}/")]
     ExpectedPattern(String),
 
     /// Corresponds to Self::NegativeLookahead
