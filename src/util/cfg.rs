@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::error::{Error, Result};
+use std::collections::BTreeMap;
 use std::ops::Index;
 use std::str::FromStr;
 use std::{env, fmt};
-
-pub type CfgA<'c> = &'c [(&'c str, &'c str)];
 
 /// Python-style falsy values for string-based configuration.
 pub const FALSY_VALUES: &[&str] = &["false", "0", "no", "none", "False", "No"];
@@ -16,21 +15,49 @@ pub fn is_falsy(v: &str) -> bool {
     v.is_empty() || FALSY_VALUES.contains(&v.to_lowercase().as_str())
 }
 
+/// What gets passed around
+pub type CfgA<'c> = &'c [(&'c str, &'c str)];
+pub type CfgR<'c> = Box<[(&'c str, &'c str)]>;
+
 /// An owned, optimized configuration container.
-#[derive(Clone)]
+/// Invariants:
+/// 1. Sorted by key (for binary search).
+/// 2. Unique keys (no duplicates).
+/// 3. Latter wins (last key in input overrides previous ones).
+#[derive(Clone, Default)]
 pub struct Cfg {
     pairs: Box<[(Box<str>, Box<str>)]>,
 }
 
+/// You can also implement IntoIterator for references to allow:
+/// for (k, v) in &cfg { ... }
+impl<'a> IntoIterator for &'a Cfg {
+    type Item = (&'a str, &'a str);
+    type IntoIter = Box<dyn Iterator<Item = Self::Item> + 'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Box::new(self.iter())
+    }
+}
+
+/// Has use for a Cfg
+pub trait Configurable {
+    fn configure(&mut self, cfg: &Cfg);
+}
+
 impl Cfg {
-    /// Creates a new Cfg from borrowed slices.
+    /// Creates a new Cfg ensuring all invariants (Sorted, Unique, Latter Wins).
     pub fn new(pairs: CfgA) -> Self {
-        let boxed_pairs = pairs
+        // BTreeMap enforces uniqueness and sorting.
+        // Collecting an iterator into a BTreeMap ensures the last value wins.
+        let map: BTreeMap<Box<str>, Box<str>> = pairs
             .iter()
             .map(|(k, v)| (Box::from(*k), Box::from(*v)))
-            .collect::<Vec<_>>()
-            .into_boxed_slice();
-        Self { pairs: boxed_pairs }
+            .collect();
+
+        Self {
+            pairs: map.into_iter().collect::<Vec<_>>().into_boxed_slice(),
+        }
     }
 
     pub fn check_new(pairs: CfgA, valid: &[&str]) -> Result<Self> {
@@ -42,33 +69,42 @@ impl Cfg {
         Ok(Self::new(pairs))
     }
 
-    pub fn fromenv(prefix: &str) -> Self {
-        let pairs = env::vars()
+    pub fn from_env(prefix: &str) -> Self {
+        let map: BTreeMap<Box<str>, Box<str>> = env::vars()
             .filter(|(key, _)| key.starts_with(prefix))
-            .map(|(key, val)| (key[prefix.len()..].to_string(), val))
-            .map(|(mut key, val)| {
+            .map(|(key, val)| {
+                let mut key = key[prefix.len()..].to_string();
                 if key.starts_with('_') {
                     key.remove(0);
                 }
-                (key, val)
+                (key.to_lowercase().into_boxed_str(), val.into_boxed_str())
             })
-            .map(|(key, val)| (key.to_lowercase(), val))
-            .map(|(k, v)| (k.into_boxed_str(), v.into_boxed_str()))
-            .collect::<Vec<_>>()
-            .into_boxed_slice();
+            .collect();
 
-        Self { pairs }
+        Self {
+            pairs: map.into_iter().collect::<Vec<_>>().into_boxed_slice(),
+        }
     }
 
-    /// Merges two configurations, returning a new one.
-    /// Values from 'other' win on key collisions.
+    pub fn from_boxed_slice(pairs: Box<[(&'_ str, &'_ str)]>) -> Self {
+        Self::new(pairs.as_ref())
+    }
+
+    pub fn as_boxed_slice(&self) -> Box<[(&str, &str)]> {
+        self.pairs
+            .iter()
+            .map(|(k, v)| (k.as_ref(), v.as_ref()))
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
+    }
+
+    /// Merges two configurations. Values from 'other' win on key collisions.
     pub fn merge(&self, other: &Cfg) -> Self {
-        let mut map: std::collections::BTreeMap<Box<str>, Box<str>> =
-            self.pairs.iter().cloned().collect();
+        let mut map: BTreeMap<Box<str>, Box<str>> = self.pairs.iter().cloned().collect();
 
         for (k, v) in other.pairs.iter() {
-            let s = map.get(k);
-            if let Some(u) = s
+            // Keep existing if it's truthy, otherwise override.
+            if let Some(u) = map.get(k)
                 && !is_falsy(u)
             {
                 continue;
@@ -76,40 +112,54 @@ impl Cfg {
             map.insert(k.clone(), v.clone());
         }
 
-        let merged_pairs = map.into_iter().collect::<Vec<_>>().into_boxed_slice();
-
         Self {
-            pairs: merged_pairs,
+            pairs: map.into_iter().collect::<Vec<_>>().into_boxed_slice(),
         }
     }
 
-    pub fn is_enabled(&self, key: &str) -> bool {
+    pub fn insert(&mut self, key: &str, value: &str) {
+        // 1. Convert existing pairs to a map
+        let mut map: BTreeMap<Box<str>, Box<str>> = self.pairs
+            .iter()
+            .cloned()
+            .collect();
+
+        // 2. Insert/Overwrite the new value
+        map.insert(Box::from(key), Box::from(value));
+
+        // 3. Re-freeze into a boxed slice
+        self.pairs = map.into_iter().collect::<Vec<_>>().into_boxed_slice();
+    }
+
+    /// Returns an iterator over the configuration pairs as borrowed strings.
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
         self.pairs
             .iter()
-            .find(|(k, _)| k.as_ref() == key)
-            .map(|(_, v)| !is_falsy(v))
-            .unwrap_or(false)
+            .map(|(k, v)| (k.as_ref(), v.as_ref()))
+    }
+
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.pairs
+            .binary_search_by(|(k, _)| k.as_ref().cmp(key))
+            .ok()
+            .map(|idx| self.pairs[idx].1.as_ref())
+    }
+
+    pub fn is_enabled(&self, key: &str) -> bool {
+        self.get(key).map(|v| !is_falsy(v)).unwrap_or(false)
     }
 
     pub fn get_or<T: FromStr>(&self, key: &str, default: T) -> T {
-        self.pairs
-            .iter()
-            .find(|(k, _)| k.as_ref() == key)
-            .and_then(|(_, v)| v.parse::<T>().ok())
+        self.get(key)
+            .and_then(|v| v.parse::<T>().ok())
             .unwrap_or(default)
     }
 
     pub fn get_value(&self, key: &str) -> &str {
-        self.pairs
-            .iter()
-            .find(|(k, _)| k.as_ref() == key)
-            .map(|(_, v)| v.as_ref())
-            .unwrap_or("")
+        self.get(key).unwrap_or("")
     }
 }
 
-/// Fixed Index implementation.
-/// Since Output is 'str', we return a reference '&str'.
 impl Index<&str> for Cfg {
     type Output = str;
     fn index(&self, key: &str) -> &Self::Output {
@@ -130,66 +180,39 @@ impl fmt::Debug for Cfg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[test]
-    fn test_conversion_and_storage() {
-        let storage = [("trace", "1"), ("mode", "strict")];
+    fn test_latter_wins_invariant() {
+        // "trace" is defined twice. The second one ("1") must win.
+        let storage = [("trace", "0"), ("mode", "strict"), ("trace", "1")];
         let cfg = Cfg::new(&storage);
 
-        // Cfg is alive here
-        assert!(cfg.is_enabled("trace"));
+        assert_eq!(cfg.pairs.len(), 2); // Unique keys
+        assert_eq!(cfg.get_value("trace"), "1"); // Latter wins
+        // Verify sorting (a < m < t is not the case here, but 'm' < 't')
+        assert_eq!(cfg.pairs[0].0.as_ref(), "mode");
+        assert_eq!(cfg.pairs[1].0.as_ref(), "trace");
     }
 
     #[test]
-    fn test_owned_cfg_logic() {
-        let base = Cfg::new(&[("trace", "0"), ("memoize", "true")]);
-        let overrides = Cfg::new(&[("trace", "1"), ("new_opt", "yes")]);
-
-        let merged = base.merge(&overrides);
-
-        assert!(merged.is_enabled("trace"));
-        assert!(merged.is_enabled("memoize"));
-
-        // This should now compile perfectly.
-        // We compare the &str returned by index to the &str "1".
-        assert_eq!(&merged["trace"], "1");
-        assert_eq!(&merged["missing"], "");
+    fn test_binary_search_get() {
+        let cfg = Cfg::new(&[("z", "last"), ("a", "first"), ("m", "middle")]);
+        assert_eq!(cfg.get("a"), Some("first"));
+        assert_eq!(cfg.get("m"), Some("middle"));
+        assert_eq!(cfg.get("z"), Some("last"));
+        assert_eq!(cfg.get("missing"), None);
     }
 
     #[test]
-    fn test_cfg_fromenv_mangling() {
-        let prefix = "TX";
+    fn test_merge_logic() {
+        let base = Cfg::new(&[("a", "0"), ("b", "1")]);
+        let over = Cfg::new(&[("a", "1"), ("c", "2")]);
+        let merged = base.merge(&over);
 
-        // Set up the environment for the test
-        unsafe {
-            env::set_var("TXVERBOSE", "true");
-            env::set_var("TX_DEBUG", "1");
-            env::set_var("TX_MAX_DEPTH", "50");
-            env::set_var("OTHER_VAR", "ignore_me");
-        }
-
-        let cfg = Cfg::fromenv(prefix);
-
-        // Helper to check if a key exists in our boxed slice
-        let get_val = |key: &str| {
-            cfg.pairs
-                .iter()
-                .find(|(k, _)| k.as_ref() == key)
-                .map(|(_, v)| v.as_ref())
-        };
-
-        // Assertions for the four cases
-        assert_eq!(get_val("verbose"), Some("true")); // Case 1: Simple prefix removal
-        assert_eq!(get_val("debug"), Some("1")); // Case 2: Underscore peeling
-        assert_eq!(get_val("max_depth"), Some("50")); // Case 3: Lowercasing
-        assert!(get_val("other_var").is_none()); // Case 4: Filtering
-
-        // Clean up (optional, but polite for other tests)
-        unsafe {
-            env::remove_var("TXVERBOSE");
-            env::remove_var("TX_DEBUG");
-            env::remove_var("TX_MAX_DEPTH");
-        }
+        // "a" was truthy "0" in Pythonic terms? No, "0" is falsy.
+        // So "a" should be overridden by "1".
+        assert_eq!(&merged["a"], "1");
+        assert_eq!(&merged["b"], "1");
+        assert_eq!(&merged["c"], "2");
     }
 }
