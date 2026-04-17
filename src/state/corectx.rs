@@ -24,12 +24,11 @@ pub struct State<U: Cursor> {
     pub callstack: TokenList,
 }
 
-#[derive(Clone, Debug)]
-pub struct HeavyState<'c> {
+#[derive(Debug)]
+pub struct HeavyState<'t> {
     pub memos: MemoCache,
     pub patterns: PatternCache,
-    pub tracer: &'c dyn Tracer,
-    pub marker: std::marker::PhantomData<&'c ()>,
+    pub tracer: &'t dyn Tracer,
 }
 
 #[derive(Clone, Debug)]
@@ -59,7 +58,6 @@ where
                 memos: MemoCache::new(),
                 patterns: PatternCache::new(),
                 tracer: &NULL_TRACER,
-                marker: std::marker::PhantomData,
             })),
         }
     }
@@ -72,14 +70,14 @@ where
     #[inline]
     fn with_heavy_mut<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&mut HeavyState<'c>) -> R,
+        F: FnOnce(&mut HeavyState) -> R,
     {
         let mut heavy = self.heavy.borrow_mut();
         f(&mut heavy)
     }
 
     pub fn trace_with(&mut self, tracer: &'c dyn Tracer) {
-        self.heavy.borrow_mut().tracer = tracer;
+        self.heavy.borrow_mut().tracer = tracer
     }
 
     pub fn set_trace(&mut self, on: bool) {
