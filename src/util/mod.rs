@@ -9,6 +9,7 @@ pub mod indent;
 pub mod into;
 pub mod pyre;
 pub mod tokenlist;
+pub mod strutil;
 
 pub use cfg::Cfg;
 pub use error::*;
