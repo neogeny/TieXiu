@@ -40,13 +40,11 @@ pub trait Cursor: Debug + Configurable {
     fn set_tokenizing(&mut self, patterns: &TokenizingPatterns);
 
     fn tokenizing_from_cfg(&self, cfg: &Cfg) -> Result<TokenizingPatterns, Error> {
-        eprintln!("Cursor cfg {:#?}", cfg);
         type P = TokenizingPatterns;
         let wsp = cfg.get(WSP).map_or(P::DEFAULT_WSP, |s| s);
         let cmt = cfg.get(CMT).map_or(P::DEFAULT_CMT, |s| s);
         let eol = cfg.get(EOL).map_or(P::DEFAULT_EOL, |s| s);
         let patterns = TokenizingPatterns::try_new(wsp, cmt, eol);
-        eprintln!("Cursor patterns {:#?}", patterns);
         patterns
     }
     // // Character classification
