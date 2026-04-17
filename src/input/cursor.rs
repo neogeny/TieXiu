@@ -44,8 +44,7 @@ pub trait Cursor: Debug + Configurable {
         let wsp = cfg.get(WSP).map_or(P::DEFAULT_WSP, |s| s);
         let cmt = cfg.get(CMT).map_or(P::DEFAULT_CMT, |s| s);
         let eol = cfg.get(EOL).map_or(P::DEFAULT_EOL, |s| s);
-        let patterns = TokenizingPatterns::try_new(wsp, cmt, eol);
-        patterns
+        TokenizingPatterns::try_new(wsp, cmt, eol)
     }
     // // Character classification
     // fn is_name(&self, s: &str) -> bool;
