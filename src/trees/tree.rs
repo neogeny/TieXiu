@@ -183,9 +183,9 @@ impl Tree {
         }
     }
 
-    pub fn normalized(self) -> Tree {
+    pub fn into_node_tree(self) -> Tree {
         let mut gather = TreeMerge::new();
-        let tree = self._clean(&mut gather);
+        let tree = self.clean_and_merge(&mut gather);
 
         if gather.root != Tree::Nil {
             gather.root
@@ -196,7 +196,7 @@ impl Tree {
         }
     }
 
-    fn _clean(&self, gather: &mut TreeMerge) -> Tree {
+    fn clean_and_merge(&self, gather: &mut TreeMerge) -> Tree {
         match self {
             Tree::List(elements) => {
                 // NOTE:
@@ -208,7 +208,7 @@ impl Tree {
                 let mut out = Tree::Nil;
                 elements
                     .into_iter()
-                    .for_each(|s| out = out.clone().append(s._clean(gather)));
+                    .for_each(|s| out = out.clone().append(s.clean_and_merge(gather)));
                 out
             }
             Tree::Closed(elements) => {
@@ -216,28 +216,31 @@ impl Tree {
                 //  Tree::Closed is the product of the Exp closure node kinds.
                 //  The current semantics inherited from TatSu are to keep them
                 //  intact, with no merging
-                let clean: Vec<Tree> = elements.into_iter().map(|s| s._clean(gather)).collect();
+                let clean: Vec<Tree> = elements
+                    .into_iter()
+                    .map(|s| s.clean_and_merge(gather))
+                    .collect();
                 Tree::Closed(clean.into())
             }
             Tree::Named(keyval) => {
                 let KeyValue(name, val) = keyval;
-                let clean = val.clone()._clean(gather);
+                let clean = val.clone().clean_and_merge(gather);
                 gather.map.insert(name, clean.clone());
                 clean
             }
             Tree::NamedAsList(keyval) => {
                 let KeyValue(name, val) = keyval;
-                let clean = val._clean(gather);
+                let clean = val.clean_and_merge(gather);
                 gather.map.insert_as_list(name, clean.clone());
                 clean
             }
             Tree::Override(val) => {
-                let clean = val._clean(gather);
+                let clean = val.clean_and_merge(gather);
                 gather.root = gather.root.clone().append(clean.clone());
                 clean
             }
             Tree::OverrideAsList(val) => {
-                let clean = val._clean(gather);
+                let clean = val.clean_and_merge(gather);
                 gather.root = gather.root.clone().append_as_list(clean.clone());
                 clean
             }
@@ -283,16 +286,16 @@ mod tests {
     #[test]
     fn test_node_nil_removal() {
         let raw = Tree::List([Tree::Nil, Tree::Bottom, Tree::Nil].into());
-        let result = raw.normalized();
+        let result = raw.into_node_tree();
 
         // result = tree_closed(Bottom)
-        assert_eq!(result, Tree::Bottom.normalized());
+        assert_eq!(result, Tree::Bottom.into_node_tree());
     }
 
     #[test]
     fn test_node_nil_removal_to_bottom() {
         let raw = Tree::List([Tree::Nil, Tree::Bottom, Tree::Nil].into());
-        let result = raw.normalized();
+        let result = raw.into_node_tree();
 
         // If tree_closed is identity for non-lists, this is just Bottom
         assert_eq!(result, Tree::Bottom);
@@ -301,7 +304,7 @@ mod tests {
     #[test]
     fn test_node_nil_removal_to_list() {
         let raw = Tree::List([Tree::Bottom, Tree::Nil, Tree::Bottom].into());
-        let result = raw.normalized(); // normalize doesn't close
+        let result = raw.into_node_tree(); // normalize doesn't close
 
         if let Tree::List(v) = result {
             assert_eq!(v.len(), 2); // Nil is gone, only the two Bottoms remain
@@ -316,7 +319,7 @@ mod tests {
     fn test_node_nil_purging_preserves_count() {
         // Input: List([Nil, Bottom, Nil])
         let raw = Tree::List([Tree::Nil, Tree::Bottom, Tree::Nil].into());
-        let result = raw.normalized();
+        let result = raw.into_node_tree();
 
         // Since it's effectively Bottom, and Bottom isn't a list,
         // it doesn't become a Closure of len 1. It just stays Bottom.
@@ -338,7 +341,7 @@ mod tests {
             ),
         );
 
-        let result = tree.normalized();
+        let result = tree.into_node_tree();
 
         // Result should be a Map containing "a", "b", and "x"
         assert!(matches!(result, Tree::Map(_)));

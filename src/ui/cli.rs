@@ -131,7 +131,7 @@ pub fn cli() -> Result<()> {
             for input in inputs {
                 let text = std::fs::read_to_string(&input)?;
                 let tree = parse_input(&parser, &text, &[])?;
-                output.push_str(format!("{}", tree.normalized()).as_str());
+                output.push_str(format!("{}", tree.into_node_tree()).as_str());
                 output.push('\n');
             }
             (output, "text")

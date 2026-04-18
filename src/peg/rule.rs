@@ -98,7 +98,7 @@ impl Rule {
         let _text = ctx.cursor().textstr();
         match self.exp.parse(ctx) {
             Ok(Succ(ctx, mut tree)) => {
-                tree = tree.normalized();
+                tree = tree.into_node_tree();
                 Ok(Succ(
                     ctx,
                     if self.params.is_empty() {
