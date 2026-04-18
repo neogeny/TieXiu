@@ -150,9 +150,7 @@ mod tests {
         map.insert("foo", list(&["c", "d"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::Seq(
-                [text("a"), text("b"), list(&["c", "d"])].into()
-            ))
+            Some(&Tree::Seq([text("a"), text("b"), list(&["c", "d"])].into()))
         );
     }
 
@@ -196,10 +194,7 @@ mod tests {
     fn insert_as_list_with_list_once() {
         let mut map = TreeMap::new();
         map.insert_as_list("foo", list(&["a", "b"]));
-        assert_eq!(
-            map.get("foo"),
-            Some(&Tree::Seq([list(&["a", "b"])].into()))
-        );
+        assert_eq!(map.get("foo"), Some(&Tree::Seq([list(&["a", "b"])].into())));
     }
 
     #[test]
