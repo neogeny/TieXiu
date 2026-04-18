@@ -12,7 +12,7 @@ use crate::util::Cfg;
 use std::rc::Rc;
 
 pub type KeywordRef = Box<str>;
-pub type Keywords = Box<[KeywordRef]>;
+pub type GrammarKeywords = Box<[KeywordRef]>;
 pub type GrammarDirectives = Cfg;
 
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ pub struct Grammar {
     pub name: Box<str>,
     pub analyzed: bool,
     directives: GrammarDirectives,
-    pub keywords: Keywords,
+    pub keywords: GrammarKeywords,
     pub rules: RuleMap,
 }
 
@@ -69,10 +69,24 @@ impl Grammar {
 
     pub fn set_directives(&mut self, directives: GrammarDirectives) {
         self.directives = directives;
-        eprintln!("DIRECTIVES {:#?}", self.directives);
         if let Some(name) = self.directives.get(STR_GRAMMAR_NAME) {
             self.name = name.into();
         }
+    }
+
+    pub fn set_keywords(&mut self, keywords: &[KeywordRef]) {
+        let mut vec: Vec<KeywordRef> = keywords.to_vec();
+
+        vec.sort();
+        vec.dedup();
+
+        // 3. Shrink to fit and freeze as a boxed slice
+        self.keywords = vec.into_boxed_slice();
+    }
+
+    pub fn is_keyword(&self, name: &str) -> bool {
+        let name: Box<str> = name.into();
+        self.keywords.binary_search(&name).is_ok()
     }
 
     pub fn start_rule(&self) -> Result<&Rule, ParseError> {
@@ -85,16 +99,6 @@ impl Grammar {
             .map(|r| r.as_ref())
             .or_else(|| self.rules.get_index(0).map(|(_, r)| r.as_ref()))
             .ok_or_else(|| RuleNotFound(start.into()))
-    }
-
-    pub fn set_keywords(&mut self, keywords: &[&str]) {
-        let mut vec: Vec<KeywordRef> = keywords.iter().map(|&k| k.into()).collect();
-
-        vec.sort();
-        vec.dedup();
-
-        // 3. Shrink to fit and freeze as a boxed slice
-        self.keywords = vec.into_boxed_slice();
     }
 
     pub fn parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {

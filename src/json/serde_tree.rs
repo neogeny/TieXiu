@@ -38,10 +38,10 @@ impl Tree {
 
     pub fn to_serde_json_value(&self) -> Value {
         match self {
-            Tree::Nil => tagged("Nil", []),
-            Tree::Bottom => tagged("Bottom", []),
-            Tree::Text(text) => tagged("Text", [("text", Value::String(text.to_string()))]),
-            Tree::List(items) | Tree::Closed(items) => tagged(
+            Tree::Nil => named("Nil", []),
+            Tree::Bottom => named("Bottom", []),
+            Tree::Text(text) => named("Text", [("text", Value::String(text.to_string()))]),
+            Tree::List(items) | Tree::Closed(items) => named(
                 "List",
                 [(
                     "items",
@@ -51,14 +51,14 @@ impl Tree {
             Tree::Named(keyval) => named_value("Named", keyval),
             Tree::NamedAsList(keyval) => named_value("NamedAsList", keyval),
             Tree::Override(tree) => {
-                tagged("Override", [("tree", tree.as_ref().to_serde_json_value())])
+                named("Override", [("tree", tree.as_ref().to_serde_json_value())])
             }
-            Tree::OverrideAsList(tree) => tagged(
+            Tree::OverrideAsList(tree) => named(
                 "OverrideAsList",
                 [("tree", tree.as_ref().to_serde_json_value())],
             ),
-            Tree::Map(m) => tagged("Map", [("entries", map_entries_value(m))]),
-            Tree::Node { typename, tree } => tagged(
+            Tree::Map(m) => named("Map", [("entries", map_entries_value(m))]),
+            Tree::Node { typename, tree } => named(
                 "Node",
                 [
                     ("typename", Value::String(typename.to_string())),
@@ -106,7 +106,7 @@ impl Tree {
     }
 }
 
-fn tagged<const N: usize>(kind: &str, fields: [(&str, Value); N]) -> Value {
+fn named<const N: usize>(kind: &str, fields: [(&str, Value); N]) -> Value {
     let mut object = Map::new();
     object.insert("type".into(), Value::String(kind.into()));
     for (key, value) in fields {
@@ -117,7 +117,7 @@ fn tagged<const N: usize>(kind: &str, fields: [(&str, Value); N]) -> Value {
 
 fn named_value(kind: &str, keyval: &KeyValue) -> Value {
     let KeyValue(name, tree) = keyval;
-    tagged(
+    named(
         kind,
         [
             ("name", Value::String(name.to_string())),
@@ -131,7 +131,7 @@ fn map_entries_value(m: &TreeMap) -> Value {
         m.entries
             .iter()
             .map(|(key, value)| {
-                tagged(
+                named(
                     "Entry",
                     [
                         ("key", Value::String(key.to_string())),
@@ -148,7 +148,7 @@ fn _flag_entries_value(flags: &FlagMap) -> Value {
         flags
             .iter()
             .map(|(key, value)| {
-                tagged(
+                named(
                     "Flag",
                     [
                         ("key", Value::String(key.to_string())),

@@ -10,9 +10,12 @@ fn test_ebnf_parsing() -> tiexiu::Result<()> {
             Example of a grammar that mixes TatSu and EBNF
         */
         @@grammar :: EBNF  // this is TatSu wiht an EBNF comment
-        
+        @@keyword :: None At
+        @@keyword :: This Time
+
         start := expression $
-        
+
+
         expression := expression '+' term | expression '-' term | term
         
         term := term '*' factor | term '/' factor | factor
@@ -23,10 +26,11 @@ fn test_ebnf_parsing() -> tiexiu::Result<()> {
     "#,
     );
 
-    let g = compile(grammar.as_ref(), &[("trace", "1")])?;
+    let g = compile(grammar.as_ref(), &[("trace", "0")])?;
 
     assert_eq!(g.name.to_string(), "EBNF");
     assert_eq!(g.rules.len(), 5, "Unexpected number of rules");
+    assert_eq!(g.keywords.len(), 4, "Unexpected number of keywords");
 
     Ok(())
 }

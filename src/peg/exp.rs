@@ -182,7 +182,6 @@ impl Exp {
             ExpKind::Named(name, exp) => match exp.parse(ctx) {
                 Ok(Succ(ctx, mut tree)) => {
                     tree = Tree::named(name, tree);
-                    eprintln!("Named {}={:#?}", name, tree);
                     Ok(Succ(ctx, tree))
                 }
                 err => err,
@@ -190,7 +189,6 @@ impl Exp {
             ExpKind::NamedList(name, exp) => match exp.parse(ctx) {
                 Ok(Succ(ctx, mut tree)) => {
                     tree = Tree::named_as_list(name, tree);
-                    eprintln!("NamedList {}={:#?}", name, tree);
                     Ok(Succ(ctx, tree))
                 }
                 err => err,

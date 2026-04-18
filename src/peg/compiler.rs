@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::{Exp, Grammar, Rule};
-use crate::peg::grammar::GrammarDirectives;
+use crate::peg::grammar::{GrammarDirectives, KeywordRef};
 use crate::peg::rule::RuleName;
 use crate::trees::{FlagMap, Tree, TreeMap};
 use indexmap::IndexMap;
@@ -110,7 +110,6 @@ impl GrammarCompiler {
     }
 
     pub fn compile_grammar(&mut self, tree: &Tree) -> CompileResult<Grammar> {
-        eprintln!("COMPILER TREE\n{:#?}", tree);
         let map = parse_node_check(tree, "Grammar")?;
 
         let rule_trees = map_get(map, "Grammar", "rules")?.list_value();
@@ -132,13 +131,31 @@ impl GrammarCompiler {
                 let value = dm.get("value").expect("value key").value();
                 (name.to_string(), value.to_string())
             }));
-        if let Ok(_keywords_tree) = map_get(map, "Grammar", "keywords") {
-            // TODO: Implement keywords
-            unimplemented!();
-        }
+        let keywords: Vec<KeywordRef> =
+            if let Ok(keywords_tree) = map_get(map, "Grammar", "keywords") {
+                let keywords_nested = _parse_list(keywords_tree)?;
+                let mut keywords = Vec::new();
+                for nested_list in keywords_nested.iter() {
+                    let inner_list = _parse_list(nested_list)?;
+                    for kw in inner_list.iter() {
+                        let value: Box<str> = match kw {
+                            Tree::Text(t) => t.clone(),
+                            Tree::Node { typename, tree } if typename.as_ref() == "Word" => {
+                                tree.value()
+                            }
+                            _ => continue,
+                        };
+                        keywords.push(value);
+                    }
+                }
+                keywords
+            } else {
+                Vec::new()
+            };
 
         let mut grammar = Grammar::new(&name, rules.as_slice());
         grammar.set_directives(directives);
+        grammar.set_keywords(keywords.as_slice());
         Ok(grammar)
     }
 
