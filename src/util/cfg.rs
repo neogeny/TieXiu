@@ -26,7 +26,7 @@ pub struct Cfg {
     pairs: Box<[(Box<str>, Box<str>)]>,
 }
 
-impl<'c> From<CfgA<'c>> for Cfg  {
+impl<'c> From<CfgA<'c>> for Cfg {
     fn from(cfg: CfgA) -> Self {
         Self::new(cfg)
     }

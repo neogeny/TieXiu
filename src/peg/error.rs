@@ -38,6 +38,10 @@ pub enum ParseError {
     #[error("no viable option")]
     NoViableOption(Box<[Box<str>]>),
 
+    /// Corresponds is_keyword() validations
+    #[error("'{0}' is a reserved word")]
+    ReservedWord(Box<str>),
+
     /// Corresponds memos that are Tree::Bottom
     #[error("Failed parsing '{0}'")]
     FailedParse(Rc<str>),

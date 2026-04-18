@@ -152,6 +152,10 @@ impl Rule {
                 .is_some_and(|c| c.is_uppercase())
     }
 
+    pub fn is_name(&self) -> bool {
+        self.flag(FLAG_IS_NAME)
+    }
+
     pub fn reset_left_recursion(&mut self) {
         self.set_flag(FLAG_IS_MEMO, !self.has_no_memo_flag());
         self.set_flag(FLAG_IS_LREC, false);

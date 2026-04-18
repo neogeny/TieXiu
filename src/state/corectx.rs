@@ -28,6 +28,7 @@ pub struct State<U: Cursor> {
 pub struct HeavyState<'t> {
     pub memos: MemoCache,
     pub patterns: PatternCache,
+    pub keywords: Box<[Box<str>]>,
     pub tracer: &'t dyn Tracer,
 }
 
@@ -57,6 +58,7 @@ where
             heavy: Rc::new(RefCell::new(HeavyState {
                 memos: MemoCache::new(),
                 patterns: PatternCache::new(),
+                keywords: [].into(),
                 tracer: &NULL_TRACER,
             })),
         }
@@ -179,6 +181,18 @@ where
     fn prune_cache(&mut self) {
         let cutpoint = self.mark();
         self.with_heavy_mut(|heavy| heavy.memos.prune(cutpoint));
+    }
+
+    fn is_keyword(&self, name: &str) -> bool {
+        self.heavy
+            .borrow()
+            .keywords
+            .binary_search(&name.into())
+            .is_ok()
+    }
+
+    fn set_keywords(&mut self, keywords: &[Box<str>]) {
+        self.heavy.borrow_mut().keywords = keywords.into()
     }
 }
 

@@ -4,7 +4,6 @@
 //! Tests for Buffer functionality - NOT IMPLEMENTED
 
 #[test]
-#[ignore = "TODO: Fix buffering failures"]
 fn test_pos_consistency() {
     unimplemented!("buffer not implemented");
 }

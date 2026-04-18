@@ -115,7 +115,7 @@ impl Exp {
             },
             ExpKind::Call { name, rule } => match rule {
                 None => Err(ctx.failure(start, ParseError::RuleNotLinked(name.clone()))),
-                Some(rule) => match ctx.call_rule(name, rule.as_ref()) {
+                Some(rule) => match ctx.call(name, rule.as_ref()) {
                     Ok(Succ(mut ctx, tree)) => {
                         ctx.restore_cut(was_cut);
                         Ok(Succ(ctx, tree))

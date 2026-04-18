@@ -19,7 +19,7 @@ pub type GrammarDirectives = Cfg;
 pub struct Grammar {
     pub name: Box<str>,
     pub analyzed: bool,
-    directives: GrammarDirectives,
+    pub directives: GrammarDirectives,
     pub keywords: GrammarKeywords,
     pub rules: RuleMap,
 }
@@ -104,6 +104,7 @@ impl Grammar {
     pub fn parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
         let start_mark = ctx.mark();
         ctx.configure(&self.directives);
+        ctx.set_keywords(&self.keywords);
         match self.start_rule() {
             Ok(rule) => rule.parse(ctx),
             Err(err) => Err(ctx.failure(start_mark, err)),

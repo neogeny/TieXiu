@@ -119,7 +119,10 @@ pub trait Ctx: CtxI + Clone + Debug {
     }
     fn prune_cache(&mut self);
 
-    fn call_rule(mut self, name: &str, rule: &Rule) -> ParseResult<Self> {
+    fn is_keyword(&self, name: &str) -> bool;
+    fn set_keywords(&mut self, keywords: &[Box<str>]);
+
+    fn call(mut self, name: &str, rule: &Rule) -> ParseResult<Self> {
         let start = self.mark();
         self.enter(name);
         self.tracer().trace_entry(&self);
@@ -153,9 +156,18 @@ pub trait Ctx: CtxI + Clone + Debug {
             rule.parse(doppelganger)
         } {
             Ok(Succ(mut neogenus, tree)) => {
+                neogenus.leave();
+                if rule.is_name()
+                    && let Tree::Text(name) = &tree
+                    && self.is_keyword(name)
+                {
+                    self.memoize(&key, &Tree::Bottom);
+                    let error = ParseError::ReservedWord(name.clone());
+                    self.tracer().trace_failure(&self, &error);
+                    return Err(self.failure(start, error));
+                }
                 neogenus.tracer().trace_success(&neogenus);
                 neogenus.memoize(&key, &tree);
-                neogenus.leave();
                 Ok(Succ(neogenus, tree))
             }
             Err(nope) => {
