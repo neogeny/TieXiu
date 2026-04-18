@@ -39,7 +39,7 @@ impl fmt::Display for Tree {
             Self::Map(map) => write!(f, "{}", map),
             Self::Nil => write!(f, "∅"),
             Self::Bottom => write!(f, "⊥"),
-            Self::List(items) | Self::Closed(items) => {
+            Self::Seq(items) | Self::Closed(items) => {
                 write!(f, "[")?;
                 for (i, item) in items.iter().enumerate() {
                     if i > 0 {
@@ -102,7 +102,7 @@ mod tests {
 
         // RootNode
         assert_eq!(
-            Tree::OverrideAsList(Tree::List(vec![Tree::Text("item".into())].into()).into())
+            Tree::OverrideAsList(Tree::Seq(vec![Tree::Text("item".into())].into()).into())
                 .to_string(),
             "!![item]"
         );
@@ -120,11 +120,11 @@ mod tests {
         assert_eq!(Tree::Bottom.to_string(), "⊥");
 
         // Node
-        let node = Tree::List(
+        let node = Tree::Seq(
             vec![
                 Tree::Text("a".into()),
                 Tree::Text("b".into()),
-                Tree::List(vec![Tree::Text("c".into())].into()),
+                Tree::Seq(vec![Tree::Text("c".into())].into()),
             ]
             .into(),
         );

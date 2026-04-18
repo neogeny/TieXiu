@@ -12,7 +12,7 @@ fn to_python(tree: &Tree, py: Python<'_>) -> PyResult<Py<PyAny>> {
             let s: String = (*s).clone().into();
             Ok(PyString::new(py, &s).into())
         }
-        Tree::List(items) => {
+        Tree::Seq(items) => {
             let py_items: Vec<Py<PyAny>> = items
                 .iter()
                 .map(|item| to_python(item, py))

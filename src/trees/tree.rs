@@ -16,8 +16,8 @@ pub type FlagMap = IndexMap<Box<str>, bool>;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Tree {
     Text(Box<str>),      // Tokens or patterns
-    List(Box<[Tree]>),   // Sequences of expressions
-    Closed(Box<[Tree]>), // Sequences of expressions
+    Seq(Box<[Tree]>),    // Sequences of values
+    Closed(Box<[Tree]>), // Non-mergeable list of values
     Map(Box<TreeMap>),   // A mapping of named elements
 
     Node {
@@ -43,7 +43,7 @@ impl From<Vec<Tree>> for Tree {
             .into_iter()
             .filter(|item| !matches!(item, Tree::Nil))
             .collect();
-        Tree::List(clean.into_boxed_slice())
+        Tree::Seq(clean.into_boxed_slice())
     }
 }
 
@@ -53,7 +53,7 @@ impl<const N: usize> From<[Tree; N]> for Tree {
             .into_iter()
             .filter(|item| !matches!(item, Tree::Nil))
             .collect();
-        Tree::List(clean.into_boxed_slice())
+        Tree::Seq(clean.into_boxed_slice())
     }
 }
 
@@ -88,7 +88,7 @@ impl Tree {
 
     pub fn list_value(&self) -> Box<[Tree]> {
         match self {
-            Tree::List(items) | Tree::Closed(items) => items.clone(),
+            Tree::Seq(items) | Tree::Closed(items) => items.clone(),
             _ => [].into(),
         }
     }
@@ -129,7 +129,7 @@ impl Tree {
 
     pub fn closed(self) -> Self {
         match self {
-            Tree::List(items) => Tree::Closed(items),
+            Tree::Seq(items) => Tree::Closed(items),
             _ => self,
         }
     }
@@ -138,25 +138,25 @@ impl Tree {
         match (self, node) {
             (Self::Nil, n) => n,
             (s, Self::Nil) => s,
-            (Self::List(list), node) => {
+            (Self::Seq(list), node) => {
                 let mut v = list.into_vec();
                 v.push(node);
-                Self::List(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice())
             }
-            (s, n) => Self::List(vec![s, n].into_boxed_slice()),
+            (s, n) => Self::Seq(vec![s, n].into_boxed_slice()),
         }
     }
 
     pub fn append_as_list(self, node: Self) -> Self {
         match (self, node) {
-            (Self::Nil, n) => Self::List(vec![n].into_boxed_slice()),
+            (Self::Nil, n) => Self::Seq(vec![n].into_boxed_slice()),
             (s, Self::Nil) => s,
-            (Self::List(list), n) => {
+            (Self::Seq(list), n) => {
                 let mut v = list.into_vec();
                 v.push(n);
-                Self::List(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice())
             }
-            (s, n) => Self::List(vec![s, n].into_boxed_slice()),
+            (s, n) => Self::Seq(vec![s, n].into_boxed_slice()),
         }
     }
 
@@ -164,20 +164,20 @@ impl Tree {
         match (self, node) {
             (Self::Nil, n) => n,
             (s, Self::Nil) => s,
-            (Self::List(l1), Self::List(l2)) => {
+            (Self::Seq(l1), Self::Seq(l2)) => {
                 let mut v = l1.into_vec();
                 v.extend(l2.into_vec());
-                Self::List(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice())
             }
-            (Self::List(l1), n) => {
+            (Self::Seq(l1), n) => {
                 let mut v = l1.into_vec();
                 v.push(n);
-                Self::List(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice())
             }
-            (s, Self::List(l2)) => {
+            (s, Self::Seq(l2)) => {
                 let mut v = vec![s];
                 v.extend(l2.into_vec());
-                Self::List(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice())
             }
             (s, n) => s.append(n),
         }
@@ -198,7 +198,7 @@ impl Tree {
 
     fn clean_and_merge(&self, gather: &mut TreeMerge) -> Tree {
         match self {
-            Tree::List(elements) => {
+            Tree::Seq(elements) => {
                 // NOTE:
                 //  Tree::List is the product of Exp::Sequence and the
                 //  right semantics are to merge the values one by one
@@ -254,7 +254,7 @@ impl Tree {
             Tree::Text(text) => text.len(),
             Tree::Override(inner) | Tree::OverrideAsList(inner) => inner.width(),
             Tree::Nil | Tree::Bottom => 0,
-            Tree::List(items) | Tree::Closed(items) => items.iter().map(|item| item.width()).sum(),
+            Tree::Seq(items) | Tree::Closed(items) => items.iter().map(|item| item.width()).sum(),
             Tree::Map(map) => map.entries.values().map(|node| node.width()).sum(),
             Tree::Named(pair) | Tree::NamedAsList(pair) => {
                 let KeyValue(_, val) = pair;
@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn test_node_nil_removal() {
-        let raw = Tree::List([Tree::Nil, Tree::Bottom, Tree::Nil].into());
+        let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
         let result = raw.into_node_tree();
 
         // result = tree_closed(Bottom)
@@ -294,7 +294,7 @@ mod tests {
 
     #[test]
     fn test_node_nil_removal_to_bottom() {
-        let raw = Tree::List([Tree::Nil, Tree::Bottom, Tree::Nil].into());
+        let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
         let result = raw.into_node_tree();
 
         // If tree_closed is identity for non-lists, this is just Bottom
@@ -303,10 +303,10 @@ mod tests {
 
     #[test]
     fn test_node_nil_removal_to_list() {
-        let raw = Tree::List([Tree::Bottom, Tree::Nil, Tree::Bottom].into());
+        let raw = Tree::Seq([Tree::Bottom, Tree::Nil, Tree::Bottom].into());
         let result = raw.into_node_tree(); // normalize doesn't close
 
-        if let Tree::List(v) = result {
+        if let Tree::Seq(v) = result {
             assert_eq!(v.len(), 2); // Nil is gone, only the two Bottoms remain
             assert_eq!(v[0], Tree::Bottom);
             assert_eq!(v[1], Tree::Bottom);
@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn test_node_nil_purging_preserves_count() {
         // Input: List([Nil, Bottom, Nil])
-        let raw = Tree::List([Tree::Nil, Tree::Bottom, Tree::Nil].into());
+        let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
         let result = raw.into_node_tree();
 
         // Since it's effectively Bottom, and Bottom isn't a list,
@@ -332,7 +332,7 @@ mod tests {
         // After normalization, all of a, b, and x should be present
         let tree = Tree::named(
             "x",
-            Tree::List(
+            Tree::Seq(
                 [
                     Tree::named("a", Tree::text("a")),
                     Tree::named("b", Tree::text("b")),

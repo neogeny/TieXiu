@@ -27,7 +27,7 @@ impl TreeMap {
 
     pub fn update(&mut self, other: &TreeMap) {
         for (key, value) in &other.entries {
-            if let Tree::List(items) = value {
+            if let Tree::Seq(items) = value {
                 for item in items.iter() {
                     self.insert_as_list(key, item.clone());
                 }
@@ -63,7 +63,7 @@ impl TreeMap {
         if let Some(current) = self.entries.get(&key) {
             new = current.clone().append_as_list(new);
         } else {
-            new = Tree::List([new].into());
+            new = Tree::Seq([new].into());
         }
         self.entries.insert(key, new);
     }
@@ -93,7 +93,7 @@ mod tests {
     }
 
     fn list(items: &[&str]) -> Tree {
-        Tree::List(items.iter().map(|s| text(s)).collect())
+        Tree::Seq(items.iter().map(|s| text(s)).collect())
     }
 
     fn closed(items: &[&str]) -> Tree {
@@ -120,7 +120,7 @@ mod tests {
         map.insert("foo", text("baz"));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([text("bar"), text("baz")].into()))
+            Some(&Tree::Seq([text("bar"), text("baz")].into()))
         );
     }
 
@@ -132,7 +132,7 @@ mod tests {
         map.insert("foo", text("c"));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([text("a"), text("b"), text("c")].into()))
+            Some(&Tree::Seq([text("a"), text("b"), text("c")].into()))
         );
     }
 
@@ -150,7 +150,7 @@ mod tests {
         map.insert("foo", list(&["c", "d"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List(
+            Some(&Tree::Seq(
                 [text("a"), text("b"), list(&["c", "d"])].into()
             ))
         );
@@ -166,7 +166,7 @@ mod tests {
     fn insert_as_list_once() {
         let mut map = TreeMap::new();
         map.insert_as_list("foo", text("bar"));
-        assert_eq!(map.get("foo"), Some(&Tree::List([text("bar")].into())));
+        assert_eq!(map.get("foo"), Some(&Tree::Seq([text("bar")].into())));
     }
 
     #[test]
@@ -176,7 +176,7 @@ mod tests {
         map.insert_as_list("foo", text("baz"));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([text("bar"), text("baz")].into()))
+            Some(&Tree::Seq([text("bar"), text("baz")].into()))
         );
     }
 
@@ -188,7 +188,7 @@ mod tests {
         map.insert_as_list("foo", text("c"));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([text("a"), text("b"), text("c")].into()))
+            Some(&Tree::Seq([text("a"), text("b"), text("c")].into()))
         );
     }
 
@@ -198,7 +198,7 @@ mod tests {
         map.insert_as_list("foo", list(&["a", "b"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([list(&["a", "b"])].into()))
+            Some(&Tree::Seq([list(&["a", "b"])].into()))
         );
     }
 
@@ -209,7 +209,7 @@ mod tests {
         map.insert_as_list("foo", list(&["c", "d"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([list(&["a", "b"]), list(&["c", "d"])].into()))
+            Some(&Tree::Seq([list(&["a", "b"]), list(&["c", "d"])].into()))
         );
     }
 
@@ -219,7 +219,7 @@ mod tests {
         map.insert_as_list("foo", closed(&["a", "b"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([closed(&["a", "b"])].into()))
+            Some(&Tree::Seq([closed(&["a", "b"])].into()))
         );
     }
 
@@ -230,7 +230,7 @@ mod tests {
         map.insert_as_list("foo", closed(&["c", "d"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List(
+            Some(&Tree::Seq(
                 [closed(&["a", "b"]), closed(&["c", "d"])].into()
             ))
         );
@@ -244,7 +244,7 @@ mod tests {
         map.insert("foo", text("c"));
         map.insert_as_list("foo", text("d"));
 
-        let expected = Tree::List([text("a"), text("b"), text("c"), text("d")].into());
+        let expected = Tree::Seq([text("a"), text("b"), text("c"), text("d")].into());
         assert_eq!(map.get("foo"), Some(&expected));
     }
 
@@ -277,7 +277,7 @@ mod tests {
 
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([text("a"), text("b")].into()))
+            Some(&Tree::Seq([text("a"), text("b")].into()))
         );
     }
 
@@ -302,7 +302,7 @@ mod tests {
         let other = TreeMap::new();
         map.update(&other);
 
-        assert_eq!(map.get("foo"), Some(&Tree::List([text("a")].into())));
+        assert_eq!(map.get("foo"), Some(&Tree::Seq([text("a")].into())));
     }
 
     #[test]
@@ -316,7 +316,7 @@ mod tests {
 
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::List([text("a"), list(&["b", "c"])].into()))
+            Some(&Tree::Seq([text("a"), list(&["b", "c"])].into()))
         );
     }
 }

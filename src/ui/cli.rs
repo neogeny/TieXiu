@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
-pub use crate::json::exp::*;
+pub use crate::json::exp_json::*;
 pub use crate::tools::rails::*;
 use crate::{Result, boot_grammar};
 use clap;

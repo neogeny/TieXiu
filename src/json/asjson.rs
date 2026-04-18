@@ -18,7 +18,7 @@ impl Tree {
                 m
             }),
             Tree::Text(t) => Value::String(t.to_string()),
-            Tree::List(items) | Tree::Closed(items) => {
+            Tree::Seq(items) | Tree::Closed(items) => {
                 Value::Array(items.iter().map(Tree::as_json).collect())
             }
             Tree::Map(m) => {
@@ -50,7 +50,7 @@ impl Tree {
             Value::String(s) => Some(Tree::Text(s.clone().into())),
             Value::Array(arr) => {
                 let items: Vec<Tree> = arr.iter().map(Tree::from_json).collect::<Option<_>>()?;
-                Some(Tree::List(items.into()))
+                Some(Tree::Seq(items.into()))
             }
             Value::Object(obj) => {
                 if obj.len() == 1 {
@@ -100,7 +100,7 @@ mod tests {
             Tree::Nil,
             Tree::Bottom,
             Tree::Text("hello".into()),
-            Tree::List(vec![Tree::Text("a".into()), Tree::Text("b".into())].into_boxed_slice()),
+            Tree::Seq(vec![Tree::Text("a".into()), Tree::Text("b".into())].into_boxed_slice()),
         ];
 
         for tree in cases {

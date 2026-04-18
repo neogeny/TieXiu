@@ -41,7 +41,7 @@ impl Tree {
             Tree::Nil => named("Nil", []),
             Tree::Bottom => named("Bottom", []),
             Tree::Text(text) => named("Text", [("text", Value::String(text.to_string()))]),
-            Tree::List(items) | Tree::Closed(items) => named(
+            Tree::Seq(items) | Tree::Closed(items) => named(
                 "List",
                 [(
                     "items",
@@ -76,7 +76,7 @@ impl Tree {
             "Text" => Ok(Tree::Text(
                 expect_string(field(object, "text")?, "text")?.into(),
             )),
-            "List" => Ok(Tree::List(
+            "List" => Ok(Tree::Seq(
                 expect_array(field(object, "items")?, "items")?
                     .iter()
                     .map(Tree::from_serde_json_value)
