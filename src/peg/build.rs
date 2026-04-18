@@ -9,6 +9,7 @@ impl Exp {
         Self {
             kind: exp,
             la: [].into(),
+            df: [].into(),
         }
     }
 

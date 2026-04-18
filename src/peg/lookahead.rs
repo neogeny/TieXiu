@@ -5,7 +5,7 @@ use super::exp::{Exp, ExpKind, Str};
 use std::collections::HashSet;
 
 impl Exp {
-    pub(super) fn compute_lookahead(&mut self) -> HashSet<Box<str>> {
+    pub(super) fn cache_lookahead(&mut self) -> HashSet<Box<str>> {
         let mut lookaheads = HashSet::new();
 
         match &self.kind {
@@ -25,7 +25,7 @@ impl Exp {
         }
 
         for exp in self.callable_from_mut() {
-            lookaheads.extend(exp.compute_lookahead());
+            lookaheads.extend(exp.cache_lookahead());
         }
 
         if !lookaheads.is_empty() {

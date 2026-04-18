@@ -41,15 +41,10 @@ impl TreeMap {
         }
     }
 
-    pub fn define(&mut self, keys: &[&str], list_keys: &[&str]) {
-        for &k in keys {
+    pub fn define(&mut self, keys: &[Box<str>]) {
+        for k in keys {
             let key = self.safe_key(k);
             self.entries.entry(key).or_insert(Tree::Nil);
-        }
-
-        for &k in list_keys {
-            let key = self.safe_key(k);
-            self.entries.entry(key).or_insert(Tree::List([].into()));
         }
     }
 

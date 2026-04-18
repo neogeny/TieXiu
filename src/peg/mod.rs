@@ -3,6 +3,7 @@
 
 mod build;
 mod compiler;
+mod defines;
 mod leftrec;
 mod linker;
 mod lookahead;

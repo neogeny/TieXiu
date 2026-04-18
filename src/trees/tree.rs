@@ -73,6 +73,12 @@ impl TreeMerge {
 }
 
 impl Tree {
+    pub fn define(&mut self, names: &[Box<str>]) {
+        if let Tree::Map(map) = self {
+            map.define(names);
+        }
+    }
+
     pub fn value(&self) -> Box<str> {
         match self {
             Tree::Text(text) => text.clone(),

@@ -65,7 +65,7 @@ impl Rule {
     }
 
     pub fn new(name: &str, params: &[Box<str>], mut exp: Exp) -> Self {
-        exp.compute_lookahead();
+        exp.initialize_caches();
         Self {
             name: name.into(),
             params: params.into(),
@@ -85,7 +85,7 @@ impl Rule {
         is_memo: bool,
         is_lrec: bool,
     ) -> Self {
-        exp.compute_lookahead();
+        exp.cache_lookahead();
         Self {
             name: name.into(),
             params: params.into_iter().map(|p| p.into()).collect(),

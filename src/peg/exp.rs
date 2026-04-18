@@ -7,17 +7,20 @@ use super::rule::RuleRef;
 use crate::state::Ctx;
 use crate::trees::Tree;
 use crate::util::pyre;
+use indexmap::IndexSet;
 use std::fmt::Debug;
 use std::ops::Deref;
 
 pub type ERef = Box<Exp>;
 pub type ERefArr = Box<[Exp]>;
 pub type Str = Box<str>;
+pub type NameSet = IndexSet<Str>;
 
 #[derive(Clone)]
 pub struct Exp {
     pub kind: ExpKind,
     pub la: Box<[Str]>, // the lookahead set
+    pub df: Box<[Str]>, // the lookahead set
 }
 
 impl Debug for Exp {
@@ -76,6 +79,11 @@ impl<C: Ctx> Parser<C> for Exp {
 }
 
 impl Exp {
+    pub fn initialize_caches(&mut self) {
+        self.cache_lookahead();
+        self.cache_defines();
+    }
+
     pub fn lookahead_str(&self) -> Box<str> {
         self.la
             .iter()
@@ -85,8 +93,18 @@ impl Exp {
             .into_boxed_str()
     }
 
+    pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
+        match self.do_parse(ctx) {
+            Err(err) => Err(err),
+            Ok(Succ(ctx, mut tree)) => {
+                tree.define(&self.df);
+                Ok(Succ(ctx, tree))
+            }
+        }
+    }
+
     // #[track_caller]
-    pub fn parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
+    fn do_parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
         let was_cut = ctx.cut_seen();
         match &self.kind {
@@ -362,7 +380,7 @@ mod tests {
     use crate::state::prelude::*;
     use crate::state::strctx::StrCtx;
 
-    const TARGET: usize = 48;
+    const TARGET: usize = 64;
 
     #[test]
     fn test_exp_size() {
