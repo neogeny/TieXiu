@@ -48,7 +48,10 @@ pub fn check_exp_for_unlinked(exp: &Exp, path: &str, grammar: &Grammar) {
             check_exp_for_unlinked(e1, &format!("{}.exp", path), grammar);
             check_exp_for_unlinked(sep, &format!("{}.sep", path), grammar);
         }
-        ExpKind::RuleInclude { name: ri_name, exp: None } => {
+        ExpKind::RuleInclude {
+            name: ri_name,
+            exp: None,
+        } => {
             println!("  {}: RuleInclude '{}' is NOT resolved", path, ri_name);
             match grammar.get_rule(ri_name) {
                 Ok(r) => println!("    Rule '{}' exists in grammar", r.name),
