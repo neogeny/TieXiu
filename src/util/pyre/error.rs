@@ -12,6 +12,10 @@ pub enum Error {
     #[error("pcre2 error: {0}")]
     Pcre2(#[from] pcre2::Error),
 
+    #[cfg(feature = "regex")]
+    #[error("regex error: {0}")]
+    Regex(#[from] regex::Error),
+
     #[error("invalid regex pattern: {0}")]
     InvalidPattern(String),
 }
