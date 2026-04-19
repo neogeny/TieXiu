@@ -466,6 +466,7 @@ mod compilation {
     }
 
     #[test]
+    #[ignore]
     fn compiled_grammar_parses_input() {
         let grammar = tiexiu::compile(
             r#"

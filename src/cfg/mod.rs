@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub mod constants;
+pub mod keys;
 
 pub use crate::util::cfg::*;
 
