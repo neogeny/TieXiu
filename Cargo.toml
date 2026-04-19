@@ -24,7 +24,7 @@ required-features = ["cli"]
 # --- Features ---
 [features]
 bootstrap = ["default"]
-default = ["serde", "serde_json", "cli", "pyo3"]
+default = ["serde", "serde_json", "cli", "pyo3", "pcre2"]
 
 # Specific feature groupings
 serde = ["dep:serde"]
@@ -38,6 +38,7 @@ cli = [
     "dep:syntect",
 ]
 pyo3 = ["dep:pyo3"]
+pcre2 = ["dep:pcre2"]
 
 # --- Core Library Dependencies ---
 [dependencies]
@@ -57,6 +58,7 @@ syntect = { version = "5.3.0", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0.149", features = ["preserve_order"], optional = true }
 serde_path_to_error = { version = "0.1", optional = true }
+pcre2 = { version = "0.2.11", optional = true }
 
 # --- Debug & Benchmarking ---
 [dev-dependencies]
