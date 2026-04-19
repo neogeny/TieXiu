@@ -92,8 +92,7 @@ fn test_linker_debug() {
 
     println!("\n=== Trying to parse EBNF ===");
     let ebnf_text =
-        std::fs::read_to_string(PATH_TATSU_GRAMMAR_EBNF)
-            .expect("Failed to read grammar");
+        std::fs::read_to_string(PATH_TATSU_GRAMMAR_EBNF).expect("Failed to read grammar");
     let cursor = StrCursor::new(&ebnf_text);
     let ctx = CoreCtx::new(cursor);
 
