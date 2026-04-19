@@ -301,11 +301,11 @@ mod parse_naming {
         let grammar = r#"
             @@grammar :: RWP
             start: foo
-            foo[param]: 'x' param
+            foo[Foo]: 'x' param
         "#;
         let tree = parse_ebnf(&boot, grammar);
         let json = tree.to_model_json_string().unwrap();
-        assert!(json.contains("params"));
+        assert!(json.contains("Foo"));
     }
 }
 
