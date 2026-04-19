@@ -10,11 +10,21 @@ pub const PATH_TATSU_GRAMMAR_JSON: &str = "grammar/tatsu.json";
 pub const PATH_CALC_GRAMMAR_JSON: &str = "grammar/calc.json";
 pub const PATH_CALC_GRAMMAR_EBNF: &str = "grammar/calc.ebnf";
 
-pub const STR_GRAMMAR_NAME: &str = "grammar";
 
-pub const STR_WSP: &str = "whitespace";
-pub const STR_CMT: &str = "comments";
-pub const STR_EOL: &str = "eol_comments";
+// Grammar directives (from TatSu)
+pub const STR_GRAMMAR_NAME: &str = "grammar";
+pub const STR_WHITESPACE: &str = "whitespace";
+pub const STR_COMMENTS: &str = "comments";
+pub const STR_EOL_COMMENTS: &str = "eol_comments";
+pub const STR_IGNORECASE: &str = "ignorecase";
+pub const STR_LEFTREC: &str = "left_recursion";
+pub const STR_PARSEINFO: &str = "parseinfo";
+pub const STR_MEMOIZATION: &str = "memoization";
+pub const STR_NAMECHARS: &str = "namechars";
+pub const STR_NAMEGUARD: &str = "nameguard";
+
+// Symbols
+
 
 pub const SYM_ETX: &str = "＄";
 pub const SYM_EOL: &str = "⏎";

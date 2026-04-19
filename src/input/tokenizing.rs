@@ -38,9 +38,9 @@ impl TokenizingPatterns {
 
     pub fn try_new(ws: &str, cmt: &str, eol: &str) -> Result<Self, Error> {
         Ok(Self {
-            wsp: Self::compile(STR_WSP, ws)?,
-            cmt: Self::compile(STR_CMT, cmt)?,
-            eol: Self::compile(STR_EOL, eol)?,
+            wsp: Self::compile(STR_WHITESPACE, ws)?,
+            cmt: Self::compile(STR_COMMENTS, cmt)?,
+            eol: Self::compile(STR_EOL_COMMENTS, eol)?,
         })
     }
 }

@@ -49,16 +49,16 @@ impl CfgMapper<Cfg> for Cfg {
             ("verbose", "1") => Some(Cfg::Verbose),
 
             (STR_GRAMMAR_NAME, name) => Some(Cfg::Grammar(name.to_string())),
-            (STR_WSP, pattern) => Some(Cfg::Wsp(pattern.to_string())),
-            (STR_CMT, pattern) => Some(Cfg::Cmt(pattern.to_string())),
-            (STR_EOL, pattern) => Some(Cfg::Eol(pattern.to_string())),
+            (STR_WHITESPACE, pattern) => Some(Cfg::Wsp(pattern.to_string())),
+            (STR_COMMENTS, pattern) => Some(Cfg::Cmt(pattern.to_string())),
+            (STR_EOL_COMMENTS, pattern) => Some(Cfg::Eol(pattern.to_string())),
 
-            ("ignorecase", _) if is_truthy => Some(Cfg::IgnoreCase),
-            ("nameguard", _) if !is_truthy => Some(Cfg::NoNameGuard),
-            ("left_recursion", _) if !is_truthy => Some(Cfg::NoLeftRecursion),
-            ("parseinfo", _) if !is_truthy => Some(Cfg::NoParseInfo),
-            ("memoization", _) if !is_truthy => Some(Cfg::NoMemoization),
-            ("namechars", pattern) => Some(Cfg::NameChars(pattern.to_string())),
+            (STR_IGNORECASE, _) if is_truthy => Some(Cfg::IgnoreCase),
+            (STR_NAMEGUARD, _) if !is_truthy => Some(Cfg::NoNameGuard),
+            (STR_LEFTREC, _) if !is_truthy => Some(Cfg::NoLeftRecursion),
+            (STR_PARSEINFO, _) if !is_truthy => Some(Cfg::NoParseInfo),
+            (STR_MEMOIZATION, _) if !is_truthy => Some(Cfg::NoMemoization),
+            (STR_NAMECHARS, pattern) => Some(Cfg::NameChars(pattern.to_string())),
 
             _ => None,
         }

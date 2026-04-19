@@ -12,6 +12,7 @@ use crate::peg::exp::{Exp, ExpKind};
 use crate::peg::grammar::Grammar;
 use crate::peg::rule::Rule;
 use serde_json::{Map, Value};
+use crate::cfg::constants::*;
 
 pub trait ToExpJson {
     fn to_json_exp(&self) -> Value;
@@ -65,16 +66,16 @@ impl Grammar {
             .iter()
             .filter_map(|opt| {
                 let (name, value) = match opt {
-                    Cfg::Grammar(name) => ("grammar", name.as_str()),
-                    Cfg::Wsp(p) => ("whitespace", p.as_str()),
-                    Cfg::Cmt(p) => ("comments", p.as_str()),
-                    Cfg::Eol(p) => ("eol_comments", p.as_str()),
-                    Cfg::NameChars(p) => ("namechars", p.as_str()),
-                    Cfg::IgnoreCase => ("ignorecase", "True"),
-                    Cfg::NoNameGuard => ("nameguard", "False"),
-                    Cfg::NoLeftRecursion => ("left_recursion", "False"),
-                    Cfg::NoParseInfo => ("parseinfo", "False"),
-                    Cfg::NoMemoization => ("memoization", "False"),
+                    Cfg::Grammar(name) => (STR_GRAMMAR_NAME, name.as_str()),
+                    Cfg::Wsp(p) => (STR_WHITESPACE, p.as_str()),
+                    Cfg::Cmt(p) => (STR_COMMENTS, p.as_str()),
+                    Cfg::Eol(p) => (STR_EOL_COMMENTS, p.as_str()),
+                    Cfg::NameChars(p) => (STR_NAMECHARS, p.as_str()),
+                    Cfg::IgnoreCase => (STR_IGNORECASE, "True"),
+                    Cfg::NoNameGuard => (STR_NAMEGUARD, "False"),
+                    Cfg::NoLeftRecursion => (STR_LEFTREC, "False"),
+                    Cfg::NoParseInfo => (STR_PARSEINFO, "False"),
+                    Cfg::NoMemoization => (STR_MEMOIZATION, "False"),
                     _ => return None,
                 };
                 let mut d_obj = Map::new();
