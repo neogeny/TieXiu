@@ -52,11 +52,14 @@ jobs:
       - name: set up rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
       - name: rust cache
         uses: swatinem/rust-cache@v2
 
       - name: build
-        run: cargo build --verbose
+        run: cargo build --verbose --all-features
 
       - name: test
-        run: cargo test --verbose
+        run: cargo nextest run --verbose --all-features
