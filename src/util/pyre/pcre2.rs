@@ -31,10 +31,17 @@ pub fn compile(pattern: &str) -> Result<Pattern> {
 
 impl Pattern {
     pub fn new(pattern: &str) -> Result<Self> {
-        let regex = RegexBuilder::new().utf(true).build(pattern)?;
+        // Use .jit(true) on the builder itself
+        let regex = RegexBuilder::new()
+            .utf(true)
+            .jit(true) // This is the magic line
+            .build(pattern)?;
 
         let anchored_pattern = format!(r"\A(?:{})", pattern);
-        let anchored = RegexBuilder::new().utf(true).build(&anchored_pattern)?;
+        let anchored = RegexBuilder::new()
+            .utf(true)
+            .jit(true) // Enable it here too
+            .build(&anchored_pattern)?;
 
         Ok(Self {
             regex,
