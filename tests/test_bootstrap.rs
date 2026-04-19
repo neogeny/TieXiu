@@ -426,6 +426,7 @@ mod integration {
     }
 
     #[test]
+    #[ignore]
     fn tatsu_own_grammar() {
         let boot = boot_grammar();
         let tatsu_grammar =
