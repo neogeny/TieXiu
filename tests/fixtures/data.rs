@@ -31,24 +31,27 @@ pub fn find_unlinked_calls(exp: &Exp, path: &str) -> Vec<String> {
                 result.push(format!("{}: Call to '{}' is NOT linked", path, name));
             }
         }
+
         ExpKind::RuleInclude { name, exp: inner } => {
             if inner.is_none() {
                 result.push(format!("{}: RuleInclude '{}' is NOT resolved", path, name));
             }
         }
+
         ExpKind::Sequence(items) => {
             for (i, item) in items.iter().enumerate() {
                 result.extend(find_unlinked_calls(item, &format!("{}[{}]", path, i)));
             }
         }
+
         ExpKind::Choice(options) => {
             for (i, opt) in options.iter().enumerate() {
                 result.extend(find_unlinked_calls(opt, &format!("{}[{}]", path, i)));
             }
         }
-        ExpKind::Alt(inner) => {
-            result.extend(find_unlinked_calls(inner, &format!("{}:alt", path)));
-        }
+
+        ExpKind::Alt(inner) => result.extend(find_unlinked_calls(inner, &format!("{}:alt", path))),
+
         ExpKind::Named(_, inner)
         | ExpKind::NamedList(_, inner)
         | ExpKind::Optional(inner)

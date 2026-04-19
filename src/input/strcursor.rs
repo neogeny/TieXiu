@@ -102,6 +102,15 @@ impl Cursor for StrCursor {
         m.group(1).or(m.group(0)).map(|s| s.to_string())
     }
 
+    fn match_eol(&mut self) -> bool {
+        if let Some(len) = empty_line(&self.text[self.offset..]) {
+            self.offset += len;
+            true
+        } else {
+            false
+        }
+    }
+
     fn next_token(&mut self) {
         let p = self.patterns.clone();
         let mut last_offset = usize::MAX;
@@ -124,15 +133,6 @@ impl Cursor for StrCursor {
 
     fn set_tokenizing(&mut self, patterns: &TokenizingPatterns) {
         self.patterns = patterns.clone().into();
-    }
-
-    fn match_eol(&mut self) -> bool {
-        if let Some(len) = empty_line(&self.text[self.offset..]) {
-            self.offset += len;
-            true
-        } else {
-            false
-        }
     }
 }
 

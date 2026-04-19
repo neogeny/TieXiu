@@ -45,7 +45,6 @@ indexmap = "2.13"
 thiserror = "2.0.18"
 fancy-regex = "0.17"
 console = "0.16.3"
-termcolor = "1.4.1"
 
 # --- PyO3 Dependencies ---
 pyo3 = { version = "0.28", features = ["extension-module"], optional = true }
