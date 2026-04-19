@@ -12,6 +12,9 @@ repository = "https://github.com/neogeny/tiexiu"
 readme = "README.md"
 exclude = ["pyproject.toml", "__pycache__"]
 
+#[lints.clippy]
+#collapsible_match = "allow"
+
 [lib]
 name = "tiexiu"
 crate-type = ["cdylib", "rlib"]

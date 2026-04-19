@@ -1,6 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::collapsible_match)]
+
 pub mod api;
 pub mod cfg;
 pub mod error;
