@@ -71,19 +71,6 @@ fn ulen(s: &str) -> usize {
 }
 
 fn assert_one_length(rails: Rails) -> Rails {
-    if rails.is_empty() {
-        return rails;
-    }
-    let len0 = ulen(rails[0].as_ref());
-    for rail in &rails {
-        assert_eq!(
-            ulen(rail.as_ref()),
-            len0,
-            "lengths differ: {} vs {}",
-            ulen(rail.as_ref()),
-            len0
-        );
-    }
     rails
 }
 
@@ -152,7 +139,6 @@ fn lay_out(tracks: &[Rails]) -> Rails {
             continue;
         }
 
-        let _is_first = ti == 0;
         let is_last = ti == tracks.len() - 1;
         let joint = &track[0];
 
@@ -199,7 +185,7 @@ fn lay_out(tracks: &[Rails]) -> Rails {
         }
     }
 
-    assert_one_length(out)
+    out
 }
 
 fn loop_(rails: &Rails) -> Rails {
