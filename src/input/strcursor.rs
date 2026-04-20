@@ -13,6 +13,7 @@ use std::rc::Rc;
 pub struct StrCursor {
     text: Box<str>,
     offset: usize,
+    ignorecase: bool,
     patterns: Rc<TokenizingPatterns>,
 }
 
@@ -28,6 +29,7 @@ impl StrCursor {
         Self {
             text: text.into(),
             offset: 0,
+            ignorecase: false,
             patterns: TokenizingPatterns::default().into(),
         }
     }
@@ -36,6 +38,7 @@ impl StrCursor {
         Ok(Self {
             text: text.into(),
             offset: 0,
+            ignorecase: false,
             patterns: patterns.into(),
         })
     }
@@ -56,6 +59,7 @@ impl Configurable for StrCursor {
         if let Ok(patterns) = self.tokenizing_from_cfg(cfg) {
             self.set_tokenizing(&patterns);
         }
+        self.ignorecase = cfg.contains(&Cfg::IgnoreCase);
     }
 }
 
@@ -72,6 +76,10 @@ impl Cursor for StrCursor {
         &self.text
     }
 
+    fn ignore_case(&self) -> bool {
+        self.ignorecase
+    }
+
     fn at_end(&self) -> bool {
         self.offset >= self.text.len()
     }
@@ -84,13 +92,15 @@ impl Cursor for StrCursor {
     }
 
     fn match_token(&mut self, token: &str) -> bool {
-        let text = &self.text[self.offset..];
-        if text.starts_with(token) {
-            self.offset += token.len();
-            true
-        } else {
-            false
+        let token_len = token.len();
+        if let Some(text_slice) = self.text[self.offset..].get(..token_len)
+            && (self.ignorecase && text_slice.eq_ignore_ascii_case(token)
+                || !self.ignorecase && text_slice == token)
+        {
+            self.offset += token_len;
+            return true;
         }
+        false
     }
 
     fn match_pattern(&mut self, pat: &Pattern) -> Option<String> {

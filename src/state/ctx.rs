@@ -61,7 +61,11 @@ pub trait Ctx: CtxI + Clone + Debug {
             let wordlike = token.chars().all(|c| c.is_alphanumeric());
             let escaped = escape(token);
             if wordlike && *escaped == *token {
-                let bound = format!(r"{}\b", token);
+                let bound = if self.cursor().ignore_case() {
+                    format!(r"{}\b", token)
+                } else {
+                    format!(r"(?i){}\b", token)
+                };
                 self.match_pattern(bound.as_str()).is_some()
             } else {
                 self.cursor_mut().match_token(token)
