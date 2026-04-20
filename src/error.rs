@@ -5,11 +5,10 @@ use crate::json::error::JsonError;
 use crate::json::tree_json::TreeJsonError;
 use crate::peg::error::CompileError;
 use crate::peg::{Nope, ParseError};
-use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("JSON import/export failed: {0}")]
     JsonModel(#[from] JsonError),
