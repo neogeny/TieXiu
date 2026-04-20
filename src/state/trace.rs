@@ -16,7 +16,7 @@ impl Tracer for NullTracer {}
 
 impl Tracer for ConsoleTracer {
     fn trace(&self, msg: &str) {
-        println!("{}", msg);
+        eprintln!("{}", msg);
     }
 }
 
