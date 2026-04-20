@@ -19,6 +19,7 @@ dependencies = [
  "serde_path_to_error",
  "syntect",
  "thiserror",
+ "unicode-width",
 ]
 
 [[package]]

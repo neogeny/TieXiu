@@ -64,6 +64,7 @@ serde_json = { version = "1.0.149", features = ["preserve_order"], optional = tr
 serde_path_to_error = { version = "0.1", optional = true }
 pcre2 = { version = "0.2.11", optional = true }
 regex = { version = "1.12.3", optional = true }
+unicode-width = "0.2.2"
 
 # --- Debug & Benchmarking ---
 [dev-dependencies]

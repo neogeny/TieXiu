@@ -66,7 +66,8 @@ fn make_rail(s: &str) -> Rc<str> {
 }
 
 fn ulen(s: &str) -> usize {
-    s.chars().count()
+    use unicode_width::UnicodeWidthStr;
+    s.width()
 }
 
 fn assert_one_length(rails: Rails) -> Rails {
