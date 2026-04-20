@@ -21,6 +21,7 @@ pub const STR_PARSEINFO: &str = "parseinfo";
 pub const STR_MEMOIZATION: &str = "memoization";
 pub const STR_NAMECHARS: &str = "namechars";
 pub const STR_NAMEGUARD: &str = "nameguard";
+pub const STR_KEYWORD: &str = "keyword";
 
 // Symbols
 
