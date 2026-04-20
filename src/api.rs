@@ -11,7 +11,7 @@ use crate::state::corectx::CoreCtx;
 use crate::trees::Tree;
 use crate::{Error, Result};
 
-pub fn boot_grammar() -> Result<Grammar> {
+pub(crate) fn boot_grammar() -> Result<Grammar> {
     Ok(crate::json::boot::boot_grammar()?)
 }
 
