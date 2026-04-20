@@ -4,12 +4,14 @@
 use crate::cfg::constants::*;
 use crate::input::Error;
 use crate::util::pyre::Pattern;
+use crate::util::pyre::traits::Pattern as _;
 
 #[derive(Clone, Debug)]
 pub struct TokenizingPatterns {
     pub wsp: Pattern,
     pub cmt: Pattern,
     pub eol: Pattern,
+    pub skip_all: Option<Pattern>,
 }
 
 impl TokenizingPatterns {
@@ -29,18 +31,41 @@ impl TokenizingPatterns {
 
     pub fn validate_no_empty_match(pattern: &Pattern, kind: &str) {
         assert!(
-            pattern.search("").is_none(),
+            !pattern.matches_empty(),
             "pattern '{}' for {} matches empty string, which would cause infinite loop",
             pattern.pattern(),
             kind
         );
     }
 
-    pub fn try_new(ws: &str, cmt: &str, eol: &str) -> Result<Self, Error> {
+    pub fn try_new(ws: &str, cm: &str, eo: &str) -> Result<Self, Error> {
+        let wsp = Self::compile(STR_WHITESPACE, ws)?;
+        let cmt = Self::compile(STR_COMMENTS, cm)?;
+        let eol = Self::compile(STR_EOL_COMMENTS, eo)?;
+
+        let mut parts = Vec::new();
+        if !wsp.is_empty() {
+            parts.push(format!("(?:{})", wsp.pattern()));
+        }
+        if !cmt.is_empty() {
+            parts.push(format!("(?:{})", cmt.pattern()));
+        }
+        if !eol.is_empty() {
+            parts.push(format!("(?:{})", eol.pattern()));
+        }
+
+        let skip_all = if parts.is_empty() {
+            None
+        } else {
+            let combined = format!(r"(?:{})+", parts.join("|"));
+            Some(Self::compile("skip_all", &combined)?)
+        };
+
         Ok(Self {
-            wsp: Self::compile(STR_WHITESPACE, ws)?,
-            cmt: Self::compile(STR_COMMENTS, cmt)?,
-            eol: Self::compile(STR_EOL_COMMENTS, eol)?,
+            wsp,
+            cmt,
+            eol,
+            skip_all,
         })
     }
 }

@@ -36,6 +36,21 @@ pub trait Pattern: Clone {
     fn subn(&self, repl: &str, text: &str, count: Option<usize>) -> (String, usize);
 
     fn pattern(&self) -> &str;
+
+    /// Returns true if the pattern matches an empty string.
+    fn matches_empty(&self) -> bool {
+        self.search("").is_some()
+    }
+
+    /// Trims the pattern string.
+    fn trim(&self) -> &str {
+        self.pattern().trim()
+    }
+
+    /// Returns true if the pattern string is empty or contains only whitespace.
+    fn is_empty(&self) -> bool {
+        self.trim().is_empty()
+    }
 }
 
 pub trait Match<'a> {

@@ -111,22 +111,9 @@ impl Cursor for StrCursor {
     }
 
     fn next_token(&mut self) {
-        let p = self.patterns.clone();
-        let mut last_offset = usize::MAX;
-
-        while self.offset != last_offset {
-            last_offset = self.offset;
-            self.eat_pattern(&p.wsp);
-            if self.at_end() {
-                break;
-            }
-            if self.eat_pattern(&p.eol) {
-                self.eat_pattern(&p.wsp);
-            }
-            let cmt_text = p.cmt.pattern();
-            if !cmt_text.is_empty() {
-                self.eat_pattern(&p.cmt);
-            }
+        let skip_all = self.patterns.skip_all.clone();
+        if let Some(pat) = skip_all {
+            self.eat_pattern(&pat);
         }
     }
 
