@@ -4,6 +4,7 @@
 use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
 pub use crate::json::exp_json::*;
 pub use crate::tools::rails::*;
+pub use crate::peg::pretty::*;
 use crate::{Result, boot_grammar};
 use clap;
 use clap::builder::styling::{AnsiColor, Styles};
@@ -160,11 +161,11 @@ pub fn cli() -> Result<()> {
             if json {
                 (parser.to_json_exp_string()?, "json")
             } else if model {
-                (format!("{:#?}", boot_grammar()?), "rs")
+                (format!("{:#?}", parser), "rs")
             } else if railroads {
                 (parser.railroads(), "apl")
             } else {
-                (format!("{:#?}", parser), "ebnf")
+                (parser.pretty_print(), "ebnf")
             }
         }
     };
