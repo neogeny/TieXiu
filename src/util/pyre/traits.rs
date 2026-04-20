@@ -7,6 +7,8 @@
 //! Traits that define the pyre Pattern and Match interfaces.
 //! These traits mirror the Python `re` module API.
 
+use std::collections::HashMap;
+
 pub trait Pattern: Clone {
     type Match<'a>: Match<'a>
     where
@@ -51,6 +53,12 @@ pub trait Pattern: Clone {
     fn is_empty(&self) -> bool {
         self.trim().is_empty()
     }
+
+    /// Returns a mapping of group names to group numbers.
+    fn groupindex(&self) -> HashMap<Box<str>, usize>;
+
+    /// Returns the number of capturing groups.
+    fn groups_count(&self) -> usize;
 }
 
 pub trait Match<'a> {
@@ -63,4 +71,13 @@ pub trait Match<'a> {
     fn end(&self, group: Option<usize>) -> isize;
 
     fn span(&self, group: Option<usize>) -> (usize, usize);
+
+    /// Returns the subgroup named `name`.
+    fn group_name(&self, name: &str) -> Option<&'a str>;
+
+    /// Returns a mapping of all named subgroups.
+    fn groupdict(&self) -> HashMap<Box<str>, Option<&'a str>>;
+
+    /// Returns the string obtained by doing backreference substitution on the template.
+    fn expand(&self, template: &str) -> String;
 }

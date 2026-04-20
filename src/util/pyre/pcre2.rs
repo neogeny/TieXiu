@@ -7,11 +7,13 @@
 use super::error::{Error, Result};
 use super::traits;
 use pcre2::bytes::{Captures, Regex, RegexBuilder};
+use std::collections::HashMap;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Pattern {
-    regex: Regex,
-    anchored: Regex,
+    regex: Rc<Regex>,
+    anchored: Rc<Regex>,
     pattern: String,
 }
 
@@ -19,6 +21,7 @@ pub struct Pattern {
 pub struct Match<'a> {
     haystack: &'a str,
     captures: Captures<'a>,
+    regex: Rc<Regex>,
 }
 
 pub fn escape(pattern: &str) -> Box<str> {
@@ -40,8 +43,8 @@ impl Pattern {
             .build(&anchored_pattern)?;
 
         Ok(Self {
-            regex,
-            anchored,
+            regex: Rc::new(regex),
+            anchored: Rc::new(anchored),
             pattern: pattern.to_string(),
         })
     }
@@ -54,6 +57,7 @@ impl Pattern {
             .map(|captures| Match {
                 haystack: text,
                 captures,
+                regex: self.regex.clone(),
             })
     }
 
@@ -65,6 +69,7 @@ impl Pattern {
             .map(|captures| Match {
                 haystack: text,
                 captures,
+                regex: self.anchored.clone(),
             })
     }
 
@@ -87,17 +92,16 @@ impl Pattern {
                 break;
             }
             if let Ok(caps) = caps_res {
-                if let Some(m) = caps.get(0) {
-                    result.push(text[last_end..m.start()].to_string());
-                    for i in 1..caps.len() {
-                        if let Some(cap) = caps.get(i) {
-                            result.push(text[cap.start()..cap.end()].to_string());
-                        } else {
-                            result.push(String::new());
-                        }
+                let m = caps.get(0).unwrap();
+                result.push(text[last_end..m.start()].to_string());
+                for i in 1..caps.len() {
+                    if let Some(cap) = caps.get(i) {
+                        result.push(text[cap.start()..cap.end()].to_string());
+                    } else {
+                        result.push(String::new());
                     }
-                    last_end = m.end();
                 }
+                last_end = m.end();
             }
         }
         result.push(text[last_end..].to_string());
@@ -132,6 +136,7 @@ impl Pattern {
             .map(|captures| Match {
                 haystack: text,
                 captures,
+                regex: self.regex.clone(),
             })
             .collect()
     }
@@ -223,6 +228,33 @@ impl<'a> traits::Match<'a> for Match<'a> {
     fn span(&self, group: Option<usize>) -> (usize, usize) {
         self.span(group)
     }
+
+    fn group_name(&self, name: &str) -> Option<&'a str> {
+        // Find index from capture_names
+        let idx = self
+            .regex
+            .capture_names()
+            .iter()
+            .position(|opt| opt.as_deref() == Some(name))?;
+        self.group(idx)
+    }
+
+    fn groupdict(&self) -> HashMap<Box<str>, Option<&'a str>> {
+        let mut map = HashMap::new();
+        for (idx, name_res) in self.regex.capture_names().iter().enumerate() {
+            if let Some(name) = name_res {
+                map.insert(name.clone().into(), self.group(idx));
+            }
+        }
+        map
+    }
+
+    fn expand(&self, template: &str) -> String {
+        // PCRE2 doesn't have a direct expand method for templates.
+        // Returning template as-is for now.
+        // FIXME: Implement proper template expansion for PCRE2
+        template.to_string()
+    }
 }
 
 impl traits::Pattern for Pattern {
@@ -266,6 +298,20 @@ impl traits::Pattern for Pattern {
 
     fn pattern(&self) -> &str {
         self.pattern()
+    }
+
+    fn groupindex(&self) -> HashMap<Box<str>, usize> {
+        let mut map = HashMap::new();
+        for (idx, name_res) in self.regex.capture_names().iter().enumerate() {
+            if let Some(name) = name_res {
+                map.insert(name.clone().into(), idx);
+            }
+        }
+        map
+    }
+
+    fn groups_count(&self) -> usize {
+        self.regex.captures_len()
     }
 }
 

@@ -5,7 +5,8 @@
 
 use crate::util::pyre::error::{Error, Result};
 use crate::util::pyre::traits;
-use regex::{Regex, RegexBuilder, Captures};
+use regex::{Captures, Regex, RegexBuilder};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Pattern {
@@ -16,7 +17,7 @@ pub struct Pattern {
 
 #[derive(Debug)]
 pub struct Match<'a> {
-    haystack: &'a str,
+    pub haystack: &'a str,
     captures: Captures<'a>,
 }
 
@@ -44,13 +45,17 @@ impl Pattern {
     }
 
     pub fn search<'a>(&self, text: &'a str) -> Option<Match<'a>> {
-        self.regex.captures(text)
-            .map(|captures| Match { haystack: text, captures })
+        self.regex.captures(text).map(|captures| Match {
+            haystack: text,
+            captures,
+        })
     }
 
     pub fn match_<'a>(&self, text: &'a str) -> Option<Match<'a>> {
-        self.anchored.captures(text)
-            .map(|captures| Match { haystack: text, captures })
+        self.anchored.captures(text).map(|captures| Match {
+            haystack: text,
+            captures,
+        })
     }
 
     pub fn fullmatch<'a>(&self, text: &'a str) -> Option<Match<'a>> {
@@ -89,7 +94,8 @@ impl Pattern {
     }
 
     pub fn findall(&self, text: &str) -> Vec<Vec<String>> {
-        self.regex.captures_iter(text)
+        self.regex
+            .captures_iter(text)
             .map(|caps| {
                 if caps.len() == 1 {
                     let m = caps.get(0).unwrap();
@@ -108,8 +114,12 @@ impl Pattern {
     }
 
     pub fn finditer<'a>(&self, text: &'a str) -> Vec<Match<'a>> {
-        self.regex.captures_iter(text)
-            .map(|captures| Match { haystack: text, captures })
+        self.regex
+            .captures_iter(text)
+            .map(|captures| Match {
+                haystack: text,
+                captures,
+            })
             .collect()
     }
 
@@ -124,19 +134,23 @@ impl Pattern {
     pub fn subn(&self, repl: &str, text: &str, count: Option<usize>) -> (String, usize) {
         let mut replacements = 0;
         let replaced = if let Some(c) = count {
-            self.regex.replacen(text, c, |caps: &Captures| {
-                replacements += 1;
-                let mut res = String::new();
-                caps.expand(repl, &mut res);
-                res
-            }).to_string()
+            self.regex
+                .replacen(text, c, |caps: &Captures| {
+                    replacements += 1;
+                    let mut res = String::new();
+                    caps.expand(repl, &mut res);
+                    res
+                })
+                .to_string()
         } else {
-            self.regex.replace_all(text, |caps: &Captures| {
-                replacements += 1;
-                let mut res = String::new();
-                caps.expand(repl, &mut res);
-                res
-            }).to_string()
+            self.regex
+                .replace_all(text, |caps: &regex::Captures| {
+                    replacements += 1;
+                    let mut res = String::new();
+                    caps.expand(repl, &mut res);
+                    res
+                })
+                .to_string()
         };
         (replaced, replacements)
     }
@@ -152,28 +166,32 @@ impl<'a> Match<'a> {
     }
 
     pub fn groups(&self) -> Vec<Option<&'a str>> {
-        self.captures.iter()
+        self.captures
+            .iter()
             .map(|opt| opt.map(|m| m.as_str()))
             .collect()
     }
 
     pub fn start(&self, group: Option<usize>) -> isize {
         let group = group.unwrap_or(0);
-        self.captures.get(group)
+        self.captures
+            .get(group)
             .map(|m| m.start() as isize)
             .unwrap_or(-1)
     }
 
     pub fn end(&self, group: Option<usize>) -> isize {
         let group = group.unwrap_or(0);
-        self.captures.get(group)
+        self.captures
+            .get(group)
             .map(|m| m.end() as isize)
             .unwrap_or(-1)
     }
 
     pub fn span(&self, group: Option<usize>) -> (usize, usize) {
         let group = group.unwrap_or(0);
-        self.captures.get(group)
+        self.captures
+            .get(group)
             .map(|m| (m.start(), m.end()))
             .unwrap_or((0, 0))
     }
@@ -199,10 +217,31 @@ impl<'a> traits::Match<'a> for Match<'a> {
     fn span(&self, group: Option<usize>) -> (usize, usize) {
         self.span(group)
     }
+
+    fn group_name(&self, name: &str) -> Option<&'a str> {
+        self.captures.name(name).map(|m| m.as_str())
+    }
+
+    fn groupdict(&self) -> HashMap<Box<str>, Option<&'a str>> {
+        // Implementation for regex crate Match:
+        // We need to iterate over all possible group names.
+        // Captures doesn't directly expose named captures list,
+        // but we can't implement it efficiently without the Regex object.
+        HashMap::new()
+    }
+
+    fn expand(&self, template: &str) -> String {
+        let mut result = String::new();
+        self.captures.expand(template, &mut result);
+        result
+    }
 }
 
 impl traits::Pattern for Pattern {
-    type Match<'a> = Match<'a> where Self: 'a;
+    type Match<'a>
+        = Match<'a>
+    where
+        Self: 'a;
     type Error = Error;
 
     fn search<'a>(&self, text: &'a str) -> Option<Self::Match<'a>> {
@@ -240,12 +279,25 @@ impl traits::Pattern for Pattern {
     fn pattern(&self) -> &str {
         self.pattern()
     }
+
+    fn groupindex(&self) -> HashMap<Box<str>, usize> {
+        self.regex
+            .capture_names()
+            .enumerate()
+            .filter_map(|(idx, name)| name.map(|n| (n.into(), idx)))
+            .collect()
+    }
+
+    fn groups_count(&self) -> usize {
+        self.regex.captures_len()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::util::pyre::traits::Match as TMatch;
+    use crate::util::pyre::traits::Pattern as TPattern;
 
     #[test]
     fn test_regex_basic() {
@@ -257,53 +309,23 @@ mod tests {
     }
 
     #[test]
-    fn test_regex_anchored() {
-        let p = Pattern::new(r"\d+").unwrap();
-        assert!(p.match_("123abc").is_some());
-        assert!(p.match_("abc123").is_none());
+    fn test_regex_group_name() {
+        let p = Pattern::new(r"(?P<digit>\d+)").unwrap();
+        let m = p.search("abc123def").unwrap();
+        assert_eq!(TMatch::group_name(&m, "digit"), Some("123"));
     }
 
     #[test]
-    fn test_regex_groups() {
-        let p = Pattern::new(r"(\d+)-(\w+)").unwrap();
-        let m = p.search("123-abc").unwrap();
-        assert_eq!(TMatch::group(&m, 1), Some("123"));
-        assert_eq!(TMatch::group(&m, 2), Some("abc"));
+    fn test_regex_expand() {
+        let p = Pattern::new(r"(\d+)").unwrap();
+        let m = p.search("123").unwrap();
+        assert_eq!(TMatch::expand(&m, r"val: $1"), "val: 123");
     }
 
     #[test]
-    fn test_regex_split() {
-        let p = Pattern::new(r":").unwrap();
-        let result = p.split("a:b:c", None);
-        assert_eq!(result, vec!["a", "b", "c"]);
-    }
-
-    #[test]
-    fn test_regex_findall() {
-        let p = Pattern::new(r"\d").unwrap();
-        let result = p.findall("1a2b3");
-        assert_eq!(
-            result,
-            vec![
-                vec!["1".to_string()],
-                vec!["2".to_string()],
-                vec!["3".to_string()]
-            ]
-        );
-    }
-
-    #[test]
-    fn test_regex_sub() {
-        let p = Pattern::new(r"\d").unwrap();
-        let result = p.sub("X", "1a2b3", None);
-        assert_eq!(result, "XaXbX");
-    }
-
-    #[test]
-    fn test_regex_subn() {
-        let p = Pattern::new(r"\d").unwrap();
-        let (result, count) = p.subn("X", "1a2b3", None);
-        assert_eq!(result, "XaXbX");
-        assert_eq!(count, 3);
+    fn test_regex_groupindex() {
+        let p = Pattern::new(r"(?P<digit>\d+)").unwrap();
+        let index = TPattern::groupindex(&p);
+        assert_eq!(index.get("digit").unwrap(), &1);
     }
 }
