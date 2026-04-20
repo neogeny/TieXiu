@@ -33,7 +33,7 @@ mod tests {
         //     println!("Total rulemap loaded: {}", grammar.rulemap.len());
         //     assert!(has_start, "Bootstrap grammar missing a starting rule");
         // }
-        println!("Successfully bootstrapped grammar: {}", grammar.name);
+        // println!("Successfully bootstrapped grammar: {}", grammar.name);
 
         Ok(())
     }
