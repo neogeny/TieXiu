@@ -16,6 +16,14 @@ apply: always
 
 - Tests can be marked with `#[ignore]` but must compile
 - Run tests with `cargo test --verbose`
+- Use of `.unwrap()` or `.expect()` in tests is forbidden. Tests functions must
+  return `tiexiu::Result<()>` and use the `?` notation to forward any errors
+  to the test runner.
+
+  For example:
+    ```rust
+    let tree = tiexiu::parse_grammar(grammar, &[])?;
+    ```
 
 ## Code Tools
 
@@ -30,4 +38,4 @@ apply: always
 - Instead of calling specific constructors like Box::new() or Rc::new(), the
   preference in this project is to use .into() whenever possible, as it hides
   decisions about typing and require no modification after a change in typing.
-- Error Delegation: Utilize thiserror's #[from] attribute for sub-module error promotion.
+- Error Delegation: Utilize thiserror's #[from] attribute for submodule error promotion.
