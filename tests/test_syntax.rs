@@ -5,9 +5,9 @@
 
 use tiexiu::Result;
 use tiexiu::api::{compile, parse_grammar};
+use tiexiu::engine::corectx::CoreCtx;
 use tiexiu::input::StrCursor;
 use tiexiu::peg::{ExpKind, Grammar};
-use tiexiu::state::corectx::CoreCtx;
 
 fn parse_input(grammar: &Grammar, input: &str) -> Result<tiexiu::trees::Tree> {
     let cursor = StrCursor::new(input);

@@ -4,7 +4,7 @@
 use super::error::ParseError;
 use super::parser::{ParseResult, Parser, Succ};
 use super::rule::RuleRef;
-use crate::state::Ctx;
+use crate::engine::Ctx;
 use crate::trees::tree::Define;
 use crate::trees::{Str, Tree};
 use crate::util::pyre;
@@ -370,10 +370,10 @@ impl Exp {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engine::prelude::*;
+    use crate::engine::strctx::StrCtx;
     use crate::input::StrCursor;
     use crate::peg::Rule;
-    use crate::state::prelude::*;
-    use crate::state::strctx::StrCtx;
 
     const TARGET: usize = 64;
 

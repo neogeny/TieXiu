@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
+use tiexiu::engine::StrCtx;
 use tiexiu::error::Result;
 use tiexiu::input::StrCursor;
 use tiexiu::peg::{Exp, Grammar, Succ};
-use tiexiu::state::StrCtx;
 use tiexiu::ui::cli;
 
 #[allow(dead_code)]

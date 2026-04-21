@@ -3,8 +3,8 @@
 
 use super::exp::Exp;
 use super::parser::Succ;
+use crate::engine::Ctx;
 use crate::peg::{Nope, ParseResult};
-use crate::state::Ctx;
 use crate::trees::Tree;
 
 impl Exp {
@@ -84,10 +84,10 @@ impl Exp {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engine::CtxI;
+    use crate::engine::corectx::CoreCtx;
     use crate::input::strcursor::StrCursor;
     use crate::peg::Grammar;
-    use crate::state::CtxI;
-    use crate::state::corectx::CoreCtx;
 
     fn setup(input: &str) -> CoreCtx<'_, StrCursor> {
         let grammar = Box::leak(Box::new(Grammar::default()));

@@ -4,9 +4,9 @@
 //! features that can be tested without Python-specific semantics.
 
 use tiexiu::Result;
+use tiexiu::engine::CtxI;
+use tiexiu::engine::corectx::CoreCtx;
 use tiexiu::input::StrCursor;
-use tiexiu::state::CtxI;
-use tiexiu::state::corectx::CoreCtx;
 
 // =============================================================================
 // Basic Grammar Parsing Tests

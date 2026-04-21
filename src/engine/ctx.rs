@@ -3,10 +3,10 @@
 
 use super::memo::{Key, Memo, MemoCache};
 use crate::cfg::Configurable;
+use crate::engine::trace::Tracer;
 use crate::input::Cursor;
 use crate::peg::error::ParseError;
 use crate::peg::{Nope, ParseResult, Rule, Succ};
-use crate::state::trace::Tracer;
 use crate::trees::tree::Tree;
 use crate::util::pyre::{Pattern, escape};
 use crate::util::tokenlist::TokenList;

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::error::ParseError;
+use crate::engine::{Ctx, CtxI};
 use crate::input::memento::Memento;
-use crate::state::{Ctx, CtxI};
 use crate::trees::Tree;
 pub use crate::util::tokenlist::TokenList;
 use std::fmt::Debug;
@@ -116,7 +116,7 @@ impl<C: Ctx> Succ<C> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::StrCtx;
+    use crate::engine::StrCtx;
 
     const TARGET: usize = 64;
 

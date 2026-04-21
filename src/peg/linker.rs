@@ -75,8 +75,8 @@ impl Grammar {
 mod tests {
     use super::*;
     use crate::cfg::constants::PATH_TATSU_GRAMMAR_EBNF;
+    use crate::engine::StrCtx;
     use crate::input::StrCursor;
-    use crate::state::StrCtx;
 
     #[test]
     #[ignore]
