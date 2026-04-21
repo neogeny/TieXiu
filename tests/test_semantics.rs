@@ -3,11 +3,15 @@
 
 //! Tests for semantics - uses compile() which has BUG
 
+use tiexiu::Result;
+use tiexiu::api::compile;
+
 #[test]
-fn test_semantics_not_class() {
+fn test_semantics_not_class() -> Result<()> {
     let grammar = r#"
         start::sum = {number}+ $ ;
         number::int = /\d+/ ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[]);
+    compile(grammar, &[])?;
+    Ok(())
 }

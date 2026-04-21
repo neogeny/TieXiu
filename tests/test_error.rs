@@ -3,18 +3,22 @@
 
 //! Tests for error handling
 
+use tiexiu::Result;
+
 #[test]
-fn test_missing_rule() {
+fn test_missing_rule() -> Result<()> {
     let grammar = r#"
         @@grammar::TestGrammar
         block = test ;
     "#;
 
-    let _result = tiexiu::api::compile(grammar, &[]);
+    let _result = tiexiu::api::compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_error_exists() {
+fn test_error_exists() -> Result<()> {
     // Simple check that Error type exists
     fn _check_error(_: tiexiu::Error) {}
+    Ok(())
 }

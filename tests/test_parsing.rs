@@ -3,22 +3,11 @@
 
 //! Tests translated from TatSu's parsing_test.py
 
+use tiexiu::Result;
 use tiexiu::api::compile;
-use tiexiu::input::StrCursor;
-use tiexiu::peg::Grammar;
-use tiexiu::state::corectx::CoreCtx;
-
-fn _parse_input(grammar: &Grammar, input: &str) -> tiexiu::trees::Tree {
-    let cursor = StrCursor::new(input);
-    let ctx = CoreCtx::new(cursor, &[]);
-    match grammar.parse(ctx) {
-        Ok(s) => s.1,
-        Err(f) => panic!("Failed to parse at mark {}: {:?}", f.mark, f.source),
-    }
-}
 
 #[test]
-fn test_include() {
+fn test_include() -> Result<()> {
     let grammar = r#"
         @@include :: "included.ebnf"
         start = item $ ;
@@ -31,10 +20,11 @@ fn test_include() {
         "Expected error for @@include, got success: {:?}",
         result
     );
+    Ok(())
 }
 
 #[test]
-fn test_multiple_include() {
+fn test_multiple_include() -> Result<()> {
     let grammar = r#"
         @@include :: "a.ebnf"
         @@include :: "b.ebnf"
@@ -42,18 +32,18 @@ fn test_multiple_include() {
         item = /\w+/ ;
     "#;
 
-    let _result = compile(grammar, &[]);
-    // assert!(result.is_err());
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_escape_sequences() {
+fn test_escape_sequences() -> Result<()> {
     let grammar = r#"
         start = 'hello\nworld' $ ;
     "#;
 
-    let _model = compile(grammar, &[])
-        .expect("Failed to compile (escape sequences in tokens not supported)");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 // ============================================================================
@@ -61,7 +51,7 @@ fn test_escape_sequences() {
 // ============================================================================
 
 #[test]
-fn test_start() {
+fn test_start() -> Result<()> {
     let grammar = r#"
         @@grammar :: Test
 
@@ -69,7 +59,8 @@ fn test_start() {
         false = 'test' @:`False` $;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile grammar");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 // ============================================================================
@@ -77,48 +68,52 @@ fn test_start() {
 // ============================================================================
 
 #[test]
-fn test_skip_whitespace() {
+fn test_skip_whitespace() -> Result<()> {
     let grammar = r#"
         statement = 'FOO' subject $ ;
         subject = name:id ;
         id = /[a-z]+/ ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_node_parseinfo() {
+fn test_node_parseinfo() -> Result<()> {
     let grammar = r#"
         @@grammar::Test
         start = 'test' $ ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_parseinfo_directive() {
+fn test_parseinfo_directive() -> Result<()> {
     let grammar = r#"
         @@parseinfo :: True
         start = 'test' $ ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_parseinfo_false_directive() {
+fn test_parseinfo_false_directive() -> Result<()> {
     let grammar = r#"
         @@parseinfo :: False
         start = 'test' $ ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_cut_scope() {
+fn test_cut_scope() -> Result<()> {
     let grammar = r#"
         start =
             | one
@@ -132,6 +127,6 @@ fn test_cut_scope() {
         two = `something` ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
-    // let _ast = parse_input(&model, "abc");
+    compile(grammar, &[])?;
+    Ok(())
 }

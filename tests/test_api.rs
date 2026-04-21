@@ -1,10 +1,12 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use tiexiu::Result;
+
 #[test]
-fn test_parse() {
-    let tree = tiexiu::api::parse_grammar("start = /a/", &[]).expect("Failed to parse");
-    let parser = tiexiu::api::compile("start = /a/", &[]).expect("Failed to compile");
+fn test_parse() -> Result<()> {
+    let tree = tiexiu::api::parse_grammar("start = /a/", &[])?;
+    let parser = tiexiu::api::compile("start = /a/", &[])?;
 
     eprintln!("TREE\n{:?}", tree);
     eprintln!("PARSER\n{:?}", parser);
@@ -17,11 +19,13 @@ fn test_parse() {
             other => panic!("Unexpected: {:?}", other),
         }
     }
+    Ok(())
 }
 
 #[test]
-fn test_parse_to_json() {
-    let json_str = tiexiu::api::parse_to_json("start = /a/", "a", &[]).expect("Failed to parse");
+fn test_parse_to_json() -> Result<()> {
+    let json_str = tiexiu::api::parse_to_json("start = /a/", "a", &[])?;
     eprintln!("TREE {:?}", json_str);
     assert!(json_str.contains("\"a\""));
+    Ok(())
 }

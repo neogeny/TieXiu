@@ -3,17 +3,18 @@
 
 //! Tests translated from TatSu's grammar/syntax_test.py
 
+use tiexiu::Result;
 use tiexiu::api::{compile, parse_grammar};
 use tiexiu::input::StrCursor;
 use tiexiu::peg::{ExpKind, Grammar};
 use tiexiu::state::corectx::CoreCtx;
 
-fn parse_input(grammar: &Grammar, input: &str) -> tiexiu::trees::Tree {
+fn parse_input(grammar: &Grammar, input: &str) -> Result<tiexiu::trees::Tree> {
     let cursor = StrCursor::new(input);
     let ctx = CoreCtx::new(cursor, &[]);
     match grammar.parse(ctx) {
-        Ok(s) => s.1,
-        Err(f) => panic!("Failed to parse at mark {}: {:?}", f.mark, f.source),
+        Ok(s) => Ok(s.1),
+        Err(f) => Err(f.into()),
     }
 }
 
@@ -22,14 +23,14 @@ fn parse_input(grammar: &Grammar, input: &str) -> tiexiu::trees::Tree {
 // ============================================================================
 
 #[test]
-fn test_update_ast() {
+fn test_update_ast() -> Result<()> {
     let grammar = r#"
         start = 'test' $ ;
     "#;
 
-    let tree = parse_grammar(grammar, &[]);
+    let tree = parse_grammar(grammar, &[])?;
     eprintln!("{:?}", tree);
-    let parser = compile(grammar, &[]).expect("Failed to compile");
+    let parser = compile(grammar, &[])?;
 
     assert_eq!(parser.name.to_string(), "grammar");
     assert!(!parser.analyzed);
@@ -58,10 +59,11 @@ fn test_update_ast() {
             other => panic!("Expected Sequence, got {:?}", other),
         }
     }
+    Ok(())
 }
 
 #[test]
-fn test_ast_assignment() {
+fn test_ast_assignment() -> Result<()> {
     let grammar = r#"
         n  = @: {"a"}* $ ;
         f  = @+: {"a"}* $ ;
@@ -71,45 +73,50 @@ fn test_ast_assignment() {
         ff = @+: {"a"}* @+: {"b"}* $ ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
+    compile(grammar, &[])?;
+    Ok(())
 }
 
 #[test]
-fn test_optional_closure() {
+fn test_optional_closure() -> Result<()> {
     let grammar = r#"
         start = foo+:"x" foo:{"y"}* {foo:"z"}* ;
     "#;
 
-    let model = compile(grammar, &[]).expect("Failed to compile");
-    let _ast = parse_input(&model, "xyyzz");
+    let model = compile(grammar, &[])?;
+    let _ast = parse_input(&model, "xyyzz")?;
+    Ok(())
 }
 
 #[test]
-fn test_optional_sequence() {
+fn test_optional_sequence() -> Result<()> {
     let grammar = r#"
         start = '1' ['2' '3'] '4' $ ;
     "#;
 
-    let model = compile(grammar, &[]).expect("Failed to compile");
-    let _ast = parse_input(&model, "1234");
+    let model = compile(grammar, &[])?;
+    let _ast = parse_input(&model, "1234")?;
+    Ok(())
 }
 
 #[test]
-fn test_group_ast() {
+fn test_group_ast() -> Result<()> {
     let grammar = r#"
         start = '1' ('2' '3') '4' $ ;
     "#;
 
-    let model = compile(grammar, &[]).expect("Failed to compile");
-    let _ast = parse_input(&model, "1234");
+    let model = compile(grammar, &[])?;
+    let _ast = parse_input(&model, "1234")?;
+    Ok(())
 }
 
 #[test]
-fn test_partial_options() {
+fn test_partial_options() -> Result<()> {
     let grammar = r#"
         start = [a] ['A' 'A' | 'A' 'B'] $ ;
         a = 'A' !('A'|'B') ;
     "#;
 
-    let _model = compile(grammar, &[]).expect("Failed to compile");
+    compile(grammar, &[])?;
+    Ok(())
 }

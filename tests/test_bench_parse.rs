@@ -6,6 +6,7 @@
 //! These are skeletal tests - they will not compile until TieXiu
 //! implements the full EBNF parsing bootstrap.
 
+use tiexiu::Result;
 use tiexiu::compile;
 use tiexiu::state::StrCtx;
 
@@ -32,9 +33,9 @@ const CALC_GRAMMAR: &str = r#"
 "#;
 
 #[test]
-fn test_bench_compile_calc_grammar() {
-    // Benchmark: compile a simple calculator grammar
-    let _model = compile(CALC_GRAMMAR, &[]);
+fn test_bench_compile_calc_grammar() -> Result<()> {
+    compile(CALC_GRAMMAR, &[])?;
+    Ok(())
 }
 
 #[test]

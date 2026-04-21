@@ -3,8 +3,11 @@
 
 //! Misc tests
 
+use tiexiu::Result;
+
 #[test]
-fn test_mapping() {
+fn test_mapping() -> Result<()> {
     use std::collections::HashMap;
     fn _check_mapping<V>(_: &HashMap<String, V>) {}
+    Ok(())
 }

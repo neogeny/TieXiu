@@ -3,7 +3,9 @@
 
 //! Tests for first/follow - requires grammar internals
 
+use tiexiu::Result;
+
 #[test]
-fn test_firstfollow() {
+fn test_firstfollow() -> Result<()> {
     unimplemented!("firstfollow tests require rule internals");
 }

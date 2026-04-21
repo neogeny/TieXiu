@@ -6,16 +6,17 @@
 //! These are skeletal tests - they will not compile until TieXiu
 //! implements the full EBNF parsing bootstrap.
 
+use tiexiu::Result;
 use tiexiu::api::parse;
 
 #[test]
 #[ignore = "TODO: broken, check the Python original"]
-fn test_alert_interpolation() {
+fn test_alert_interpolation() -> Result<()> {
     let grammar = r#"
         start = a:number b: number i:^`"seen: {a}, {b}"` $ ;
         number::int = /\d+/ ;
     "#;
 
-    let ast = parse(grammar, "42 69", &[]);
-    assert!(ast.is_ok());
+    let _ast = parse(grammar, "42 69", &[])?;
+    Ok(())
 }

@@ -3,10 +3,14 @@
 
 //! Tests for join - uses compile() which has BUG
 
+use tiexiu::Result;
+use tiexiu::api::compile;
+
 #[test]
-fn test_positive_join() {
+fn test_positive_join() -> Result<()> {
     let grammar = r#"
         start = ','%{'x' 'y'}+ ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[]);
+    compile(grammar, &[])?;
+    Ok(())
 }

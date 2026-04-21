@@ -3,11 +3,14 @@
 
 //! Tests for constants - uses compile() which has BUG
 
+use tiexiu::Result;
+
 #[test]
-fn test_constant_interpolation() {
+fn test_constant_interpolation() -> Result<()> {
     let grammar = r#"
         start = a:number b: number i:`"seen: {a}, {b}"` $ ;
         number = /\d+/ ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[]);
+    let _result = tiexiu::api::compile(grammar, &[])?;
+    Ok(())
 }

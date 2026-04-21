@@ -3,11 +3,15 @@
 
 //! Tests for parameters - uses compile() which has BUG
 
+use tiexiu::Result;
+use tiexiu::api::compile;
+
 #[test]
-fn test_keyword_params() {
+fn test_keyword_params() -> Result<()> {
     let grammar = r#"
         start = rule[param] ;
         rule[:param] = 'test' ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[]);
+    compile(grammar, &[])?;
+    Ok(())
 }

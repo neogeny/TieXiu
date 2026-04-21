@@ -3,7 +3,9 @@
 
 //! Tests for Buffer functionality - NOT IMPLEMENTED
 
+use tiexiu::Result;
+
 #[test]
-fn test_pos_consistency() {
+fn test_pos_consistency() -> Result<()> {
     unimplemented!("buffer not implemented");
 }

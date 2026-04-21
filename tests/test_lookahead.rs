@@ -3,11 +3,15 @@
 
 //! Tests for lookahead - uses compile() which has BUG
 
+use tiexiu::Result;
+use tiexiu::api::compile;
+
 #[test]
-fn test_skip_to() {
+fn test_skip_to() -> Result<()> {
     let grammar = r#"
         start = 'x' ab $ ;
         ab = 'a' 'b' | -> 'b' ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[]);
+    compile(grammar, &[])?;
+    Ok(())
 }

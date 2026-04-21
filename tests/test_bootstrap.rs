@@ -11,24 +11,25 @@ mod fixtures;
 // =============================================================================
 
 mod parse_grammar {
+    use tiexiu::Result;
     use tiexiu::api::parse_grammar;
 
     #[test]
-    fn simple_grammar() {
+    fn simple_grammar() -> Result<()> {
         let tree = parse_grammar(
             r#"
             @@grammar :: Simple
             start: 'hello'
         "#,
             &[],
-        )
-        .expect("Failed to parse");
+        )?;
         assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
-        assert!(tree.to_model_json_string().unwrap().contains("grammar"));
+        assert!(tree.to_model_json_string()?.contains("grammar"));
+        Ok(())
     }
 
     #[test]
-    fn multiple_rules() {
+    fn multiple_rules() -> Result<()> {
         let grammar = r#"
             @@grammar :: Multi
             start: a | b | c
@@ -36,21 +37,23 @@ mod parse_grammar {
             b: 'b'
             c: 'c'
         "#;
-        let tree = parse_grammar(grammar, &[]).expect("a tree");
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("rules"));
+        Ok(())
     }
 
     #[test]
-    fn directive() {
+    fn directive() -> Result<()> {
         let grammar = r#"
             @@grammar :: Directives
             @@whitespace :: /\s+/
             start: 'hello'
         "#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("directive"));
+        Ok(())
     }
 }
 
@@ -59,70 +62,79 @@ mod parse_grammar {
 // =============================================================================
 
 mod parse_expressions {
+    use tiexiu::Result;
     use tiexiu::api::*;
 
     #[test]
-    fn token() {
+    fn token() -> Result<()> {
         let grammar = r#"@@grammar :: T start: 'foo' 'bar'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Token"));
+        Ok(())
     }
 
     #[test]
-    fn pattern() {
+    fn pattern() -> Result<()> {
         let grammar = r#"@@grammar :: P start: /\d+/"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Pattern"));
+        Ok(())
     }
 
     #[test]
-    fn sequence() {
+    fn sequence() -> Result<()> {
         let grammar = r#"@@grammar :: S start: 'a' 'b' 'c'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Sequence"));
+        Ok(())
     }
 
     #[test]
-    fn choice() {
+    fn choice() -> Result<()> {
         let grammar = r#"@@grammar :: C start: 'a' | 'b' | 'c'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Choice"));
+        Ok(())
     }
 
     #[test]
-    fn optional() {
+    fn optional() -> Result<()> {
         let grammar = r#"@@grammar :: O start: 'a' 'b'? 'c'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Optional"));
+        Ok(())
     }
 
     #[test]
-    fn closure() {
+    fn closure() -> Result<()> {
         let grammar = r#"@@grammar :: Cl start: 'a'*"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Closure"));
+        Ok(())
     }
 
     #[test]
-    fn positive_closure() {
+    fn positive_closure() -> Result<()> {
         let grammar = r#"@@grammar :: PC start: 'a'+"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("PositiveClosure"));
+        Ok(())
     }
 
     #[test]
-    fn group() {
+    fn group() -> Result<()> {
         let grammar = r#"@@grammar :: G start: ('a' 'b')*"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Group"));
+        Ok(())
     }
 }
 
@@ -131,30 +143,34 @@ mod parse_expressions {
 // =============================================================================
 
 mod parse_constraints {
+    use tiexiu::Result;
     use tiexiu::parse_grammar;
 
     #[test]
-    fn lookahead() {
+    fn lookahead() -> Result<()> {
         let grammar = r#"@@grammar :: L start: &'a' 'a'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Lookahead"));
+        Ok(())
     }
 
     #[test]
-    fn negative_lookahead() {
+    fn negative_lookahead() -> Result<()> {
         let grammar = r#"@@grammar :: NL start: !'b' 'a'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("NegativeLookahead"));
+        Ok(())
     }
 
     #[test]
-    fn cut() {
+    fn cut() -> Result<()> {
         let grammar = r#"@@grammar :: Cu start: 'a' ~ 'b'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Cut"));
+        Ok(())
     }
 }
 
@@ -166,40 +182,43 @@ mod parse_naming {
     use tiexiu::*;
 
     #[test]
-    fn named() {
+    fn named() -> Result<()> {
         let grammar = r#"@@grammar :: N start: name='a'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Named"));
         assert!(json.contains("name"));
+        Ok(())
     }
 
     #[test]
-    fn rule_call() {
+    fn rule_call() -> Result<()> {
         let grammar = r#"
             @@grammar :: RC
             start: foo
             foo: 'x'
         "#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Call"));
+        Ok(())
     }
 
     #[test]
-    fn rule_include() {
+    fn rule_include() -> Result<()> {
         let grammar = r#"
             @@grammar :: RI
             start: >base
             base: 'x'
         "#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("RuleInclude"));
+        Ok(())
     }
 
     #[test]
-    fn rule_with_params() {
+    fn rule_with_params() -> Result<()> {
         let grammar = r#"
             @@grammar :: RWP
 
@@ -207,9 +226,10 @@ mod parse_naming {
 
             foo[Foo]: 'x' param ;
         "#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Foo"));
+        Ok(())
     }
 }
 
@@ -221,68 +241,76 @@ mod parse_special {
     use tiexiu::*;
 
     #[test]
-    fn void() {
+    fn void() -> Result<()> {
         let grammar = r#"@@grammar :: V start: 'a' () 'b'"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Void"));
+        Ok(())
     }
 
     #[test]
-    fn eof() {
+    fn eof() -> Result<()> {
         let grammar = r#"@@grammar :: E start: 'a' $"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("EOF"));
+        Ok(())
     }
 
     #[test]
-    fn dot() {
+    fn dot() -> Result<()> {
         let grammar = r#"@@grammar :: D start: /./"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         eprintln!("{:#}", json);
         assert!(json.contains("Dot"));
+        Ok(())
     }
 
     #[test]
-    fn constant() {
+    fn constant() -> Result<()> {
         let grammar = r#"@@grammar :: Cst start: `constant`"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Constant"));
+        Ok(())
     }
 
     #[test]
-    fn join() {
+    fn join() -> Result<()> {
         let grammar = r#"@@grammar :: J start: ','%{'a'}*"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Join"));
+        Ok(())
     }
 
     #[test]
-    fn gather() {
+    fn gather() -> Result<()> {
         let grammar = r#"@@grammar :: Gt start: ','.{'a'}*"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Gather"));
+        Ok(())
     }
 
     #[test]
-    fn skip_group() {
+    fn skip_group() -> Result<()> {
         let grammar = r#"@@grammar :: Sk start: (?: 'a' 'b')*"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("SkipGroup"));
+        Ok(())
     }
 
     #[test]
-    fn alert() {
+    fn alert() -> Result<()> {
         let grammar = r#"@@grammar :: Al start: ^^`danger`"#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(grammar, &[])?;
+        let json = tree.to_model_json_string()?;
         assert!(json.contains("Alert"));
+        Ok(())
     }
 }
 
@@ -291,11 +319,12 @@ mod parse_special {
 // =============================================================================
 
 mod integration {
+    use tiexiu::Result;
     use tiexiu::cfg::constants::PATH_TATSU_GRAMMAR_EBNF;
     use tiexiu::parse_grammar;
 
     #[test]
-    fn complex_grammar() {
+    fn complex_grammar() -> Result<()> {
         let grammar = r#"
             @@grammar :: Complex
             @@whitespace :: /\s+/
@@ -316,21 +345,23 @@ mod integration {
 
             NUMBER: /\d+/
         "#;
-        let tree = parse_grammar(grammar, &[]).unwrap();
+        let tree = parse_grammar(grammar, &[])?;
         assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
+        Ok(())
     }
 
     #[test]
     #[ignore]
-    fn tatsu_own_grammar() {
-        let tatsu_grammar =
-            std::fs::read_to_string(PATH_TATSU_GRAMMAR_EBNF).expect("Failed to read grammar");
+    fn tatsu_own_grammar() -> Result<()> {
+        let tatsu_grammar = std::fs::read_to_string(PATH_TATSU_GRAMMAR_EBNF)
+            .map_err(|e| tiexiu::Error::from(e.to_string()))?;
 
-        let tree = parse_grammar(&tatsu_grammar, &[]).unwrap();
-        let json = tree.to_model_json_string().unwrap();
+        let tree = parse_grammar(&tatsu_grammar, &[])?;
+        let json = tree.to_model_json_string()?;
 
         assert!(json.contains("Grammar"));
         assert!(json.contains("rules"));
+        Ok(())
     }
 }
 
@@ -339,22 +370,23 @@ mod integration {
 // =============================================================================
 
 mod compilation {
+    use tiexiu::Result;
     use tiexiu::parse_input;
 
     #[test]
     #[ignore]
-    fn compiled_grammar_parses_input() {
+    fn compiled_grammar_parses_input() -> Result<()> {
         let grammar = tiexiu::compile(
             r#"
             @@grammar :: Test
             start: 'hello' 'world'
         "#,
             &[],
-        )
-        .unwrap();
+        )?;
 
-        let tree = parse_input(&grammar, "hello world", &[]).unwrap();
+        let tree = parse_input(&grammar, "hello world", &[])?;
         assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
+        Ok(())
     }
 }
 
@@ -367,21 +399,21 @@ mod round_trips {
     use tiexiu::*;
 
     #[test]
-    fn pretty_print_roundtrip() {
+    fn pretty_print_roundtrip() -> Result<()> {
         let grammar_text = r#"
             @@grammar :: Pretty
             start: 'a' | 'b'
         "#;
-        let tree = parse_grammar(grammar_text, &[]).unwrap();
+        let tree = parse_grammar(grammar_text, &[])?;
         eprintln!("TREE\n{:#?}", tree);
 
-        let grammar = compile(grammar_text, &[]).unwrap();
+        let grammar = compile(grammar_text, &[])?;
         eprintln!("COMPILED\n{}", grammar);
 
         let pretty = grammar.pretty_print();
         eprintln!("COMPILED->PRETTY\n{:#}", pretty);
 
-        let grammar2 = compile(&pretty, &[]).unwrap();
+        let grammar2 = compile(&pretty, &[])?;
         let pretty2 = grammar2.to_string();
 
         assert_eq!(
@@ -391,5 +423,6 @@ mod round_trips {
             pretty,
             pretty2
         );
+        Ok(())
     }
 }

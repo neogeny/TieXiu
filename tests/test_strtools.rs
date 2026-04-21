@@ -3,12 +3,14 @@
 
 //! Tests for util/strtools - NOT IMPLEMENTED
 
+use tiexiu::Result;
+
 #[test]
-fn test_visible_width() {
+fn test_visible_width() -> Result<()> {
     unimplemented!("strtools not implemented");
 }
 
 #[test]
-fn test_visual_linecount() {
+fn test_visual_linecount() -> Result<()> {
     unimplemented!("strtools not implemented");
 }

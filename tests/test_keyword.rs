@@ -3,11 +3,14 @@
 
 //! Tests for keyword - uses compile() which has BUG
 
+use tiexiu::Result;
+
 #[test]
-fn test_keywords_in_rule_names() {
+fn test_keywords_in_rule_names() -> Result<()> {
     let grammar = r#"
         start = whitespace ;
         whitespace = ' ' ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[]);
+    let _result = tiexiu::api::compile(grammar, &[])?;
+    Ok(())
 }

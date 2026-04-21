@@ -94,8 +94,8 @@ fn is_falsy(v: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use crate::Result;
+    use std::env;
 
     #[test]
     fn test_cfg_box_is_alias() -> Result<()> {

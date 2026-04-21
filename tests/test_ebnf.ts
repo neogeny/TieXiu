@@ -6,10 +6,11 @@
 //! These are skeletal tests - they will not compile until TieXiu
 //! implements the full EBNF parsing bootstrap.
 
-use crate::api::compile;
+use tiexiu::api::compile;
+use tiexiu::Result;
 
 #[test]
-fn test_parse_ebnf() {
+fn test_parse_ebnf() -> Result<()> {
     let grammar = r#"
         /*
             Example of a grammar that mixes TatSu and EBNF
@@ -27,24 +28,26 @@ fn test_parse_ebnf() {
         number := /\d+/
     "#;
 
-    let model = compile(grammar).expect("Failed to compile");
+    let model = compile(grammar, &[])?;
     assert!(!model.to_string().is_empty());
+    Ok(())
 }
 
 #[test]
-fn test_optional() {
+fn test_optional() -> Result<()> {
     let grammar = r#"
         start:  '[' /abc/
 
         other := 'xyz'?
     "#;
 
-    let model = compile(grammar).expect("Failed to compile");
+    let model = compile(grammar, &[])?;
     let _ = model;
+    Ok(())
 }
 
 #[test]
-fn test_one_line_grammar() {
+fn test_one_line_grammar() -> Result<()> {
     let grammar = r#"
         start: lisp
 
@@ -58,6 +61,7 @@ fn test_one_line_grammar() {
 
     "#;
 
-    let model = compile(grammar).expect("Failed to compile");
+    let model = compile(grammar, &[])?;
     assert!(model.to_string().contains("lisp"));
+    Ok(())
 }

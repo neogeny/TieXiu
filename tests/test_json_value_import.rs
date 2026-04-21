@@ -1,4 +1,5 @@
 use serde_json::Value;
+use tiexiu::Result;
 use tiexiu::peg::grammar::Grammar;
 
 const TATSU_JSON: &str = include_str!("../grammar/tatsu.json");
@@ -7,24 +8,27 @@ const RULE_INCLUDE_NO_NAME_JSON: &str = include_str!("./fixtures/rule_include_no
 const RULE_INCLUDE_WITH_EXP_JSON: &str = include_str!("./fixtures/rule_include_with_exp.json");
 
 #[test]
-fn test_grammar_from_json() {
-    let grammar = Grammar::serde_from_json(TATSU_JSON).expect("Failed to convert");
+fn test_grammar_from_json() -> Result<()> {
+    let grammar = Grammar::serde_from_json(TATSU_JSON)?;
     assert_eq!(grammar.name.to_string(), "TatSu");
     let rule_count = grammar.rules().count();
     assert!(rule_count > 0, "Expected rules, got {}", rule_count);
+    Ok(())
 }
 
 #[test]
-fn test_grammar_from_serde_value() {
-    let value: Value = serde_json::from_str(CALC_JSON).expect("Failed to parse JSON");
-    let grammar = Grammar::from_serde_json_value(&value).expect("Failed to convert");
-    assert_eq!(grammar.name.to_string(), "CALC");
-}
-
-#[test]
-fn test_grammar_from_json_error_reporting() {
+fn test_grammar_from_serde_value() -> Result<()> {
     let value: Value =
-        serde_json::from_str(RULE_INCLUDE_NO_NAME_JSON).expect("Failed to parse JSON");
+        serde_json::from_str(CALC_JSON).map_err(|e| tiexiu::Error::from(e.to_string()))?;
+    let grammar = Grammar::from_serde_json_value(&value)?;
+    assert_eq!(grammar.name.to_string(), "CALC");
+    Ok(())
+}
+
+#[test]
+fn test_grammar_from_json_error_reporting() -> Result<()> {
+    let value: Value = serde_json::from_str(RULE_INCLUDE_NO_NAME_JSON)
+        .map_err(|e| tiexiu::Error::from(e.to_string()))?;
     let result = Grammar::from_serde_json_value(&value);
 
     match result {
@@ -45,16 +49,13 @@ fn test_grammar_from_json_error_reporting() {
             );
         }
     }
+    Ok(())
 }
 
 #[test]
-fn test_grammar_from_json_with_rule_include_exp() {
-    let result = Grammar::serde_from_json(RULE_INCLUDE_WITH_EXP_JSON);
-    match result {
-        Ok(g) => {
-            assert_eq!(g.name.to_string(), "TatSu");
-            assert!(g.rules().count() > 0);
-        }
-        Err(e) => panic!("Expected success, got error: {}", e),
-    }
+fn test_grammar_from_json_with_rule_include_exp() -> Result<()> {
+    let result = Grammar::serde_from_json(RULE_INCLUDE_WITH_EXP_JSON)?;
+    assert_eq!(result.name.to_string(), "TatSu");
+    assert!(result.rules().count() > 0);
+    Ok(())
 }
