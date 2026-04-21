@@ -33,10 +33,8 @@ fn test_build() {
 }
 
 fn main() -> Result<()> {
-    if cfg!(debug_assertions) {
-        cli::cli()
-    } else if let Err(err) = cli::cli() {
-        eprintln!("{err}");
+    if let Err(err) = cli::cli() {
+        eprintln!("{:#?}", err);
         std::process::exit(1);
     } else {
         Ok(())
