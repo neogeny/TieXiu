@@ -99,7 +99,7 @@ impl<K: Ord + Clone + Default> CfgBox<K> {
     }
 
     /// Merges two configurations (Set Union).
-    pub fn merge(&self, other: &CfgA<K>) -> Self {
+    pub fn merge(&self, other: &CfgBox<K>) -> Self {
         let mut set: BTreeSet<K> = self.options.iter().cloned().collect();
         set.extend(other.iter().cloned());
 
@@ -204,7 +204,7 @@ mod tests {
             env::set_var("TEST_OTHER", "skip");
         }
 
-        let cfg = TestOpt::load_from_env("TEST_");
+        let cfg: CfgBox<TestOpt> = TestOpt::load_from_env("TEST_");
         assert!(cfg.contains(&TestOpt::Trace));
         assert!(cfg.contains(&TestOpt::Strict));
         assert_eq!(cfg.options.len(), 2);

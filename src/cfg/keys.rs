@@ -1,14 +1,24 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::ENV_PREFIX;
 pub use crate::util::cfg;
 pub use cfg::*;
 
 pub type CfgA = cfg::CfgA<Cfg>;
 pub type CfgBox = cfg::CfgBox<Cfg>;
 
-pub fn config_all(input: &CfgA) -> CfgBox {
-    CfgBox::load_from_env(super::constants::ENV_PREFIX).merge(input)
+/// Configuration Key are addditive, so the default is empty
+const DEFAULT_CFGA: &CfgA = &[];
+
+/// Add configurations over default and env
+pub fn config(cfga: &CfgA) -> CfgBox {
+    // NOTE:
+    //  Configurations are meant to be mostly one-time
+    //  except for options passed by library users through
+    CfgBox::from(DEFAULT_CFGA)
+        .merge(&CfgBox::load_from_env(ENV_PREFIX))
+        .merge(&cfga.into())
 }
 
 // NOTE! Order matters here! Debug < Mode < Trace
@@ -44,7 +54,7 @@ pub trait Configurable {
 
 impl From<&CfgA> for CfgBox {
     fn from(cfga: &CfgA) -> Self {
-        config_all(cfga)
+        config(cfga)
     }
 }
 
