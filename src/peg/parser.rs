@@ -38,8 +38,12 @@ pub trait Parser<C: Ctx>: Debug {
 
 impl std::fmt::Display for Nope {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Debug::fmt(self, f)?;
-        Ok(())
+        // Use the three-liner style you prefer
+        write!(
+            f,
+            "{} at {}: {}",
+            self.source, self.mark, self.report.callstack,
+        )
     }
 }
 

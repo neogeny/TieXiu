@@ -26,20 +26,20 @@ impl Exp {
     }
 
     pub fn repeat<C: Ctx>(mut ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> ParseResult<C> {
-        let was_cut = ctx.cut_seen();
+        let was_cut = ctx.cut_seen(); // take to not affect the choice that comes
         loop {
-            let mut next_ctx = ctx.clone();
-            next_ctx.unset_cut();
-            match exp.parse(next_ctx) {
-                Ok(Succ(new_ctx, tree)) => {
-                    res.push(tree);
+            ctx = ctx.clone();
+            ctx.uncut();
+            match Self::add_exp(ctx, exp, res) {
+                Ok(new_ctx) => {
                     ctx = new_ctx;
                 }
-                Err(mut f) => {
+                Err((mut ctx, mut f)) => {
                     if f.take_cut() {
+                        // the cut was set by the loop
                         return Err(f);
                     }
-                    ctx.restore_if_was_cut(was_cut);
+                    ctx.restore_cut(was_cut);
                     return Ok(Succ(ctx, Tree::Nil));
                 }
             }
@@ -55,18 +55,18 @@ impl Exp {
     ) -> ParseResult<C> {
         let was_cut = ctx.cut_seen(); // take to not affect the choice that comes
         loop {
-            ctx.unset_cut();
+            ctx.uncut();
             match pre.parse(ctx.clone()) {
                 Err(mut f) => {
                     if f.take_cut() {
                         return Err(f);
                     }
                     // OK to match nothing
-                    ctx.restore_if_was_cut(was_cut);
+                    ctx.restore_cut(was_cut);
                     return Ok(Succ(ctx, Tree::Nil));
                 }
                 Ok(Succ(mut new_ctx, pre_cst)) => {
-                    new_ctx.unset_cut();
+                    new_ctx.uncut();
                     match exp.parse(new_ctx.clone()) {
                         // NOTE: pre.parse().is_ok() so exp.parse().is_ok_or(fail)
                         Ok(Succ(repeat_ctx, exp_cst)) => {
@@ -76,7 +76,10 @@ impl Exp {
                             res.push(exp_cst);
                             ctx = repeat_ctx;
                         }
-                        Err(f) => {
+                        Err(mut f) => {
+                            if f.take_cut() {
+                                return Err(f);
+                            }
                             return Err(f); // the implicit cut after pre.parse()
                         }
                     }
@@ -167,7 +170,7 @@ mod tests {
     #[test]
     fn test_repeat_restores_entered_cut() {
         let mut ctx = setup("abc abc abc");
-        ctx.cut(); // set cut before entering Repeat
+        ctx.setcut(); // set cut before entering Repeat
         assert!(ctx.cut_seen(), "ctx should have cut set before repeat");
 
         let exp = Exp::token("abc");
@@ -183,7 +186,7 @@ mod tests {
     #[test]
     fn test_repeat_with_pre_restores_entered_cut() {
         let mut ctx = setup(",abc,abc");
-        ctx.cut(); // set cut before entering repeat_with_pre
+        ctx.setcut(); // set cut before entering repeat_with_pre
         assert!(
             ctx.cut_seen(),
             "ctx should have cut set before repeat_with_pre"

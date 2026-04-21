@@ -171,12 +171,14 @@ where
         });
     }
 
-    fn set_cut_seen(&mut self) {
-        self.tracer().trace_cut(self);
+    fn setcut(&mut self) {
+        // TODO: self.tracer.trace_cut(self.cursor)
         self.state_mut().cutseen = true;
+        self.prune_cache();
     }
+
     #[inline]
-    fn unset_cut(&mut self) {
+    fn uncut(&mut self) {
         self.state_mut().cutseen = false;
     }
 
@@ -227,10 +229,10 @@ mod tests {
         let cursor = StrCursor::new("test");
         let mut ctx = CoreCtx::new(cursor, &[]);
 
-        ctx.cut();
+        ctx.setcut();
         assert!(ctx.cut_seen());
 
-        ctx.unset_cut();
+        ctx.uncut();
         assert!(!ctx.cut_seen());
     }
 

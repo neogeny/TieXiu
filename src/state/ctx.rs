@@ -111,19 +111,14 @@ pub trait Ctx: CtxI + Clone + Debug {
 
     fn memoize(&mut self, key: &Key, tree: &Tree);
 
-    fn set_cut_seen(&mut self);
-    fn unset_cut(&mut self);
+    fn setcut(&mut self);
+    fn uncut(&mut self);
 
-    fn cut(&mut self) {
-        self.set_cut_seen();
-        self.prune_cache();
-    }
-
-    fn restore_if_was_cut(&mut self, was_cut: bool) {
+    fn restore_cut(&mut self, was_cut: bool) {
         if was_cut {
-            self.set_cut_seen();
+            self.setcut();
         } else {
-            // NOTE: Do nothinig. A cut may have been set by the caller.
+            self.uncut();
         }
     }
     fn prune_cache(&mut self);
