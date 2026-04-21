@@ -33,10 +33,13 @@ fn test_build() {
 }
 
 fn main() -> Result<()> {
-    if let Err(err) = cli::cli() {
-        eprintln!("{:#?}", err);
-        std::process::exit(1);
-    } else {
-        Ok(())
+    match cli::cli() {
+        Ok(result) => {
+            Ok(())
+        }
+        Err(err)  => {
+            eprintln!("{:#?}", err);
+            Err(err)
+        }
     }
 }
