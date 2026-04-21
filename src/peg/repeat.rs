@@ -70,7 +70,8 @@ impl Exp {
                             res.push(exp_cst);
                             loop_ctx = repeat_ctx;
                         }
-                        Err(f) => {
+                        Err(mut f) => {
+                            f.take_cut();
                             return Err(f); // the implicit cut after pre.parse()
                         }
                     }
