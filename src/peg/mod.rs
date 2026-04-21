@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 mod build;
+mod choices;
 mod compiler;
 mod defines;
 mod leftrec;
