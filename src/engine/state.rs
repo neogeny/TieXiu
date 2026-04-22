@@ -4,9 +4,8 @@
 //! A translation of the TatSu module with the same name
 
 use super::memo::MemoCache;
-use super::trace::Tracer;
+use super::trace::{NULL_TRACER, Tracer};
 use crate::input::Cursor;
-use crate::parser::TokenList;
 use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::collections::HashMap;
@@ -14,6 +13,8 @@ use std::collections::HashMap;
 pub const _AT_: &str = "__value__";
 
 pub type PatternCache = HashMap<String, Pattern>;
+
+pub type CallStack = Vec<Box<str>>;
 
 #[derive(Debug, Clone)]
 pub struct Alert {
@@ -29,7 +30,7 @@ pub struct ParseState<U: Cursor + Clone> {
     pub cutseen: bool,
     pub last_node: Tree,
     pub alerts: Vec<Alert>,
-    pub callstack: TokenList,
+    pub callstack: CallStack,
 }
 
 #[derive(Debug)]
@@ -38,6 +39,23 @@ pub struct HeavyState<'t> {
     pub patterns: PatternCache,
     pub keywords: Box<[Box<str>]>,
     pub tracer: &'t dyn Tracer,
+}
+
+impl<'t> Default for HeavyState<'t> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'t> HeavyState<'t> {
+    pub fn new() -> Self {
+        Self {
+            memos: MemoCache::new(),
+            patterns: PatternCache::new(),
+            keywords: [].into(),
+            tracer: &NULL_TRACER,
+        }
+    }
 }
 
 impl<U: Cursor + Clone> ParseState<U> {
@@ -49,7 +67,7 @@ impl<U: Cursor + Clone> ParseState<U> {
             cutseen: false,
             last_node: Tree::Nil,
             alerts: Vec::new(),
-            callstack: TokenList::new(),
+            callstack: CallStack::from(&["<|•".into()]),
         }
     }
 

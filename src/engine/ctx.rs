@@ -3,18 +3,18 @@
 
 use super::memo::{Key, Memo, MemoCache};
 use crate::cfg::Configurable;
+use crate::engine::state::CallStack;
 use crate::engine::trace::Tracer;
 use crate::input::Cursor;
 use crate::peg::error::ParseError;
 use crate::peg::{Nope, ParseResult, Rule, Succ};
 use crate::trees::tree::Tree;
 use crate::util::pyre::{Pattern, escape};
-use crate::util::tokenlist::TokenList;
 use std::fmt::Debug;
 
 pub trait CtxI: Configurable {
     fn cursor(&self) -> &dyn Cursor;
-    fn callstack(&self) -> TokenList;
+    fn callstack(&self) -> CallStack;
     fn mark(&self) -> usize {
         self.cursor().mark()
     }
@@ -145,6 +145,18 @@ pub trait Ctx: CtxI + Clone + Debug {
         //      Don't know what to do about the callstack
         //      All self.leave() does is pop it
         self.cursor_mut().reset(other.cursor().mark());
+        self
+    }
+
+    fn push(&mut self) -> Self {
+        self.clone()
+    }
+
+    fn pop(self) -> Self {
+        self
+    }
+
+    fn undo(self) -> Self {
         self
     }
 

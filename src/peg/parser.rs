@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::error::ParseError;
+use crate::engine::state::CallStack;
 use crate::engine::{Ctx, CtxI};
 use crate::input::memento::Memento;
 use crate::trees::Tree;
@@ -16,7 +17,7 @@ pub struct Succ<C: Ctx>(pub C, pub Tree);
 pub struct DisasterReport {
     pub pos: (usize, usize),
     pub la: Box<str>,
-    pub callstack: TokenList,
+    pub callstack: CallStack,
     pub location: &'static Location<'static>,
     pub memento: Memento,
 }

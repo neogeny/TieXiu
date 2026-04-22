@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub use super::ctx::{Ctx, CtxI};
-use super::memo::{Key, Memo, MemoCache};
-use super::state::{HeavyState, ParseState, PatternCache};
+use super::memo::{Key, Memo};
+use super::state::{CallStack, HeavyState, ParseState};
 use super::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
 use crate::cfg::*;
 use crate::input::Cursor;
-use crate::peg::parser::TokenList;
 use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
@@ -48,12 +47,7 @@ where
         let mut ctx = Self {
             cloned: true,
             state: Cow::Owned(ParseState::new(cursor).into()),
-            heavy: Rc::new(RefCell::new(HeavyState {
-                memos: MemoCache::new(),
-                patterns: PatternCache::new(),
-                keywords: [].into(),
-                tracer: &NULL_TRACER,
-            })),
+            heavy: RefCell::new(HeavyState::new()).into(),
         };
         ctx.configure(&config(cfga));
         ctx
@@ -96,7 +90,7 @@ where
     }
 
     #[inline]
-    fn callstack(&self) -> TokenList {
+    fn callstack(&self) -> CallStack {
         self.state.callstack.clone()
     }
 
@@ -129,16 +123,11 @@ where
     }
 
     fn enter(&mut self, name: &str) {
-        let stack = self.state.callstack.clone();
-        self.state_mut().callstack = stack.insert(name);
+        self.state_mut().callstack.push(name.into());
     }
 
     fn leave(&mut self) {
-        let stack = self.state.callstack.clone();
-        self.state_mut().callstack = match stack.tail() {
-            Some(tail) => tail.clone(),
-            None => TokenList::new(),
-        }
+        self.state_mut().callstack.pop();
     }
 
     fn tracer(&self) -> &dyn Tracer {
@@ -146,13 +135,12 @@ where
     }
 
     fn get_pattern(&self, pattern: &str) -> Pattern {
-        self.with_heavy_mut(|heavy| {
-            heavy
-                .patterns
-                .entry(pattern.to_string())
-                .or_insert_with(|| Pattern::new(pattern).unwrap())
-                .clone()
-        })
+        self.heavy
+            .borrow_mut()
+            .patterns
+            .entry(pattern.to_string())
+            .or_insert_with(|| Pattern::new(pattern).unwrap())
+            .clone()
     }
 
     fn memo(&mut self, key: &Key) -> Option<Memo> {
@@ -209,9 +197,8 @@ mod tests {
         let mut ctx = CoreCtx::new(cursor, &[]);
 
         ctx.enter("rule");
-
         let stack = ctx.callstack();
-        assert!(stack.to_vec().contains(&"rule"));
+        assert!(stack.contains(&"rule".into()));
     }
 
     #[test]
@@ -231,7 +218,7 @@ mod tests {
         ctx.cut();
         assert!(ctx.cut_seen());
 
-        let cloned_ctx = ctx.clone();
+        let cloned_ctx = ctx.push();
         assert!(
             !cloned_ctx.cut_seen(),
             "cloned context should have cutseen as false"

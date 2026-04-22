@@ -8,15 +8,16 @@ use crate::peg::{Nope, ParseResult};
 use crate::trees::Tree;
 
 impl Exp {
-    pub fn skip_exp<C: Ctx>(ctx: C, exp: &Exp) -> C {
-        match exp.parse(ctx.clone()) {
+    pub fn skip_exp<C: Ctx>(mut ctx: C, exp: &Exp) -> C {
+        let skip_ctx = ctx.push();
+        match exp.parse(skip_ctx) {
             Ok(Succ(new_ctx, _)) => ctx.merge(&new_ctx),
             Err(_) => ctx,
         }
     }
 
-    pub fn add_exp<C: Ctx>(ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> Result<C, (C, Nope)> {
-        match exp.parse(ctx.clone()) {
+    pub fn add_exp<C: Ctx>(mut ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> Result<C, (C, Nope)> {
+        match exp.parse(ctx.push()) {
             Ok(Succ(new_ctx, tree)) => {
                 res.push(tree);
                 Ok(ctx.merge(&new_ctx))
@@ -25,10 +26,10 @@ impl Exp {
         }
     }
 
-    pub fn repeat<C: Ctx>(ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> ParseResult<C> {
-        let mut loop_ctx = ctx.clone();
+    pub fn repeat<C: Ctx>(mut ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> ParseResult<C> {
+        let mut loop_ctx = ctx.push();
         loop {
-            match exp.parse(loop_ctx.clone()) {
+            match exp.parse(loop_ctx.push()) {
                 Ok(Succ(new_ctx, tree)) => {
                     res.push(tree);
                     loop_ctx = new_ctx;
@@ -44,15 +45,15 @@ impl Exp {
     }
 
     pub fn repeat_with_pre<C: Ctx>(
-        ctx: C,
+        mut ctx: C,
         exp: &Exp,
         pre: &Exp,
         res: &mut Vec<Tree>,
         keep_pre: bool,
     ) -> ParseResult<C> {
-        let mut loop_ctx = ctx.clone();
+        let mut loop_ctx = ctx.push();
         loop {
-            match pre.parse(loop_ctx.clone()) {
+            match pre.parse(loop_ctx.push()) {
                 Err(mut f) => {
                     if f.take_cut() {
                         return Err(f);
@@ -60,8 +61,8 @@ impl Exp {
                     // OK to match nothing
                     return Ok(Succ(ctx.merge(&loop_ctx), Tree::Nil));
                 }
-                Ok(Succ(new_ctx, pre_cst)) => {
-                    match exp.parse(new_ctx.clone()) {
+                Ok(Succ(mut new_ctx, pre_cst)) => {
+                    match exp.parse(new_ctx.push()) {
                         // NOTE: pre.parse().is_ok() so exp.parse().is_ok_or(fail)
                         Ok(Succ(repeat_ctx, exp_cst)) => {
                             if keep_pre {
@@ -97,13 +98,13 @@ mod tests {
 
     #[test]
     fn test_skip_exp() {
-        let ctx = setup("abc");
+        let mut ctx = setup("abc");
         let exp = Exp::token("abc");
-        let new_ctx = Exp::skip_exp(ctx.clone(), &exp);
+        let new_ctx = Exp::skip_exp(ctx.push(), &exp);
         assert_eq!(new_ctx.cursor().mark(), 3);
 
-        let ctx = setup("def");
-        let new_ctx = Exp::skip_exp(ctx.clone(), &exp);
+        let mut ctx = setup("def");
+        let new_ctx = Exp::skip_exp(ctx.push(), &exp);
         assert_eq!(new_ctx.cursor().mark(), 0);
     }
 

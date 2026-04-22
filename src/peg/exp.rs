@@ -248,18 +248,18 @@ impl Exp {
                 Ok(Succ(new_ctx, Tree::Nil))
             }
             ExpKind::Lookahead(exp) => {
-                let _ = exp.parse(ctx.clone())?;
+                let _ = exp.parse(ctx.push())?;
                 Ok(Succ(ctx, Tree::Nil))
             }
             ExpKind::NegativeLookahead(exp) => {
-                if let Ok(Succ(_, _)) = exp.parse(ctx.clone()) {
+                if let Ok(Succ(_, _)) = exp.parse(ctx.push()) {
                     Err(ctx.failure(start, ParseError::NotExpecting(self.lookahead_str())))
                 } else {
                     Ok(Succ(ctx, Tree::Nil))
                 }
             }
             ExpKind::SkipTo(exp) => loop {
-                match exp.parse(ctx.clone()) {
+                match exp.parse(ctx.push()) {
                     Err(f) => {
                         if !ctx.dot() {
                             return Err(f);
