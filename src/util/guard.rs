@@ -37,7 +37,6 @@ impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
     }
 }
 
-
 impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
     pub fn new(subject: T, action: F) -> Self {
         Self {
