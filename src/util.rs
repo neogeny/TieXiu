@@ -5,11 +5,14 @@ pub mod cfg;
 pub mod error;
 pub mod finally;
 pub mod fold;
+pub mod fuse;
 pub mod indent;
 pub mod into;
+pub mod memento;
 pub mod newlines;
 pub mod pyre;
 pub mod tokenstack;
+pub mod guard;
 
 pub use cfg::CfgBox;
 pub use error::*;
