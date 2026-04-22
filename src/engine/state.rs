@@ -4,7 +4,7 @@
 //! A translation of the TatSu module with the same name
 
 use super::memo::MemoCache;
-use super::trace::{Tracer, NULL_TRACER};
+use super::trace::{NULL_TRACER, Tracer};
 use crate::input::Cursor;
 use crate::parser::TokenStack;
 use crate::trees::Tree;
@@ -158,7 +158,7 @@ impl<U: Cursor + Clone> ParseStateStack<U> {
     }
 
     pub fn undo(&mut self) -> ParseState<U> {
-        let mut prev = self.state_stack.pop().expect("empty state stack")
+        let mut prev = self.state_stack.pop().expect("empty state stack");
         prev.pop();
         prev
     }

@@ -133,7 +133,7 @@ pub trait Ctx: CtxI + Clone + Debug {
     ///     self.cursor.goto(prev.cursor.pos)
     ///     return self
     /// ```
-    fn merge(mut self, other: &Self) -> Self {
+    fn merge(mut self, other: &mut Self) -> Self {
         // NOTE:
         //  * We don't construct the resulting CST/AST because Tree does it
         //    when Tree.node() is called on success of a rule call
@@ -148,16 +148,23 @@ pub trait Ctx: CtxI + Clone + Debug {
         self
     }
 
+    // NOTE
+    //  Default to .clone(), but implementors can do more work.
+    //  This should work with both cloned Ctx and with a separate
+    //  StateStack.
     fn push(&mut self) -> Self {
         self.clone()
     }
 
-    fn pop(self) -> Self {
-        self
-    }
+    fn done(&self) -> bool;
 
-    fn undo(self) -> Self {
-        self
+    // NOTE These only make sense over owned self
+    fn pop(&mut self) {}
+    fn undo(&mut self) {}
+    fn undo_unpopped(&mut self) {
+        if !self.done() {
+            self.undo();
+        }
     }
 
     fn call(mut self, name: &str, rule: &Rule) -> ParseResult<Self> {
@@ -182,12 +189,13 @@ pub trait Ctx: CtxI + Clone + Debug {
                     self.reset(memo.mark);
                     self.tracer().trace_success(&self);
                     self.leave();
+                    self.undo_unpopped();
                     Ok(Succ(self, memo.tree))
                 }
             };
         }
 
-        let cloned_ctx = self.clone();
+        let cloned_ctx = self.push();
         match if rule.is_left_recursive() {
             cloned_ctx.call_recursive(&key, rule)
         } else {
@@ -206,7 +214,7 @@ pub trait Ctx: CtxI + Clone + Debug {
                 }
                 new_ctx.tracer().trace_success(&new_ctx);
                 new_ctx.memoize(&key, &tree);
-                Ok(Succ(new_ctx, tree))
+                Ok(Succ(self.merge(&mut new_ctx), tree))
             }
             Err(nope) => {
                 self.tracer().trace_failure(&self, &nope.source);
@@ -229,7 +237,7 @@ pub trait Ctx: CtxI + Clone + Debug {
         let mut last_failure: Option<Nope> = None;
 
         loop {
-            let mut ctx = self.clone();
+            let mut ctx = self.push();
             ctx.reset(start_mark);
 
             match rule.parse(ctx) {

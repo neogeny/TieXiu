@@ -134,7 +134,8 @@ impl Exp {
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
         match self.do_parse(ctx) {
             Err(err) => Err(err),
-            Ok(Succ(ctx, mut tree)) => {
+            Ok(Succ(mut ctx, mut tree)) => {
+                ctx.undo_unpopped();
                 tree.define(&self.df);
                 Ok(Succ(ctx, tree))
             }

@@ -18,7 +18,6 @@ pub struct CoreCtx<'c, U>
 where
     U: Cursor + Clone,
 {
-    pub cloned: bool, // keep track of if we are a clone
     pub state: Cow<'c, Box<ParseState<U>>>,
     pub heavy: Rc<RefCell<HeavyState<'c>>>,
 }
@@ -29,13 +28,21 @@ where
 {
     fn clone(&self) -> Self {
         let mut new_state = (*self.state).clone();
-        // NOTE: new state, own the cuts
+        // NOTE: new state, owns the cuts
         new_state.cutseen = false;
         Self {
-            cloned: false,
             state: Cow::Owned(new_state),
             heavy: self.heavy.clone(),
         }
+    }
+}
+
+impl<'c, U> Drop for CoreCtx<'c, U>
+where
+    U: Cursor + Clone,
+{
+    fn drop(&mut self) {
+        self.undo_unpopped();
     }
 }
 
@@ -45,7 +52,6 @@ where
 {
     pub fn new(cursor: U, cfga: &CfgA) -> Self {
         let mut ctx = Self {
-            cloned: true,
             state: Cow::Owned(ParseState::new(cursor).into()),
             heavy: RefCell::new(HeavyState::new()).into(),
         };
@@ -125,7 +131,6 @@ where
     fn enter(&mut self, name: &str) {
         self.state_mut().callstack.push(name);
     }
-
     fn leave(&mut self) {
         let stack = self.state.callstack.clone();
         self.state_mut().callstack = match stack.tail() {
@@ -179,6 +184,23 @@ where
 
     fn set_keywords(&mut self, keywords: &[Box<str>]) {
         self.heavy.borrow_mut().keywords = keywords.into()
+    }
+
+    fn merge(mut self, other: &mut Self) -> Self {
+        self.state_mut().merge(other.state_mut());
+        self
+    }
+
+    fn done(&self) -> bool {
+        self.state.is_popped()
+    }
+
+    fn pop(&mut self) {
+        self.state_mut().pop();
+    }
+
+    fn undo(&mut self) {
+        self.state_mut().pop();
     }
 }
 
