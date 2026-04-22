@@ -17,7 +17,9 @@ pub struct Finally<F: FnOnce()> {
 
 impl<F: FnOnce()> Finally<F> {
     pub fn new(action: F) -> Self {
-        Self { action: Some(action) }
+        Self {
+            action: Some(action),
+        }
     }
 
     pub fn defuse(&mut self) {
