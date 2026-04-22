@@ -1,10 +1,19 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+//! A translation of the TatSu module with the same name
+
+use super::memo::MemoCache;
+use super::trace::Tracer;
 use crate::input::Cursor;
+use crate::parser::TokenList;
 use crate::trees::Tree;
+use crate::util::pyre::Pattern;
+use std::collections::HashMap;
 
 pub const _AT_: &str = "__value__";
+
+pub type PatternCache = HashMap<String, Pattern>;
 
 #[derive(Debug, Clone)]
 pub struct Alert {
@@ -20,6 +29,15 @@ pub struct ParseState<U: Cursor + Clone> {
     pub cutseen: bool,
     pub last_node: Tree,
     pub alerts: Vec<Alert>,
+    pub callstack: TokenList,
+}
+
+#[derive(Debug)]
+pub struct HeavyState<'t> {
+    pub memos: MemoCache,
+    pub patterns: PatternCache,
+    pub keywords: Box<[Box<str>]>,
+    pub tracer: &'t dyn Tracer,
 }
 
 impl<U: Cursor + Clone> ParseState<U> {
@@ -31,6 +49,7 @@ impl<U: Cursor + Clone> ParseState<U> {
             cutseen: false,
             last_node: Tree::Nil,
             alerts: Vec::new(),
+            callstack: TokenList::new(),
         }
     }
 
@@ -42,6 +61,7 @@ impl<U: Cursor + Clone> ParseState<U> {
             cutseen: false,
             last_node: Tree::Nil,
             alerts: other.alerts.clone(),
+            callstack: other.callstack.clone(),
         }
     }
 
@@ -70,13 +90,13 @@ impl<U: Cursor + Clone> ParseState<U> {
 
     pub fn append(&mut self, node: Tree) -> Tree {
         self.last_node = node.clone();
-        self.cst = self.cst.clone().add(node.clone());
+        self.cst = self.cst.clone().append(node.clone());
         node
     }
 
     pub fn extend(&mut self, node: Tree) -> Tree {
         self.last_node = node.clone();
-        self.cst = self.cst.clone().merge_with(node.clone());
+        self.cst = self.cst.clone().merge(node.clone());
         node
     }
 }

@@ -3,6 +3,7 @@
 
 pub use super::ctx::{Ctx, CtxI};
 use super::memo::{Key, Memo, MemoCache};
+use super::state::{HeavyState, ParseState, PatternCache};
 use super::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
 use crate::cfg::*;
 use crate::input::Cursor;
@@ -11,25 +12,7 @@ use crate::trees::Tree;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
-
-type PatternCache = HashMap<String, Pattern>;
-
-#[derive(Clone, Debug)]
-pub struct State<U: Cursor> {
-    pub cursor: U,
-    pub cutseen: bool,
-    pub callstack: TokenList,
-}
-
-#[derive(Debug)]
-pub struct HeavyState<'t> {
-    pub memos: MemoCache,
-    pub patterns: PatternCache,
-    pub keywords: Box<[Box<str>]>,
-    pub tracer: &'t dyn Tracer,
-}
 
 #[derive(Debug)]
 pub struct CoreCtx<'c, U>
@@ -37,7 +20,7 @@ where
     U: Cursor + Clone,
 {
     pub cloned: bool, // keep track of if we are a clone
-    pub state: Cow<'c, Box<State<U>>>,
+    pub state: Cow<'c, Box<ParseState<U>>>,
     pub heavy: Rc<RefCell<HeavyState<'c>>>,
 }
 
@@ -64,14 +47,7 @@ where
     pub fn new(cursor: U, cfga: &CfgA) -> Self {
         let mut ctx = Self {
             cloned: true,
-            state: Cow::Owned(
-                State {
-                    cursor,
-                    cutseen: false,
-                    callstack: TokenList::new(),
-                }
-                .into(),
-            ),
+            state: Cow::Owned(ParseState::new(cursor).into()),
             heavy: Rc::new(RefCell::new(HeavyState {
                 memos: MemoCache::new(),
                 patterns: PatternCache::new(),
@@ -84,7 +60,7 @@ where
     }
 
     #[inline]
-    fn state_mut(&mut self) -> &mut State<U> {
+    fn state_mut(&mut self) -> &mut ParseState<U> {
         self.state.to_mut()
     }
 

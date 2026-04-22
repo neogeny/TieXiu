@@ -5,6 +5,7 @@ pub mod corectx;
 pub mod ctx;
 pub mod error;
 pub mod memo;
+pub mod state;
 pub mod strctx;
 pub mod trace;
 
