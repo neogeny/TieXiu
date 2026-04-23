@@ -186,8 +186,8 @@ where
         self
     }
 
-    fn push(&mut self) -> Self {
-        self.clone()
+    fn push_state(&mut self) {
+        // NOTE: we count on clone
     }
 
     fn done(&self) -> bool {

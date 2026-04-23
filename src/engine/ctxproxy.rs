@@ -35,7 +35,8 @@ impl<C: Ctx> CtxProxy<C> {
 
 impl<C: Ctx> Drop for CtxProxy<C> {
     fn drop(&mut self) {
-        self.undo_unmerged();
+        // WARNING This unbalances the state stack
+        // self.undo_unmerged();
     }
 }
 
@@ -129,9 +130,8 @@ impl<C: Ctx> Ctx for CtxProxy<C> {
         }
     }
 
-    fn push(&mut self) -> Self {
-        self.inner.borrow_mut().push();
-        self.clone()
+    fn push_state(&mut self) {
+        self.inner.borrow_mut().push_state();
     }
 
     fn done(&self) -> bool {

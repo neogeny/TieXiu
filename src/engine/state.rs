@@ -152,10 +152,12 @@ impl<U: Cursor + Clone> ParseStateStack<U> {
         }
     }
 
+    #[track_caller]
     pub fn state(&self) -> &ParseState<U> {
         self.state_stack.last().expect("empty state stack")
     }
 
+    #[track_caller]
     pub fn state_mut(&mut self) -> &mut ParseState<U> {
         self.state_stack.last_mut().expect("empty state stack")
     }
@@ -164,12 +166,14 @@ impl<U: Cursor + Clone> ParseStateStack<U> {
         self.state().node()
     }
 
+    #[track_caller]
     pub fn undo(&mut self) -> ParseState<U> {
         let mut prev = self.state_stack.pop().expect("empty state stack");
         prev.pop();
         prev
     }
 
+    #[track_caller]
     pub fn pop(&mut self) -> ParseState<U> {
         let mut prev = self.state_stack.pop().expect("empty state stack");
         prev.pop();

@@ -153,8 +153,11 @@ pub trait Ctx: CtxI + Clone + Debug {
     //  This should work with both cloned Ctx and with a separate
     //  StateStack.
     fn push(&mut self) -> Self {
+        self.push_state();
         self.clone()
     }
+
+    fn push_state(&mut self);
 
     fn done(&self) -> bool;
 

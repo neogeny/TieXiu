@@ -38,6 +38,7 @@ where
     }
 
     #[inline]
+    #[track_caller]
     fn state(&self) -> &ParseState<U> {
         self.states.state()
     }
@@ -65,16 +66,19 @@ where
     U: Cursor + Clone,
 {
     #[inline]
+    #[track_caller]
     fn cursor(&self) -> &dyn Cursor {
         &self.state().cursor
     }
 
     #[inline]
+    #[track_caller]
     fn callstack(&self) -> CallStack {
         self.state().callstack.clone()
     }
 
     #[inline]
+    #[track_caller]
     fn cut_seen(&self) -> bool {
         self.state().cutseen
     }
@@ -156,11 +160,14 @@ where
     }
 
     fn push(&mut self) -> Self {
-        self.states.push();
-        // TODO: Resolve Clone dependency of Ctx trait
-        todo!("StackCtx must be Clone to implement Ctx")
+        unimplemented!()
     }
 
+    fn push_state(&mut self) {
+        self.states.push();
+    }
+
+    #[track_caller]
     fn done(&self) -> bool {
         self.state().is_popped()
     }
