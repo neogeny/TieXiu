@@ -28,7 +28,6 @@ pub struct ParseState<U: Cursor + Clone> {
     fuse: Fuse,
     pub cursor: U,
     pub cutseen: bool,
-    pub alerts: Vec<Alert>,
     pub callstack: CallStack,
 }
 
@@ -82,7 +81,6 @@ impl<U: Cursor + Clone> ParseState<U> {
         Self {
             cursor,
             cutseen: false,
-            alerts: Vec::new(),
             callstack: CallStack::new(),
             fuse: Fuse::default(),
         }
@@ -92,7 +90,6 @@ impl<U: Cursor + Clone> ParseState<U> {
         Self {
             cursor: other.cursor.clone(),
             cutseen: false,
-            alerts: other.alerts.clone(),
             callstack: other.callstack.clone(),
             fuse: Fuse::default(),
         }
@@ -100,7 +97,6 @@ impl<U: Cursor + Clone> ParseState<U> {
 
     pub fn merge(&mut self, prev: &mut Self) -> &mut Self {
         prev.burn();
-        self.alerts.extend(prev.alerts.clone());
         self.cursor.reset(prev.cursor.mark());
         self.callstack = prev.callstack.clone();
         self
@@ -172,14 +168,5 @@ impl<U: Cursor + Clone> ParseStateStack<U> {
     pub fn merge(&mut self) -> &mut ParseState<U> {
         let mut prev = self.pop();
         self.state_mut().merge(&mut prev)
-    }
-
-    pub fn alert(&mut self, level: usize, message: &str) -> Alert {
-        let alert = Alert {
-            level,
-            message: message.into(),
-        };
-        self.state_mut().alerts.push(alert.clone());
-        alert
     }
 }

@@ -27,16 +27,16 @@ pub enum Tree {
     Node {
         // The result of parsing a rule call
         typename: Box<str>,
-        tree: Box<Tree>, // The result of parsing a rule
+        tree: Box<Tree>,
     },
 
     // INTERNAL
-    // The folowing variants do not appear in final trees
-    Nil,                   // Parsing that doesn't consume any input
-    Named(KeyValue),       // Named elements
-    NamedAsList(KeyValue), // Named elements forced into a list
-    Override(Box<Tree>),   // Sets the value of the whole expression
-    OverrideAsList(Box<Tree>),
+    // The folowing variants do not appear in merged trees
+    Nil,                       // Parsing that didn't consume any input
+    Named(KeyValue),           // Named elements add to the merged TreeMap
+    NamedAsList(KeyValue),     // Named elements forced into a list
+    Override(Box<Tree>),       // Adds value to the merged tree
+    OverrideAsList(Box<Tree>), // Adds value to the merged tree, forces list
 
     Bottom, // The marker for failure used in memoization
 }
