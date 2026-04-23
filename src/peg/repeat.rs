@@ -12,7 +12,10 @@ impl Exp {
         let skip_ctx = ctx.push();
         match exp.parse(skip_ctx) {
             Ok(Succ(new_ctx, _)) => ctx.merge(new_ctx),
-            Err(_) => ctx,
+            Err(_) => {
+                ctx.undo();
+                ctx
+            }
         }
     }
 
@@ -22,7 +25,10 @@ impl Exp {
                 res.push(tree);
                 Ok(ctx.merge(new_ctx))
             }
-            Err(f) => Err((ctx, f)),
+            Err(f) => {
+                ctx.undo();
+                Err((ctx, f))
+            }
         }
     }
 
@@ -38,6 +44,7 @@ impl Exp {
                         ctx.undo();
                         return Err(f);
                     }
+                    ctx.pop();
                     return Ok(Succ(ctx, Tree::Nil));
                 }
             }
@@ -59,6 +66,7 @@ impl Exp {
                         return Err(f);
                     }
                     // OK to match nothing
+                    ctx.pop();
                     return Ok(Succ(ctx, Tree::Nil));
                 }
                 Ok(Succ(new_ctx, pre_cst)) => {
