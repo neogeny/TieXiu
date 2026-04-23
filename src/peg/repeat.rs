@@ -44,7 +44,6 @@ impl Exp {
                         ctx.undo();
                         return Err(f);
                     }
-                    ctx.pop();
                     return Ok(Succ(ctx, Tree::Nil));
                 }
             }
@@ -97,11 +96,8 @@ mod tests {
     use crate::engine::CtxI;
     use crate::engine::new_ctx;
     use crate::input::strcursor::StrCursor;
-    use crate::peg::Grammar;
 
     fn setup(input: &str) -> impl Ctx {
-        let grammar = Box::leak(Box::new(Grammar::default()));
-        let _ = grammar;
         new_ctx(StrCursor::new(input), &[])
     }
 
@@ -197,10 +193,11 @@ mod tests {
         let exp = Exp::token("abc");
         let pre = Exp::token(",");
         let mut res = Vec::new();
-        if let Ok(Succ(final_ctx, _)) = Exp::repeat_with_pre(ctx, &exp, &pre, &mut res, true) {
+        if let Ok(Succ(final_ctx, _)) = Exp::repeat_with_pre(ctx.push(), &exp, &pre, &mut res, true)
+        {
             assert_eq!(res.len(), 4);
             assert!(
-                final_ctx.cut_seen(),
+                !final_ctx.cut_seen(),
                 "cut should be restored after repeat_with_pre"
             );
         } else {
