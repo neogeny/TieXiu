@@ -8,6 +8,7 @@ use tiexiu::api::compile;
 
 #[test]
 fn test_children() -> Result<()> {
+    // TODO: cause of failure - verify Tree/Node parent-child relationship
     let grammar = r#"
         @@grammar::Calc
 
@@ -23,6 +24,7 @@ fn test_children() -> Result<()> {
 
 #[test]
 fn test_node_kwargs() -> Result<()> {
+    // TODO: cause of failure - verify Node construction logic
     let grammar = r#"
         start = 'value' ;
     "#;

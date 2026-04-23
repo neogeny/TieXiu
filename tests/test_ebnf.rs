@@ -4,6 +4,7 @@ use tiexiu::util::indent::dedent_all;
 #[test]
 // #[ignore]
 fn test_ebnf_parsing() -> tiexiu::Result<()> {
+    // TODO: cause of failure - verify full EBNF grammar parsing
     let grammar = dedent_all(
         r#"
         /*

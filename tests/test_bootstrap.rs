@@ -14,6 +14,7 @@ mod parse_grammar {
 
     #[test]
     fn simple_grammar() -> Result<()> {
+        // TODO: cause of failure - verify bootstrap grammar parsing
         let grammar = r#"
             @@grammar :: Simple
             start: 'hello'
@@ -38,6 +39,7 @@ mod parse_grammar {
 
     #[test]
     fn multiple_rules() -> Result<()> {
+        // TODO: cause of failure - verify bootstrap grammar parsing
         let grammar = r#"
             @@grammar :: Multi
             start: a | b | c
@@ -53,6 +55,7 @@ mod parse_grammar {
 
     #[test]
     fn directive() -> Result<()> {
+        // TODO: cause of failure - verify directive parsing
         let grammar = r#"
             @@grammar :: Directives
             @@whitespace :: /\s+/
@@ -75,6 +78,7 @@ mod parse_expressions {
 
     #[test]
     fn token() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: T start: 'foo' 'bar'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -84,6 +88,7 @@ mod parse_expressions {
 
     #[test]
     fn pattern() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: P start: /\d+/"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -93,6 +98,7 @@ mod parse_expressions {
 
     #[test]
     fn sequence() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: S start: 'a' 'b' 'c'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -102,6 +108,7 @@ mod parse_expressions {
 
     #[test]
     fn choice() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: C start: 'a' | 'b' | 'c'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -111,6 +118,7 @@ mod parse_expressions {
 
     #[test]
     fn optional() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: O start: 'a' 'b'? 'c'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -120,6 +128,7 @@ mod parse_expressions {
 
     #[test]
     fn closure() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: Cl start: 'a'*"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -129,6 +138,7 @@ mod parse_expressions {
 
     #[test]
     fn positive_closure() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: PC start: 'a'+"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -138,6 +148,7 @@ mod parse_expressions {
 
     #[test]
     fn group() -> Result<()> {
+        // TODO: cause of failure - verify expression parsing
         let grammar = r#"@@grammar :: G start: ('a' 'b')*"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -152,10 +163,11 @@ mod parse_expressions {
 
 mod parse_constraints {
     use tiexiu::Result;
-    use tiexiu::parse_grammar;
+    use tiexiu::api::parse_grammar;
 
     #[test]
     fn lookahead() -> Result<()> {
+        // TODO: cause of failure - verify constraint parsing
         let grammar = r#"@@grammar :: L start: &'a' 'a'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -165,6 +177,7 @@ mod parse_constraints {
 
     #[test]
     fn negative_lookahead() -> Result<()> {
+        // TODO: cause of failure - verify constraint parsing
         let grammar = r#"@@grammar :: NL start: !'b' 'a'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -174,6 +187,7 @@ mod parse_constraints {
 
     #[test]
     fn cut() -> Result<()> {
+        // TODO: cause of failure - verify cut parsing
         let grammar = r#"@@grammar :: Cu start: 'a' ~ 'b'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -191,6 +205,7 @@ mod parse_naming {
 
     #[test]
     fn named() -> Result<()> {
+        // TODO: cause of failure - verify naming parsing
         let grammar = r#"@@grammar :: N start: name='a'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -201,6 +216,7 @@ mod parse_naming {
 
     #[test]
     fn rule_call() -> Result<()> {
+        // TODO: cause of failure - verify rule call parsing
         let grammar = r#"
             @@grammar :: RC
             start: foo
@@ -214,6 +230,7 @@ mod parse_naming {
 
     #[test]
     fn rule_include() -> Result<()> {
+        // TODO: cause of failure - verify rule include parsing
         let grammar = r#"
             @@grammar :: RI
             start: >base
@@ -227,6 +244,7 @@ mod parse_naming {
 
     #[test]
     fn rule_with_params() -> Result<()> {
+        // TODO: cause of failure - verify param parsing
         let grammar = r#"
             @@grammar :: RWP
 
@@ -250,6 +268,7 @@ mod parse_special {
 
     #[test]
     fn void() -> Result<()> {
+        // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: V start: 'a' () 'b'"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -259,6 +278,7 @@ mod parse_special {
 
     #[test]
     fn eof() -> Result<()> {
+        // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: E start: 'a' $"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -268,6 +288,7 @@ mod parse_special {
 
     #[test]
     fn dot() -> Result<()> {
+        // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: D start: /./"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -278,6 +299,7 @@ mod parse_special {
 
     #[test]
     fn constant() -> Result<()> {
+        // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: Cst start: `constant`"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -287,6 +309,7 @@ mod parse_special {
 
     #[test]
     fn join() -> Result<()> {
+        // TODO: cause of failure - verify join parsing
         let grammar = r#"@@grammar :: J start: ','%{'a'}*"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -296,6 +319,7 @@ mod parse_special {
 
     #[test]
     fn gather() -> Result<()> {
+        // TODO: cause of failure - verify gather parsing
         let grammar = r#"@@grammar :: Gt start: ','.{'a'}*"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -305,6 +329,7 @@ mod parse_special {
 
     #[test]
     fn skip_group() -> Result<()> {
+        // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: Sk start: (?: 'a' 'b')*"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -314,6 +339,7 @@ mod parse_special {
 
     #[test]
     fn alert() -> Result<()> {
+        // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: Al start: ^^`danger`"#;
         let tree = parse_grammar(grammar, &[])?;
         let json = tree.to_model_json_string()?;
@@ -328,11 +354,12 @@ mod parse_special {
 
 mod integration {
     use tiexiu::Result;
+    use tiexiu::api::parse_grammar;
     use tiexiu::cfg::constants::PATH_TATSU_GRAMMAR_EBNF;
-    use tiexiu::parse_grammar;
 
     #[test]
     fn complex_grammar() -> Result<()> {
+        // TODO: cause of failure - verify complex bootstrap parsing
         let grammar = r#"
             @@grammar :: Complex
             @@whitespace :: /\s+/
@@ -359,7 +386,7 @@ mod integration {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "TatSu grammar parsing is still work-in-progress"]
     fn tatsu_own_grammar() -> Result<()> {
         let tatsu_grammar = std::fs::read_to_string(PATH_TATSU_GRAMMAR_EBNF)?;
 
@@ -378,12 +405,12 @@ mod integration {
 
 mod compilation {
     use tiexiu::Result;
-    use tiexiu::parse_input;
+    use tiexiu::api::parse_input;
 
     #[test]
-    #[ignore]
+    #[ignore = "Compiled grammar parsing is still work-in-progress"]
     fn compiled_grammar_parses_input() -> Result<()> {
-        let grammar = tiexiu::compile(
+        let grammar = tiexiu::api::compile(
             r#"
             @@grammar :: Test
             start: 'hello' 'world'
@@ -402,11 +429,12 @@ mod compilation {
 // =============================================================================
 
 mod round_trips {
-    use tiexiu::peg::pretty::*;
-    use tiexiu::*;
+    use tiexiu::api::*;
+    use tiexiu::peg::grammar::PrettyPrint;
 
     #[test]
     fn pretty_print_roundtrip() -> Result<()> {
+        // TODO: cause of failure - verify round-trip stability
         let grammar_text = r#"
             @@grammar :: Pretty
             start: 'a' | 'b'

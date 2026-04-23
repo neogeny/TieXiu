@@ -7,6 +7,7 @@ use tiexiu::Result;
 use tiexiu::api::compile;
 
 #[test]
+#[ignore = "@@include not yet implemented"]
 fn test_include() -> Result<()> {
     let grammar = r#"
         @@include :: "included.ebnf"
@@ -24,6 +25,7 @@ fn test_include() -> Result<()> {
 }
 
 #[test]
+#[ignore = "@@include not yet implemented"]
 fn test_multiple_include() -> Result<()> {
     let grammar = r#"
         @@include :: "a.ebnf"

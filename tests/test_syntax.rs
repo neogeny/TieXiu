@@ -24,6 +24,7 @@ fn parse_input(grammar: &Grammar, input: &str) -> Result<tiexiu::trees::Tree> {
 
 #[test]
 fn test_update_ast() -> Result<()> {
+    // TODO: cause of failure - verify AST construction
     let grammar = r#"
         start = 'test' $ ;
     "#;
@@ -64,6 +65,7 @@ fn test_update_ast() -> Result<()> {
 
 #[test]
 fn test_ast_assignment() -> Result<()> {
+    // TODO: cause of failure - verify @ and @+ assignments
     let grammar = r#"
         n  = @: {"a"}* $ ;
         f  = @+: {"a"}* $ ;
@@ -79,6 +81,7 @@ fn test_ast_assignment() -> Result<()> {
 
 #[test]
 fn test_optional_closure() -> Result<()> {
+    // TODO: cause of failure - verify AST construction for closures
     let grammar = r#"
         start = foo+:"x" foo:{"y"}* {foo:"z"}* ;
     "#;
@@ -90,6 +93,7 @@ fn test_optional_closure() -> Result<()> {
 
 #[test]
 fn test_optional_sequence() -> Result<()> {
+    // TODO: cause of failure - verify AST construction for optional sequences
     let grammar = r#"
         start = '1' ['2' '3'] '4' $ ;
     "#;
@@ -101,6 +105,7 @@ fn test_optional_sequence() -> Result<()> {
 
 #[test]
 fn test_group_ast() -> Result<()> {
+    // TODO: cause of failure - verify AST construction for groups
     let grammar = r#"
         start = '1' ('2' '3') '4' $ ;
     "#;
@@ -112,6 +117,7 @@ fn test_group_ast() -> Result<()> {
 
 #[test]
 fn test_partial_options() -> Result<()> {
+    // TODO: cause of failure - verify choice/optional interactions
     let grammar = r#"
         start = [a] ['A' 'A' | 'A' 'B'] $ ;
         a = 'A' !('A'|'B') ;
