@@ -188,14 +188,6 @@ where
     fn done(&self) -> bool {
         self.state.is_popped()
     }
-
-    fn pop(&mut self) {
-        self.state_mut().burn();
-    }
-
-    fn undo(&mut self) {
-        self.state_mut().burn();
-    }
 }
 
 #[cfg(test)]
