@@ -31,7 +31,7 @@ pub enum ParseError {
     ExpectedPattern(String),
 
     /// Corresponds to Self::NegativeLookahead
-    #[error("!{0}")]
+    #[error("! not expecting: {0}")]
     NotExpecting(Box<str>),
 
     /// Corresponds to Self::Choice fallback
