@@ -144,12 +144,7 @@ where
     }
 
     fn get_pattern(&self, pattern: &str) -> Pattern {
-        self.heavy
-            .borrow_mut()
-            .patterns
-            .entry(pattern.to_string())
-            .or_insert_with(|| Pattern::new(pattern).unwrap())
-            .clone()
+        self.with_heavy_mut(|heavy| heavy.get_pattern(pattern))
     }
 
     fn memo(&mut self, key: &Key) -> Option<Memo> {
@@ -202,6 +197,7 @@ where
     fn pop(&mut self) {
         self.state_mut().pop();
     }
+
     fn undo(&mut self) {
         self.state_mut().pop();
     }

@@ -44,6 +44,11 @@ pub struct HeavyState<'t> {
     pub tracer: &'t dyn Tracer,
 }
 
+#[derive(Debug, Clone)]
+pub struct ParseStateStack<U: Cursor + Clone> {
+    pub state_stack: Vec<ParseState<U>>,
+}
+
 impl<'t> Default for HeavyState<'t> {
     fn default() -> Self {
         Self::new()
@@ -58,6 +63,13 @@ impl<'t> HeavyState<'t> {
             keywords: [].into(),
             tracer: &NULL_TRACER,
         }
+    }
+
+    pub fn get_pattern(&mut self, pattern: &str) -> Pattern {
+        self.patterns
+            .entry(pattern.to_string())
+            .or_insert_with(|| Pattern::new(pattern).unwrap())
+            .clone()
     }
 }
 
@@ -131,11 +143,6 @@ impl<U: Cursor + Clone> ParseState<U> {
         self.cst = self.cst.clone().merge(node.clone());
         node
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct ParseStateStack<U: Cursor + Clone> {
-    pub state_stack: Vec<ParseState<U>>,
 }
 
 impl<U: Cursor + Clone> ParseStateStack<U> {
