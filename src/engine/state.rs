@@ -101,16 +101,28 @@ impl<U: Cursor + Clone> ParseState<U> {
     }
 
     pub fn merge(&mut self, prev: &mut Self) -> &mut Self {
-        prev.pop();
+        prev.burn();
         self.ast = prev.ast.clone();
         self.extend(prev.cst.clone());
         self.alerts.extend(prev.alerts.clone());
         self.cursor.reset(prev.cursor.mark());
+        self.callstack = prev.callstack.clone();
         self
     }
 
-    pub fn pop(&mut self) {
+    pub fn burn(&mut self) {
         self.fuse.burn();
+    }
+
+    pub fn pop(&mut self, into: &mut Self) {
+        into.callstack = self.callstack.clone();
+        into.cursor.reset(self.cursor.mark());
+        self.burn();
+    }
+
+    pub fn undo(&mut self, into: &mut Self) {
+        into.callstack = self.callstack.clone();
+        self.burn();
     }
 
     pub fn is_popped(&self) -> bool {
@@ -169,15 +181,14 @@ impl<U: Cursor + Clone> ParseStateStack<U> {
     #[track_caller]
     pub fn undo(&mut self) -> ParseState<U> {
         let mut prev = self.state_stack.pop().expect("empty state stack");
-        prev.pop();
+        prev.undo(self.state_mut());
         prev
     }
 
     #[track_caller]
     pub fn pop(&mut self) -> ParseState<U> {
         let mut prev = self.state_stack.pop().expect("empty state stack");
-        prev.pop();
-        self.state_mut().cursor.reset(prev.cursor.mark());
+        prev.pop(self.state_mut());
         prev
     }
 

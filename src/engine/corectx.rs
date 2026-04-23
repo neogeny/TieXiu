@@ -133,10 +133,7 @@ where
     }
     fn leave(&mut self) {
         let stack = self.state.callstack.clone();
-        self.state_mut().callstack = match stack.tail() {
-            Some(tail) => tail.clone(),
-            None => CallStack::new(),
-        }
+        self.state_mut().callstack = stack.tail().unwrap_or_default()
     }
 
     fn tracer(&self) -> &dyn Tracer {
@@ -195,11 +192,11 @@ where
     }
 
     fn pop(&mut self) {
-        self.state_mut().pop();
+        self.state_mut().burn();
     }
 
     fn undo(&mut self) {
-        self.state_mut().pop();
+        self.state_mut().burn();
     }
 }
 
