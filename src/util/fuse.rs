@@ -25,9 +25,9 @@ impl Fuse {
 
     #[track_caller]
     pub fn burn(&mut self) {
-        // if self.0.is_none() {
-        //     panic!("Fuse already burnt");
-        // }
+        if self.0.is_none() {
+            panic!("Fuse already burnt");
+        }
         self.0 = None;
     }
 }
