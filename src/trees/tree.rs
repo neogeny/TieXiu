@@ -17,7 +17,7 @@ pub fn keyval(name: &str, tree: Tree) -> KeyValue {
     KeyValue(name.into(), tree.into())
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Tree {
     Text(Box<str>),      // Tokens or patterns
     Seq(Box<[Tree]>),    // Sequences of values

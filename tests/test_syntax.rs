@@ -3,10 +3,12 @@
 
 //! Tests translated from TatSu's grammar/syntax_test.py
 
+use serde_json::json;
 use tiexiu::api::{compile, parse_grammar};
 use tiexiu::engine;
 use tiexiu::input::StrCursor;
 use tiexiu::peg::{ExpKind, Grammar};
+use tiexiu::trees::short::*;
 use tiexiu::{Cfg, Result};
 
 fn parse_input(grammar: &Grammar, input: &str) -> Result<tiexiu::trees::Tree> {
@@ -24,7 +26,6 @@ fn parse_input(grammar: &Grammar, input: &str) -> Result<tiexiu::trees::Tree> {
 
 #[test]
 fn test_update_ast() -> Result<()> {
-    // TODO: cause of failure - verify AST construction
     let grammar = r#"
         @@grammar:: grammar
 
@@ -83,43 +84,52 @@ fn test_ast_assignment() -> Result<()> {
 
 #[test]
 fn test_optional_closure() -> Result<()> {
-    // TODO: cause of failure - verify AST construction for closures
     let grammar = r#"
         start = foo+:"x" foo:{"y"}* {foo:"z"}* ;
     "#;
 
     let model = compile(grammar, &[])?;
-    let _ast = parse_input(&model, "x y y z z")?;
+    let ast = parse_input(&model, "x y y z z")?;
+    assert_eq!(
+        ast,
+        m(&[("foo", s(&[t("x"), c(&[t("y"), t("y")]), t("z"), t("z")]))])
+    );
+    assert_eq!(ast.to_value(), json!({"foo":["x", ["y","y"], "z", "z"]}));
     Ok(())
 }
 
 #[test]
 fn test_optional_sequence() -> Result<()> {
-    // TODO: cause of failure - verify AST construction for optional sequences
     let grammar = r#"
         start = '1' ['2' '3'] '4' $ ;
     "#;
 
     let model = compile(grammar, &[Cfg::Wsp("".to_string())])?;
-    let _ast = parse_input(&model, "1234")?;
+    let mut ast;
+
+    ast = parse_input(&model, "1 2 3 4")?;
+    assert_eq!(ast, s(&[t("1"), s(&[t("2"), t("3")]), t("4")]));
+
+    ast = parse_input(&model, "1     4")?;
+    assert_eq!(ast, s(&[t("1"), t("4")]));
+
     Ok(())
 }
 
 #[test]
 fn test_group_ast() -> Result<()> {
-    // TODO: cause of failure - verify AST construction for groups
     let grammar = r#"
         start = '1' ('2' '3') '4' $ ;
     "#;
 
     let model = compile(grammar, &[])?;
-    let _ast = parse_input(&model, "1 2 3 4")?;
+    let ast = parse_input(&model, "1 2 3 4")?;
+    assert_eq!(ast, s(&[t("1"), s(&[t("2"), t("3")]), t("4")]));
     Ok(())
 }
 
 #[test]
 fn test_partial_options() -> Result<()> {
-    // TODO: cause of failure - verify choice/optional interactions
     let grammar = r#"
         start = [a] ['A' 'A' | 'A' 'B'] $ ;
         a = 'A' !('A'|'B') ;

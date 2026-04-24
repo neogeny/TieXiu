@@ -19,7 +19,10 @@ impl TokenizingPatterns {
     pub const DEFAULT_EOL: &'static str = r"//.*$";
     pub const DEFAULT_CMT: &'static str = r"(?ms)/\*.*\*/";
 
-    pub fn compile(kind: &'static str, pattern: &str) -> Result<Pattern, Error> {
+    pub fn compile(kind: &'static str, mut pattern: &str) -> Result<Pattern, Error> {
+        if pattern.is_empty() {
+            pattern = "(?!)";
+        }
         let p = Pattern::new(pattern).map_err(|source| Error::InvalidRegex {
             kind,
             pattern: pattern.to_string(),

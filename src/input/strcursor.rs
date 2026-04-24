@@ -161,19 +161,19 @@ mod tests {
     #[test]
     #[should_panic(expected = "matches empty string")]
     fn whitespace_pattern_cannot_match_empty() {
-        let _ = TokenizingPatterns::try_new("", "/* */", "//.*$");
+        let _ = TokenizingPatterns::try_new(r"[ \t]*", "/* */", "//.*$");
     }
 
     #[test]
     #[should_panic(expected = "matches empty string")]
     fn comment_pattern_cannot_match_empty() {
-        let _ = TokenizingPatterns::try_new(r"\s+", "", "//.*$");
+        let _ = TokenizingPatterns::try_new(r"\s+", ".*", "//.*$");
     }
 
     #[test]
     #[should_panic(expected = "matches empty string")]
     fn eol_pattern_cannot_match_empty() {
-        let _ = TokenizingPatterns::try_new(r"\s+", "/* */", "");
+        let _ = TokenizingPatterns::try_new(r"\s+", "/* */", r"\w?");
     }
 
     #[test]

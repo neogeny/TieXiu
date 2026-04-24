@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn text_tree() {
         let t = t("hello");
-        assert_eq!(t.to_string(), "hello");
+        assert_eq!(t.to_string(), "t(\"hello\")");
     }
 
     #[test]
@@ -85,12 +85,12 @@ mod tests {
     #[test]
     fn nil_tree() {
         let t = NIL;
-        assert_eq!(t.to_string(), "∅");
+        assert_eq!(t.to_string(), "NIL");
     }
 
     #[test]
     fn bottom_tree() {
         let t = BOTTOM;
-        assert_eq!(t.to_string(), "⊥");
+        assert_eq!(t.to_string(), "BOTTOM");
     }
 }

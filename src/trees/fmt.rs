@@ -3,7 +3,14 @@
 
 use crate::trees::{KeyValue, Tree, TreeMap};
 use std::fmt;
+use std::fmt::Debug;
 use std::ops::Deref;
+
+impl Debug for Tree {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
 
 impl fmt::Display for TreeMap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -11,46 +18,47 @@ impl fmt::Display for TreeMap {
         let mut keys: Vec<&str> = self.entries.keys().map(|k| k.deref()).collect();
         keys.sort();
 
-        write!(f, "{{")?;
+        write!(f, "m(&[")?;
         for (i, key) in keys.iter().enumerate() {
             if i > 0 {
                 write!(f, ", ")?;
             }
             // Safe to unwrap because we just got the key from the map
-            write!(f, "{}: {}", key, self.entries.get(*key).unwrap())?;
+            write!(f, "({:?}, {})", key, self.entries.get(*key).unwrap())?;
         }
-        write!(f, "}}")
+        write!(f, "])")
     }
 }
 
 impl fmt::Display for KeyValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "«{}={}»", self.0, self.1)
+        write!(f, "{:?}, {}", self.0, self.1)
     }
+}
+
+fn fmt_items(items: &[Tree]) -> String {
+    items
+        .iter()
+        .map(|item| item.to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 impl fmt::Display for Tree {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Text(s) => write!(f, "{}", s),
-            Self::Named(kv) | Self::NamedAsList(kv) => write!(f, "{}", kv),
-            Self::Override(v) => write!(f, "!{}", v),
-            Self::OverrideAsList(v) => write!(f, "!!{}", v),
-            Self::Map(map) => write!(f, "{}", map),
-            Self::Nil => write!(f, "∅"),
-            Self::Bottom => write!(f, "⊥"),
-            Self::Seq(items) | Self::Closed(items) => {
-                write!(f, "[")?;
-                for (i, item) in items.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{}", item)?;
-                }
-                write!(f, "]")
-            }
+            Self::Text(s) => write!(f, "t({:?})", s),
+            Self::Named(kv) => write!(f, "k({})", kv),
+            Self::NamedAsList(kv) => write!(f, "kl({})", kv),
+            Self::Override(v) => write!(f, "o({})", v),
+            Self::OverrideAsList(v) => write!(f, "ol({})", v),
+            Self::Map(map) => write!(f, "m({})", map),
+            Self::Nil => write!(f, "NIL"),
+            Self::Bottom => write!(f, "BOTTOM"),
+            Self::Seq(items) => write!(f, "s(&[{}])", fmt_items(items)),
+            Self::Closed(items) => write!(f, "c(&[{}])", fmt_items(items)),
             Self::Node { typename, tree } => {
-                write!(f, "[{}]: {}", typename, tree)
+                write!(f, "n({}, {})", typename, tree)
             }
         }
     }
@@ -67,57 +75,64 @@ mod tests {
         map.insert("key1".into(), Tree::Text("value1".into()));
         map.insert("key2".into(), Tree::Text("value2".into()));
         let map = TreeMap { entries: map };
-        assert_eq!(map.to_string(), "{key1: value1, key2: value2}");
+        assert_eq!(
+            map.to_string(),
+            "m(&[(\"key1\", t(\"value1\")), (\"key2\", t(\"value2\"))])"
+        );
 
         let empty_map = TreeMap {
             entries: IndexMap::new(),
         };
-        assert_eq!(empty_map.to_string(), "{}");
+        assert_eq!(empty_map.to_string(), "m(&[])");
     }
 
     #[test]
     fn test_key_value_display() {
         let kv = KeyValue("name".into(), Tree::Text("value".into()).into());
-        assert_eq!(kv.to_string(), "«name=value»");
+        assert_eq!(kv.to_string(), "\"name\", t(\"value\")");
     }
 
     #[test]
     fn test_tree_display() {
-        // Leaf
-        assert_eq!(Tree::Text("hello".into()).to_string(), "hello");
+        assert_eq!(Tree::Text("hello".into()).to_string(), "t(\"hello\")");
 
-        // LeafTag
         let kv_leaf = KeyValue("tag".into(), Tree::Text("leaf_val".into()).into());
-        assert_eq!(Tree::Named(kv_leaf).to_string(), "«tag=leaf_val»");
-
-        // NodeTag
-        let kv_node = KeyValue("node".into(), Tree::Text("node_val".into()).into());
-        assert_eq!(Tree::NamedAsList(kv_node).to_string(), "«node=node_val»");
-
-        // RootLeaf
         assert_eq!(
-            Tree::Override(Tree::Text("root".into()).into()).to_string(),
-            "!root"
+            Tree::Named(kv_leaf).to_string(),
+            "k(\"tag\", t(\"leaf_val\"))"
         );
 
-        // RootNode
+        let kv_node = KeyValue("node".into(), Tree::Text("node_val".into()).into());
+        assert_eq!(
+            Tree::NamedAsList(kv_node).to_string(),
+            "kl(\"node\", t(\"node_val\"))"
+        );
+
+        assert_eq!(
+            Tree::Override(Tree::Text("root".into()).into()).to_string(),
+            "o(t(\"root\"))"
+        );
+
         assert_eq!(
             Tree::OverrideAsList(Tree::Seq(vec![Tree::Text("item".into())].into()).into())
                 .to_string(),
-            "!![item]"
+            "ol(s(&[t(\"item\")]))"
         );
 
         // Tags
         let mut map = MapEntries::new();
         map.insert("a".into(), Tree::Text("1".into()));
         let map = TreeMap { entries: map };
-        assert_eq!(Tree::Map(map.into()).to_string(), "{a: 1}");
+        assert_eq!(
+            Tree::Map(map.into()).to_string(),
+            "m(m(&[(\"a\", t(\"1\"))]))"
+        );
 
         // Nil
-        assert_eq!(Tree::Nil.to_string(), "∅");
+        assert_eq!(Tree::Nil.to_string(), "NIL");
 
         // Bottom
-        assert_eq!(Tree::Bottom.to_string(), "⊥");
+        assert_eq!(Tree::Bottom.to_string(), "BOTTOM");
 
         // Node
         let node = Tree::Seq(
@@ -128,12 +143,12 @@ mod tests {
             ]
             .into(),
         );
-        assert_eq!(node.to_string(), "[a, b, [c]]");
+        assert_eq!(node.to_string(), "s(&[t(\"a\"), t(\"b\"), s(&[t(\"c\")])])");
 
         let pruned_tree = Tree::Node {
             typename: "MyRule".into(),
             tree: Tree::Text("pruned_content".into()).into(),
         };
-        assert_eq!(pruned_tree.to_string(), "[MyRule]: pruned_content");
+        assert_eq!(pruned_tree.to_string(), "n(MyRule, t(\"pruned_content\"))");
     }
 }
