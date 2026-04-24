@@ -132,9 +132,12 @@ pub fn parse_input(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<Tree> {
     }
 }
 
-pub fn parse_input_to_json(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<String> {
+pub fn parse_input_to_json_str(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<String> {
     let tree = parse_input(parser, text, cfg)?;
-    Ok(tree.as_json_str())
+    match tree.to_string_pretty() {
+        Ok(string) => Ok(string),
+        Err(err) => Err(err.into()),
+    }
 }
 
 pub fn parse(grammar: &str, text: &str, cfg: &CfgA) -> Result<Tree> {
@@ -144,5 +147,5 @@ pub fn parse(grammar: &str, text: &str, cfg: &CfgA) -> Result<Tree> {
 
 pub fn parse_to_json(grammar: &str, text: &str, cfg: &CfgA) -> Result<String> {
     let parser = compile(grammar, cfg)?;
-    parse_input_to_json(&parser, text, cfg)
+    parse_input_to_json_str(&parser, text, cfg)
 }

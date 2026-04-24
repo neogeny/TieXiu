@@ -11,46 +11,46 @@ impl Serialize for Tree {
     where
         S: Serializer,
     {
-        self.as_json().serialize(serializer)
+        self.to_value().serialize(serializer)
     }
 }
 
 impl Tree {
-    pub fn as_json_str(&self) -> String {
-        serde_json::to_string_pretty(&self.as_json()).unwrap()
+    pub fn to_string_pretty(&self) -> serde_json::Result<String> {
+        serde_json::to_string_pretty(&self.to_value())
     }
 
-    pub fn as_json(&self) -> Value {
+    pub fn to_value(&self) -> Value {
         match self {
             Tree::Bottom | Tree::Nil => Value::Null,
             Tree::Text(t) => Value::String(t.to_string()),
             Tree::Seq(items) | Tree::Closed(items) => {
-                Value::Array(items.iter().map(Tree::as_json).collect())
+                Value::Array(items.iter().map(Tree::to_value).collect())
             }
             Tree::Map(m) => {
                 let mut obj = Map::new();
                 for (k, v) in m.entries.iter() {
-                    obj.insert(k.to_string(), v.as_json());
+                    obj.insert(k.to_string(), v.to_value());
                 }
                 Value::Object(obj)
             }
             Tree::Node { typename, tree } => {
                 let mut obj = Map::new();
                 obj.insert("typename".into(), Value::String(typename.to_string()));
-                obj.insert(typename.to_string(), tree.as_json());
+                obj.insert(typename.to_string(), tree.to_value());
                 Value::Object(obj)
             }
             Tree::Named(KeyValue(name, tree)) => {
                 let mut obj = Map::new();
-                obj.insert(name.to_string(), tree.as_json());
+                obj.insert(name.to_string(), tree.to_value());
                 Value::Object(obj)
             }
             Tree::NamedAsList(KeyValue(name, tree)) => {
                 let mut obj = Map::new();
-                obj.insert(name.to_string(), tree.as_json());
+                obj.insert(name.to_string(), tree.to_value());
                 Value::Object(obj)
             }
-            Tree::Override(tree) | Tree::OverrideAsList(tree) => tree.as_json(),
+            Tree::Override(tree) | Tree::OverrideAsList(tree) => tree.to_value(),
         }
     }
 
@@ -99,7 +99,7 @@ mod tests {
         ];
 
         for tree in cases {
-            let json = tree.as_json();
+            let json = tree.to_value();
             let round_tripped = Tree::from_json(&json);
             assert_eq!(round_tripped, Some(tree.clone()));
         }
