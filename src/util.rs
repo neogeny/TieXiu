@@ -12,8 +12,10 @@ pub mod into;
 pub mod memento;
 pub mod newlines;
 pub mod pyre;
+pub mod strtools;
 pub mod tokenstack;
 
 pub use cfg::CfgBox;
 pub use error::*;
 pub use finally::finally;
+pub use strtools::{safe_name, to_snake_case};

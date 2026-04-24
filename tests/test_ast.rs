@@ -24,7 +24,8 @@ fn ast() -> Result<()> {
 #[test]
 fn test_tree_text() -> Result<()> {
     let t = Tree::text("hello");
-    assert_eq!(t.to_string(), "hello");
+    // Display format is t("hello"), not just "hello"
+    assert_eq!(t.to_string(), r#"t("hello")"#);
     Ok(())
 }
 

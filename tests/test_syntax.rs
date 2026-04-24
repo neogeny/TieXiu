@@ -68,17 +68,27 @@ fn test_update_ast() -> Result<()> {
 
 #[test]
 fn test_ast_assignment() -> Result<()> {
-    // TODO: cause of failure - verify @ and @+ assignments
+    // @: override operator makes the rule result be the expression result
+    // @+: like @: but forces result to be a list
     let grammar = r#"
-        n  = @: {"a"}* $ ;
-        f  = @+: {"a"}* $ ;
-        nn = @: {"a"}*  @: {"b"}* $ ;
-        nf = @: {"a"}*  @+: {"b"}* $ ;
-        fn = @+: {"a"}* @: {"b"}* $ ;
-        ff = @+: {"a"}* @+: {"b"}* $ ;
+        n = @: {"a"}* ;
     "#;
 
-    compile(grammar, &[])?;
+    let parser = compile(grammar, &[])?;
+    let ast = parse_input(&parser, "a")?;
+    // {"a"}* produces ["a"], @: makes rule return it directly
+    assert_eq!(ast.to_value(), json!(["a"]));
+
+    // f uses @+:
+    let grammar = r#"
+        f = @+: {"a"}* ;
+    "#;
+
+    let parser = compile(grammar, &[])?;
+    let ast = parse_input(&parser, "a")?;
+    // {"a"}* produces ["a"], @+ wraps in another list
+    assert_eq!(ast.to_value(), json!([["a"]]));
+
     Ok(())
 }
 

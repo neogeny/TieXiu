@@ -213,10 +213,10 @@ pub trait Ctx: CtxI + Clone + Debug {
 
     fn do_call(mut self, name: &str, rule: &Rule) -> ParseResult<Self> {
         let start = self.mark();
-        let key = self.key(name, rule.is_memoizable());
         if !rule.is_token() {
             self.next_token();
         }
+        let key = self.key(name, rule.is_memoizable());
         if let Some(memo) = self.memo(&key) {
             return match memo.tree {
                 Tree::Bottom => {
