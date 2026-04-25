@@ -4,23 +4,24 @@
 use super::error::ParseError;
 use super::parser::{ParseResult, Parser, Yeap};
 use super::rule::RuleRef;
+use crate::cfg::types::{Define, Str};
 use crate::engine::Ctx;
-use crate::trees::tree::Define;
-use crate::trees::{Str, Tree};
+use crate::trees::Tree;
+use crate::types::Ref;
 use crate::util::pyre;
 use derivative::Derivative;
 use std::fmt;
 use std::ops::Deref;
 
-pub type ERef = Box<Exp>;
-pub type ERefArr = Box<[Exp]>;
+pub type ERef = Ref<Exp>;
+pub type ERefArr = Ref<[Exp]>;
 
 #[derive(Derivative)]
 #[derivative(Clone, Debug, Default)]
 pub struct Exp {
     pub kind: ExpKind,
-    pub la: Box<[Str]>,    // the lookahead set
-    pub df: Box<[Define]>, // the defines set
+    pub la: Ref<[Str]>,    // the lookahead set
+    pub df: Ref<[Define]>, // the defines set
 }
 
 // NOTE
@@ -121,11 +122,11 @@ impl Exp {
         self.cache_defines();
     }
 
-    pub fn lookahead_str(&self) -> Box<str> {
+    pub fn lookahead_str(&self) -> Str {
         self.la
             .iter()
-            .map(|s| &**s) // Deref Box<str> to &str
-            .collect::<Vec<_>>() // Join needs a slice
+            .map(|s| &**s)
+            .collect::<Vec<_>>()
             .join(" ")
             .into_boxed_str()
     }

@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::map::TreeMap;
-use super::tree::{KeyValue, Tree};
+use super::tree::Tree;
+use crate::trees::KeyValue;
 
 impl Tree {
     pub fn text(value: &str) -> Tree {

@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::trees::tree::Tree;
+use crate::types::Str;
 use std::collections::HashMap;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, Hash)]
 pub struct Key {
     pub mark: usize,
-    pub name: Box<str>,
+    pub name: Str,
     pub memo: bool,
 }
 

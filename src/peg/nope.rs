@@ -5,13 +5,14 @@ use crate::ParseError;
 use crate::engine::CtxI;
 use crate::engine::state::CallStack;
 use crate::input::memento::Memento;
+use crate::types::{Ref, Str};
 use std::fmt::Debug;
 use std::panic::Location;
 
 #[derive(Debug)]
 pub struct DisasterReport {
     pub pos: (usize, usize),
-    pub la: Box<str>,
+    pub la: Str,
     pub callstack: CallStack,
     pub location: &'static Location<'static>,
     pub memento: Memento,
@@ -22,8 +23,8 @@ pub struct Nope {
     pub start: usize,
     pub mark: usize, // The position where the disaster occurred
     pub cutseen: bool,
-    pub source: Box<ParseError>,
-    pub report: Box<DisasterReport>,
+    pub source: Ref<ParseError>,
+    pub report: Ref<DisasterReport>,
 }
 
 impl std::fmt::Display for Nope {

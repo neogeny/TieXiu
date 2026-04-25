@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::exp::{Exp, ExpKind};
-use crate::trees::tree::DefineSet;
+use crate::cfg::types::DefineSet;
 
 impl Exp {
     pub(super) fn cache_defines(&mut self) {

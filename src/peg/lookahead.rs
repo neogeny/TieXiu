@@ -2,8 +2,7 @@
 // spdx-license-identifier: mit or apache-2.0
 
 use super::exp::{Exp, ExpKind};
-use crate::trees::{Str, StrSet};
-
+use crate::cfg::types::{Str, StrSet};
 impl Exp {
     pub(super) fn cache_lookahead(&mut self) -> StrSet {
         let mut lookaheads = StrSet::new();

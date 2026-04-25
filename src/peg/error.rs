@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::Tree;
+use crate::types::Str;
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone, PartialEq)]
@@ -24,7 +25,7 @@ pub enum ParseError {
 
     /// Corresponds to Self::Token
     #[error("{0}")]
-    ExpectedToken(Box<str>),
+    ExpectedToken(Str),
 
     /// Corresponds to Self::Pattern
     #[error("/{0}/")]
@@ -32,31 +33,31 @@ pub enum ParseError {
 
     /// Corresponds to Self::NegativeLookahead
     #[error("! not expecting: {0}")]
-    NotExpecting(Box<str>),
+    NotExpecting(Str),
 
     /// Corresponds to Self::Choice fallback
     #[error("no viable option")]
-    NoViableOption(Box<[Box<str>]>),
+    NoViableOption(Box<[Str]>),
 
     /// Corresponds is_keyword() validations
     #[error("'{0}' is a reserved word")]
-    ReservedWord(Box<str>),
+    ReservedWord(Str),
 
     /// Corresponds memos that are Tree::Bottom
     #[error("Failed parsing '{0}'")]
-    FailedParse(Box<str>),
+    FailedParse(Str),
 
     /// Corresponds memos that are Tree::Bottom
     #[error("Failed parsing '{0}' start {1} end {2}")]
-    FailedRecursion(Box<str>, usize, usize, Box<Tree>),
+    FailedRecursion(Str, usize, usize, Box<Tree>),
 
     /// Corresponds rule names not in map
     #[error("Rule not found: '{0}'")]
-    RuleNotFound(Box<str>),
+    RuleNotFound(Str),
 
     /// Corresponds rule names without a Rule reference
     #[error("Rule not linked: '{0}'")]
-    RuleNotLinked(Box<str>),
+    RuleNotLinked(Str),
 
     #[error("There are no rules in the grammar")]
     NoRulesInGrammar,
@@ -95,17 +96,14 @@ pub enum CompileError {
     ExpectedField(&'static str),
 
     #[error("expected {expected}, found '{found}'")]
-    UnexpectedNodeName {
-        expected: &'static str,
-        found: Box<str>,
-    },
+    UnexpectedNodeName { expected: &'static str, found: Str },
 
     #[error("expected {expected}, found '{found}'")]
-    UnexpectedTypeName { expected: Box<str>, found: Box<str> },
+    UnexpectedTypeName { expected: Str, found: Str },
 
     #[error("{0} is not implemented")]
     NotImplemented(&'static str),
 
     #[error("Unknown expression type '{0}'")]
-    UnknownExpressionType(Box<str>),
+    UnknownExpressionType(Str),
 }

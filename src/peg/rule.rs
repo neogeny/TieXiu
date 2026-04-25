@@ -3,9 +3,10 @@
 
 use super::exp::Exp;
 use super::{ParseResult, Parser, Yeap};
+use crate::cfg::types::FlagMap;
 use crate::engine::Ctx;
 use crate::trees::Tree;
-use crate::trees::tree::FlagMap;
+use crate::types::{Ref, Str};
 use indexmap::IndexMap;
 use std::rc::Rc;
 
@@ -15,16 +16,16 @@ pub const FLAG_NO_MEMO: &str = "no_memo";
 pub const FLAG_IS_MEMO: &str = "is_memo";
 pub const FLAG_IS_LREC: &str = "is_lrec";
 
-pub type RuleName = Box<str>;
+pub type RuleName = Str;
 pub type RuleRef = Rc<Rule>;
-pub type RuleIndex = IndexMap<Box<str>, usize>;
-pub type Rules = Box<[Rule]>;
+pub type RuleIndex = IndexMap<Str, usize>;
+pub type Rules = Ref<[Rule]>;
 pub type RuleMap = IndexMap<RuleName, RuleRef>;
 
 #[derive(Debug, Clone)]
 pub struct Rule {
     pub name: RuleName,
-    pub params: Box<[Box<str>]>,
+    pub params: Ref<[Str]>,
     // kwparams: dict[str, Any] = field(default_factory=dict)
     pub flags: FlagMap,
     pub exp: Exp,
@@ -64,7 +65,7 @@ impl Rule {
         self.flags.insert(key.into(), value);
     }
 
-    pub fn new(name: &str, params: &[Box<str>], mut exp: Exp) -> Self {
+    pub fn new(name: &str, params: &[Str], mut exp: Exp) -> Self {
         exp.initialize_caches();
         Self {
             name: name.into(),

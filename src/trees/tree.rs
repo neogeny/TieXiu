@@ -2,32 +2,24 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::map::TreeMap;
-use indexmap::{IndexMap, IndexSet};
+use crate::cfg::types::{Define, Ref, Str};
 
-pub type Str = Box<str>;
-pub type FlagMap = IndexMap<Str, bool>;
-pub type Define = (Str, bool);
-pub type StrSet = IndexSet<Str>;
-pub type DefineSet = IndexSet<Define>;
+pub type TreeRef = Ref<Tree>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct KeyValue(pub Str, pub Box<Tree>);
-
-pub fn keyval(name: &str, tree: Tree) -> KeyValue {
-    KeyValue(name.into(), tree.into())
-}
+pub struct KeyValue(pub Str, pub Ref<Tree>);
 
 #[derive(Clone, PartialEq)]
 pub enum Tree {
-    Text(Box<str>),      // Tokens or patterns
-    Seq(Box<[Tree]>),    // Sequences of values
-    Closed(Box<[Tree]>), // Non-mergeable list of values
-    Map(Box<TreeMap>),   // A mapping of named elements
+    Text(Str),           // Tokens or patterns
+    Seq(Ref<[Tree]>),    // Sequences of values
+    Closed(Ref<[Tree]>), // Non-mergeable list of values
+    Map(Ref<TreeMap>),   // A mapping of named elements
 
     Node {
         // The result of parsing a rule call
-        typename: Box<str>,
-        tree: Box<Tree>,
+        typename: Str,
+        tree: Ref<Tree>,
     },
 
     // INTERNAL
@@ -35,10 +27,14 @@ pub enum Tree {
     Nil,                       // Parsing that didn't consume any input
     Named(KeyValue),           // Named elements add to the merged TreeMap
     NamedAsList(KeyValue),     // Named elements forced into a list
-    Override(Box<Tree>),       // Adds value to the merged tree
-    OverrideAsList(Box<Tree>), // Adds value to the merged tree, forces list
+    Override(Ref<Tree>),       // Adds value to the merged tree
+    OverrideAsList(Ref<Tree>), // Adds value to the merged tree, forces list
 
     Bottom, // The marker for failure used in memoization
+}
+
+pub fn keyval(name: &str, tree: Tree) -> KeyValue {
+    KeyValue(name.into(), tree.into())
 }
 
 impl From<Vec<Tree>> for Tree {
@@ -83,21 +79,21 @@ impl Tree {
         }
     }
 
-    pub fn value(&self) -> Box<str> {
+    pub fn value(&self) -> Str {
         match self {
             Tree::Text(text) => text.clone(),
             _ => format!("{:#?}", self).into(),
         }
     }
 
-    pub fn list_value(&self) -> Box<[Tree]> {
+    pub fn list_value(&self) -> Ref<[Tree]> {
         match self {
             Tree::Seq(items) | Tree::Closed(items) => items.clone(),
             _ => [].into(),
         }
     }
 
-    pub fn str_list_value(&self) -> Box<[Box<str>]> {
+    pub fn str_list_value(&self) -> Ref<[Str]> {
         self.list_value().iter().map(|t| t.value()).collect()
     }
 
@@ -115,19 +111,19 @@ impl Tree {
         }
     }
 
-    pub fn get_value(&self, key: &str) -> Box<str> {
+    pub fn get_value(&self, key: &str) -> Str {
         self.get(key)
             .map(|n| n.value())
             .unwrap_or_else(|| "".into())
     }
 
-    pub fn get_list(&self, key: &str) -> Box<[Tree]> {
+    pub fn get_list(&self, key: &str) -> Ref<[Tree]> {
         self.get(key)
             .map(|n| n.list_value().clone())
             .unwrap_or_else(|| [].into())
     }
 
-    pub fn get_str_list(&self, key: &str) -> Box<[Box<str>]> {
+    pub fn get_str_list(&self, key: &str) -> Ref<[Str]> {
         self.get_list(key).iter().map(|t| t.value()).collect()
     }
 
@@ -278,7 +274,6 @@ mod tests {
     #[test]
     fn test_tree_size() {
         let size = size_of::<Tree>();
-        // 24 bytes: Box (8) + Rc (8) + bool/padding (8)
         assert!(size <= TARGET, "Cst size is {} > {} bytes", size, TARGET);
     }
     #[test]
@@ -292,7 +287,6 @@ mod tests {
         let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
         let result = raw.into_node_tree();
 
-        // result = tree_closed(Bottom)
         assert_eq!(result, Tree::Bottom.into_node_tree());
     }
 
@@ -301,7 +295,6 @@ mod tests {
         let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
         let result = raw.into_node_tree();
 
-        // If tree_closed is identity for non-lists, this is just Bottom
         assert_eq!(result, Tree::Bottom);
     }
 

@@ -3,15 +3,17 @@
 
 use super::error::{CompileError, CompileResult};
 use super::{Exp, Grammar, Rule};
+use crate::cfg::types::FlagMap;
 use crate::cfg::*;
 use crate::peg::grammar::KeywordRef;
 use crate::peg::rule::{RuleMap, RuleRef};
-use crate::trees::{FlagMap, Tree, TreeMap};
+use crate::trees::{Tree, TreeMap};
+use crate::types::Str;
 
 #[derive(Debug, Default)]
 pub struct GrammarCompiler {}
 
-fn parse_node(node: &Tree) -> CompileResult<(Box<str>, &Tree)> {
+fn parse_node(node: &Tree) -> CompileResult<(Str, &Tree)> {
     let Tree::Node { typename, tree } = node else {
         return Err(CompileError::ExpectedNode(format!("{:?}", node)));
     };
@@ -54,7 +56,7 @@ fn map_get<'m>(map: &'m Tree, context: &'m str, key: &'static str) -> CompileRes
     }
 }
 
-fn map_get_default(map: &Tree, key: &'static str, default: &'static str) -> Box<str> {
+fn map_get_default(map: &Tree, key: &'static str, default: &'static str) -> Str {
     match map.get(key) {
         Some(node) => node.value(),
         None => default.into(),
@@ -108,7 +110,7 @@ impl GrammarCompiler {
                 for nested_list in keywords_nested.iter() {
                     let inner_list = _parse_list(nested_list)?;
                     for kw in inner_list.iter() {
-                        let value: Box<str> = match kw {
+                        let value: Str = match kw {
                             Tree::Text(t) => t.clone(),
                             Tree::Node { typename, tree } if typename.as_ref() == "Word" => {
                                 tree.value()

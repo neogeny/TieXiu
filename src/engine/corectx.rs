@@ -8,6 +8,7 @@ use super::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
 use crate::cfg::*;
 use crate::input::Cursor;
 use crate::trees::Tree;
+use crate::types::{Ref, Str};
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -18,7 +19,7 @@ pub struct CoreCtx<'c, U>
 where
     U: Cursor + Clone,
 {
-    pub state: Cow<'c, Box<ParseState<U>>>,
+    pub state: Cow<'c, Ref<ParseState<U>>>,
     pub heavy: Rc<RefCell<HeavyState<'c>>>,
 }
 
@@ -186,7 +187,7 @@ where
             .is_ok()
     }
 
-    fn set_keywords(&mut self, keywords: &[Box<str>]) {
+    fn set_keywords(&mut self, keywords: &[Str]) {
         self.heavy.borrow_mut().keywords = keywords.into()
     }
 

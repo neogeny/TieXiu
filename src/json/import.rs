@@ -11,6 +11,7 @@ use crate::json::error::JsonError;
 use crate::peg::exp::Exp;
 use crate::peg::grammar::{Grammar, GrammarDirectives};
 use crate::peg::rule::Rule;
+use crate::types::Str;
 use serde_json::Value;
 
 #[derive(Clone)]
@@ -175,7 +176,7 @@ impl Grammar {
 
         let directives =
             Self::parse_directives(path.get_obj().ok().and_then(|o| o.get("directives")))?;
-        let keywords: Vec<Box<str>> = path
+        let keywords: Vec<Str> = path
             .get_obj()
             .ok()
             .and_then(|o| o.get("keywords"))

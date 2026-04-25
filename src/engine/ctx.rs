@@ -11,6 +11,7 @@ use crate::peg::error::ParseError;
 use crate::peg::nope::Nope;
 use crate::peg::{ParseResult, Rule, Yeap};
 use crate::trees::tree::Tree;
+use crate::types::Str;
 use crate::util::pyre::{Pattern, escape};
 use std::fmt::Debug;
 
@@ -139,7 +140,7 @@ pub trait Ctx: CtxI + Clone + Debug {
         let _ = name;
         false
     }
-    fn set_keywords(&mut self, keywords: &[Box<str>]) {
+    fn set_keywords(&mut self, keywords: &[Str]) {
         let _ = keywords;
     }
 

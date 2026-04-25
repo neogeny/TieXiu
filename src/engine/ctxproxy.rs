@@ -141,7 +141,7 @@ impl<C: Ctx> Ctx for CtxProxy<C> {
         self.inner.borrow().is_keyword(name)
     }
 
-    fn set_keywords(&mut self, keywords: &[Box<str>]) {
+    fn set_keywords(&mut self, keywords: &[Str]) {
         self.inner_mut().set_keywords(keywords);
     }
 

@@ -6,6 +6,7 @@ use super::error::Error;
 use super::tokenizing::TokenizingPatterns;
 use crate::cfg::keys::config;
 use crate::cfg::*;
+use crate::types::Str;
 use crate::util::newlines::empty_line;
 use crate::util::pyre::Pattern;
 use std::rc::Rc;
@@ -18,7 +19,7 @@ pub struct CursorHeavy {
 
 #[derive(Debug, Clone)]
 pub struct StrCursor {
-    text: Box<str>,
+    text: Str,
     offset: usize,
     heavy: Rc<CursorHeavy>,
 }

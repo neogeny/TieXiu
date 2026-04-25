@@ -3,6 +3,7 @@
 
 pub mod constants;
 pub mod keys;
+pub mod types;
 
 pub use constants::*;
 pub use keys::*;

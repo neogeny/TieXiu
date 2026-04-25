@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::tree::Tree;
-use crate::trees::tree::Define;
+use crate::cfg::types::Define;
+use crate::types::Str;
 use indexmap::IndexMap;
 
-pub type MapEntries = IndexMap<Box<str>, Tree>;
+pub type MapEntries = IndexMap<Str, Tree>;
 
 /// A structured mapping for AST nodes.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -73,7 +74,7 @@ impl TreeMap {
         self.entries.insert(key, new);
     }
 
-    fn safe_key(&self, key: &str) -> Box<str> {
+    fn safe_key(&self, key: &str) -> Str {
         let mut k = key.to_string();
         while self.is_reserved(&k) {
             k.push('_');

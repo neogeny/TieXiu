@@ -8,16 +8,17 @@ use super::rule::{Rule, RuleMap, RuleRef};
 use crate::cfg::*;
 use crate::engine::Ctx;
 use crate::peg::ParseError::RuleNotFound;
+use crate::types::{Ref, Str};
 use crate::{StrCursor, Tree, Yeap, new_ctx};
 use std::rc::Rc;
 
-pub type KeywordRef = Box<str>;
-pub type GrammarKeywords = Box<[KeywordRef]>;
+pub type KeywordRef = Str;
+pub type GrammarKeywords = Ref<[KeywordRef]>;
 pub type GrammarDirectives = CfgBox;
 
 #[derive(Debug, Clone)]
 pub struct Grammar {
-    pub name: Box<str>,
+    pub name: Str,
     pub analyzed: bool,
     pub directives: GrammarDirectives,
     pub keywords: GrammarKeywords,

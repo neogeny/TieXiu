@@ -1,11 +1,12 @@
+use crate::types::{Ref, Str};
 use console::style;
 use std::fmt;
 
 pub struct Memento {
     /// The specific error message (e.g., "expected semicolon")
-    pub msg: Box<str>,
+    pub msg: Str,
     /// Absolute line number and content of captured lines
-    pub window: Box<[(usize, Box<str>)]>,
+    pub window: Ref<[(usize, Str)]>,
     /// (Absolute Line, Absolute Column) - 1-indexed
     pub abs_start: (usize, usize),
     /// (Absolute Line, Absolute Column) - 1-indexed
@@ -26,12 +27,12 @@ impl Memento {
         let start_line_idx = mark_line_idx.saturating_sub(4);
 
         // 3. Capture lines into the boxed window
-        let window_vec: Vec<(usize, Box<str>)> = text
+        let window_vec: Vec<(usize, Ref<str>)> = text
             .lines()
             .enumerate()
             .skip(start_line_idx)
             .take(mark_line_idx - start_line_idx + 1)
-            .map(|(i, line)| (i + 1, Box::from(line)))
+            .map(|(i, line)| (i + 1, Ref::from(line)))
             .collect();
 
         // 4. Map absolute positions to window-relative indices
@@ -39,7 +40,7 @@ impl Memento {
         let rel_mark_idx = abs_mark.0.saturating_sub(start_line_idx + 1);
 
         Self {
-            msg: Box::from(msg),
+            msg: Ref::from(msg),
             window: window_vec.into_boxed_slice(),
             abs_start,
             abs_mark,

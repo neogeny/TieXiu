@@ -147,7 +147,7 @@ where
         self.heavy.keywords.binary_search(&name.into()).is_ok()
     }
 
-    fn set_keywords(&mut self, keywords: &[Box<str>]) {
+    fn set_keywords(&mut self, keywords: &[Str]) {
         self.heavy.keywords = keywords.into()
     }
 

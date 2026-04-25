@@ -1,16 +1,17 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
+use crate::types::Str;
 use std::fmt::Write;
 
 const BLACK_LEN: usize = 88;
 
 /// Trim text of common, leading whitespace except  the first line
-pub fn dedent(text: &str) -> Box<str> {
+pub fn dedent(text: &str) -> Str {
     _dedent(text, false)
 }
 
 /// Trim text of common, leading whitespace
-pub fn dedent_all(text: &str) -> Box<str> {
+pub fn dedent_all(text: &str) -> Str {
     _dedent(text, true)
 }
 
@@ -18,7 +19,7 @@ pub fn dedent_all(text: &str) -> Box<str> {
 /// Based on the trim algorithm of PEP 257:
 ///     http://www.python.org/dev/peps/pep-0257/
 ///
-fn _dedent(text: &str, all: bool) -> Box<str> {
+fn _dedent(text: &str, all: bool) -> Str {
     let to_skip = if all { 0 } else { 1 };
     let min_indent = text
         .lines()
