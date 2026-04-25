@@ -7,7 +7,7 @@ use super::tokenizing::TokenizingPatterns;
 use crate::cfg::keys::config;
 use crate::cfg::*;
 use crate::types::Str;
-use crate::util::newlines::empty_line;
+use crate::util::newlines::{take_linebreak_len, take_non_newline_whitespace_len};
 use crate::util::pyre::Pattern;
 use std::rc::Rc;
 
@@ -64,6 +64,23 @@ impl StrCursor {
             return true;
         }
         false
+    }
+
+    pub fn eat_spaces_no_newlines(&mut self) {
+        let mut p = usize::MAX;
+        let eol = self.heavy.patterns.eol.clone();
+        let cmt = self.heavy.patterns.cmt.clone();
+        while self.offset != p {
+            p = self.offset;
+
+            self.offset += take_non_newline_whitespace_len(&self.text[self.offset..]);
+
+            if self.eat_pattern(&eol) {
+                self.offset += take_non_newline_whitespace_len(&self.text[self.offset..]);
+            }
+
+            self.eat_pattern(&cmt);
+        }
     }
 }
 
@@ -130,11 +147,21 @@ impl Cursor for StrCursor {
     }
 
     fn match_eol(&mut self) -> bool {
-        if let Some(len) = empty_line(&self.text[self.offset..]) {
-            self.offset += len;
-            true
-        } else {
-            false
+        let mark = self.offset;
+        self.eat_spaces_no_newlines();
+
+        // Look for the line terminator at the current position
+        match take_linebreak_len(&self.text[self.offset..]) {
+            Some(eol_len) => {
+                self.offset += eol_len;
+                self.eat_spaces_no_newlines();
+                true
+            }
+            None => {
+                // Backtrack if no line break is found
+                self.offset = mark;
+                false
+            }
         }
     }
 

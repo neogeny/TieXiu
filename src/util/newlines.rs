@@ -1,6 +1,28 @@
+// Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
+/// Returns the byte length of non-newline whitespace starting from the beginning of the text.
+/// If the current line contains non-whitespace characters or a line separator,
+/// the scan stops at that boundary.
+pub fn take_non_newline_whitespace_len(text: &str) -> usize {
+    // Get the first line as defined by .lines()
+    match text.lines().next() {
+        None => 0,
+        Some(line) => {
+            // Count leading whitespace on this specific line.
+            // .lines() already stripped the trailing \n or \r\n,
+            // so we only see 'horizontal' whitespace and content.
+            line.chars()
+                .take_while(|c| c.is_whitespace())
+                .map(|c| c.len_utf8())
+                .sum()
+        }
+    }
+}
+
 /// Detects a single empty/whitespace line or the end of the input.
 /// Returns Some(0) if text is empty, or the byte offset to the next line.
-pub fn empty_line(text: &str) -> Option<usize> {
+pub fn take_linebreak_len(text: &str) -> Option<usize> {
     if text.is_empty() {
         return Some(0);
     }
@@ -25,8 +47,8 @@ pub fn empty_line(text: &str) -> Option<usize> {
 /// Detects a "blank line" by identifying two consecutive empty-line boundaries.
 /// Returns Some(0) if text is empty.
 pub fn blank_line(text: &str) -> Option<usize> {
-    let first_offset = empty_line(text)?;
-    let second_offset = empty_line(&text[first_offset..])?;
+    let first_offset = take_linebreak_len(text)?;
+    let second_offset = take_linebreak_len(&text[first_offset..])?;
     Some(first_offset + second_offset)
 }
 
@@ -46,7 +68,7 @@ pub fn indent_len(text: &str) -> usize {
 /// Detects a Dedent to the margin:
 /// An empty line boundary followed by a line with zero leading spaces.
 pub fn dedent(text: &str) -> Option<usize> {
-    let offset = empty_line(text)?;
+    let offset = take_linebreak_len(text)?;
     if indent_len(&text[offset..]) == 0 {
         Some(offset)
     } else {
@@ -56,7 +78,7 @@ pub fn dedent(text: &str) -> Option<usize> {
 
 /// The indent of the next line
 pub fn indent(text: &str) -> Option<usize> {
-    let offset = empty_line(text)?;
+    let offset = take_linebreak_len(text)?;
     let next_part = &text[offset..];
 
     // If the next line starts with 0 whitespace, it's a dedent.
@@ -109,13 +131,13 @@ mod tests {
     #[test]
     fn test_empty_line_basic() {
         // Should capture the line and the terminator
-        assert_eq!(empty_line("  \nrule"), Some(3));
-        assert_eq!(empty_line("  \r\nrule"), Some(4));
+        assert_eq!(take_linebreak_len("  \nrule"), Some(3));
+        assert_eq!(take_linebreak_len("  \r\nrule"), Some(4));
     }
 
     #[test]
     fn test_empty_line_content_fails() {
-        assert_eq!(empty_line("content\n"), None);
+        assert_eq!(take_linebreak_len("content\n"), None);
     }
 
     #[test]
@@ -134,15 +156,15 @@ mod tests {
     #[test]
     fn test_trailing_empty_lines() {
         let input = "  \n  ";
-        assert_eq!(empty_line(input), Some(3));
+        assert_eq!(take_linebreak_len(input), Some(3));
         assert_eq!(blank_line(input), Some(5));
     }
 
     #[test]
     fn test_none_verifications() {
-        assert_eq!(empty_line("text"), None);
+        assert_eq!(take_linebreak_len("text"), None);
         assert_eq!(blank_line(" \ntext"), None);
-        assert_eq!(empty_line(""), Some(0));
+        assert_eq!(take_linebreak_len(""), Some(0));
     }
 
     #[test]
