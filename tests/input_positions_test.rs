@@ -1,5 +1,6 @@
 //! Input Position Tests
 
+use serde_json::json;
 use tiexiu::engine::{CtxI, new_ctx};
 use tiexiu::input::strcursor::StrCursor;
 use tiexiu::parse_input;
@@ -34,6 +35,6 @@ fn multiline_input() -> Result<()> {
     let grammar = tiexiu::compile(grammar, &[])?;
 
     let tree = parse_input(&grammar, "hello\nworld", &[])?;
-    assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
+    assert_eq!(tree.to_value(), json!(["hello", "world"]));
     Ok(())
 }

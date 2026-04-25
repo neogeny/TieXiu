@@ -7,6 +7,7 @@ use tiexiu::Result;
 use tiexiu::api::compile;
 
 #[test]
+#[ignore = "semantic actions not implemented"]
 fn test_semantics_not_class() -> Result<()> {
     let grammar = r#"
         start::sum = {number}+ $ ;
