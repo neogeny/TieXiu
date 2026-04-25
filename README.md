@@ -1,5 +1,5 @@
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/neogeny/TieXiu?utm_source=badge)
-# 铁修 TieXiu
+# 金秀  铁修 TieXiu
 
 A high-performance port of **TatSu** to Rust.
 
@@ -17,7 +17,42 @@ The [TatSu Documentation][] provides a vision of where the **TieXiu** projects i
 
 ## Current Project Status: Alpha
 
-Implementation is complete for the core execution engine, the grammar model, the parsing engine, and support for left-recursive grammars. Development is currently advancing toward high-level tree construction and model synthesis.
+The project is functionally complete.
+
+* [x] Implementation is complete for the core execution engine, the grammar model, the parsing engine, and support for left-recursive grammars.
+
+* [x] Result `Tree` construction is complete, with automated conversion to `serde__json::Value`, which provides access to the `serde` suite of serializers.
+
+    ```rust
+    #[test]
+    fn test_optional_closure() -> Result<()> {
+        let grammar = r#"
+            start = foo+:"x" foo:{"y"}* {foo:"z"}* ;
+        "#;
+    
+        let model = compile(grammar, &[])?;
+        let ast = parse_input(&model, "x y y z z")?;
+        assert_eq!(
+            ast,
+            m(&[("foo", s(&[t("x"), c(&[t("y"), t("y")]), t("z"), t("z")]))])
+        );
+        assert_eq!(
+            ast.to_value(), 
+            serde_json::json!({"foo":["x", ["y","y"], "z", "z"]})
+  );
+        Ok(())
+    }
+    ```
+
+* [x] Compilation of **TatSu**/**TieXiu** grammars into a `tiexiu::peg::Grammar` object that implements parsing is complete.
+ 
+* [x] Pretty-printing a `Grammar` back to grammar text is complete.
+
+* [ ] Most tests pass, but most need reviewed because they were ported by an AI Agent from their Python versions in **TatSu**, so they may not be in fact testling anyhting.
+
+    ```console
+    Summary [   4.543s] 310 tests run: 256 passed, 54 failed, 8 skipped
+    ```
 
 ### Lean Parsing Context
 
@@ -35,16 +70,12 @@ Backtracking in **TieXiu** is *lazy*. Cloning a context/state only increments re
 
 A CST may use *64-bytes* per atomic node plus space proportional to the input matched, but CST are only kept for the currently successful path on the parse, and are dropped as soon as an option fails. CST are compacted on the boundary of the successful parse of a grammar rule node.
 
-The failure path returns the furthest position reached in the input and a message about the error encountered there. The same error value is passed back during backtracking until a branch point is reached and another path can be tried. Atr branching the error value belonging to the furthes position in the input is chosen to pass back. The error value also passes back the _cut_ state so branches can commit to a failed alternative if it was fixed with a cut.
-
-### Complete Parsing Engine
-
-The core parsing logic is fully implemented, providing a robust execution environment for PEG rules. Choice points, sequences, and lookaheads are handled with high efficiency, leveraging the CoW context for seamless backtracking.
+The failure path returns the furthest position reached in the input and a message about the error encountered there. The same error value is passed back during backtracking until a branch point is reached and another path can be tried. At branching, the error value belonging to the furthes position in the input is chosen to pass back. The error value also passes back the _cut_ state so branches can commit to a failed alternative if it was fixed with a cut.
 
 ### Left Recursion Support
 
 TieXiu features a complete implementation for handling left-recursive
-grammars. A pre-pass *analysis* identifies and marks recursive cycles, while the *runtime* includes the necessary logic to grow the recursive content by iteration instead of recursion.
+grammars. A pre-pass _analysis_ identifies and marks recursive cycles, while the _runtime_ includes the necessary logic to grow the recursive content by iteration instead of recursion.
 
 ### Complete Grammar Model
 
@@ -53,15 +84,11 @@ The building blocks for grammar models are implemented with a clear chain of own
 ### Milestone: From CST to AST
 
  The algebra for creating **Concrete Syntax Trees (CST)** was ported from
- **TatSu** to **TieXiu** with optimizations. Instead of computing the
+ **TatSu** to **TieXiu**, with optimizations. Instead of computing the
  resulting CST during parsing, the engine generates unoptimized trees that
- are destilled into their concrete versions at rule boundaries. **TieXiu**
- uses the **TatSu** semantics for **Abstract Syntax Tree (AST)**, in which
- named elements in a rule definition force the result to be a mapping of
- names to parsed elements. Rust doesn't allow the creation of synthetic
- types at runtime, so parsing to native types will require code generation
- for the desired model and deserialization of the JSON-compatible result of
- a parse into the desired model nodes.
+ are normalized into their concrete versions at rule boundaries. **TieXiu** uses the **TatSu** semantics for **Abstract Syntax Tree (AST)**, in which named elements in a rule definition force the result to be a mapping of names to parsed elements. 
+ 
+Rust doesn't allow the creation of synthetic types at runtime, so parsing to native types will require code generation for the desired model and deserialization of the JSON-compatible result of a parse into the desired model nodes. **TiexSiu**'s own `compiler.rs` may be used a an example of how to navigate a `Tree` to produce an object model (a `Grammar` in the case of `compiler.rs`).  `Tree.to_value()` can be used to objtain a `serde_json::Value` version of a `Tree`, and some may prefer to use that 
 
 ### Packrat & Memoization
 
@@ -69,19 +96,20 @@ All branches in a parse use a shared *Memoization Cache* to achieve the `O(N) ` 
 
 ### The Bootstrap Plan
 
-A critical upcoming milestone is the **Bootstrap Process**. The roadmap
-includes **Self-Hosting** through the implementation of a **TieXiu** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
+* [x] A critical upcoming milestone is the **Bootstrap Process**. The roadmap includes **Self-Hosting** through the implementation of a **TieXiu** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
 
-After the initial bootstrap (**TieXiu** parsing grammars in its own grammar
-language) either **TieXiu** or **TatSu** will generate the Rust code
-necessary for faster parser bootstrap.
+* [ ] After the initial bootstrap (**TieXiu** parsing grammars in its own grammar language) either **TieXiu** or **TatSu** will generate the Rust code necessary for faster parser bootstrap. Like in recent versions of **TatSu** the generated Rust code will not be procedural code that reimplements parsing, but a model of the parser that can be pre-compiled into Rust projects. The model will be obtained with:
 
-At the moment **TieXiu** is capable of reading the JSON representation of grammars that **TatSu** generates. In a two-step process the JSON is read and parsed to a model close to its structure. In a second step the intermediate model is translated to a grammar model that can be use for parsing.
+    ```rust
+    format!("{:#?}", grammar);
+    ```
+
+* [ ] At the moment **TieXiu** is capable of reading the JSON representation of grammars that **TatSu** generates. In a two-step process the JSON is read and parsed to a model close to its structure. In a second step the intermediate model is translated to a grammar model that can be use for parsing.
 
 * [x] The model pretty-prints to the original grammar text in TatSu-compatibleEBNF
 * [x] **TieXiu** is capable of parsing the JSON representation of the **TatSu** EBNF grammar language
-* [ ] **TieXiu** should be capable of parsing the EBNF text for the **TatSu** grammar language
-* [ ] Any EBNF grammar should be parsed by the tool and applied to input in the language described by the gramar
+* [x] **TieXiu** should be capable of parsing the EBNF text for the **TatSu** grammar language
+* [x] Any EBNF grammar should be parsed by the tool and applied to input in the language described by the gramar
 
 ## Features
 
@@ -93,7 +121,7 @@ At the moment **TieXiu** is capable of reading the JSON representation of gramma
 * [x] **Thread-Safe Grammar**: Static grammar structure can be shared across multiple threads.
 * [x] **Efficient Memoization**: Global cache consistency across backtracking branches.
 * [x] **Object-Safe Cursors**: Abstract `Cursor` trait allows for string, byte, or custom stream inputs.
-* [ ] **Self-Hosting Bootstrap**: (Planned) Engine parsing its own EBNF.
+* [x] **Self-Hosting Bootstrap**: (Planned) Engine parsing its own EBNF.
 
 ## License
 

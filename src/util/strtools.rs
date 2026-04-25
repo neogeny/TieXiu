@@ -3,6 +3,8 @@
 
 //! String utilities for generating valid identifiers.
 
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
+
 use crate::util::pyre::Pattern;
 
 /// Strict keywords that cannot be used as identifiers (e.g., let, fn).
@@ -104,6 +106,42 @@ fn is_valid_identifier(s: &str) -> bool {
     chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
+pub fn unicode_display_len(s: &str) -> usize {
+    s.width()
+}
+
+pub fn unicode_width(c: char) -> usize {
+    c.width().unwrap_or(0)
+}
+
+pub fn linecount(s: &str) -> usize {
+    if s.is_empty() {
+        1
+    } else {
+        s.lines().count().max(1)
+    }
+}
+
+pub fn ismultiline(s: &str) -> bool {
+    linecount(s) > 1
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LineCount {
+    pub tots: usize,
+    pub totl: usize,
+}
+
+pub fn countlines(s: &str) -> LineCount {
+    if s.is_empty() {
+        LineCount::default()
+    } else {
+        let tots = s.lines().count();
+        let totl = tots.max(1);
+        LineCount { tots, totl }
+    }
+}
+
 pub fn to_snake_case(name: &str) -> Result<String, String> {
     if name.is_empty() {
         return Ok(name.into());
@@ -165,7 +203,6 @@ mod tests {
 
     #[test]
     fn test_safe_name_unicode() {
-        // ASCII-only safe_name for now
         let result = safe_name("name", "_").unwrap();
         assert_eq!(result, "name");
     }
@@ -186,5 +223,47 @@ mod tests {
                 name, result, expected
             );
         }
+    }
+
+    #[test]
+    fn test_unicode_display_len() {
+        assert_eq!(unicode_display_len("abc"), 3);
+        assert_eq!(unicode_display_len("蛇"), 2);
+        assert_eq!(unicode_display_len("🐍 Py"), 5);
+    }
+
+    #[test]
+    fn test_visual_linecount() {
+        assert_eq!(linecount(""), 1);
+        assert_eq!(linecount("hello"), 1);
+        assert_eq!(linecount("hello\n"), 1);
+        assert_eq!(linecount("\n\n"), 2);
+        assert_eq!(linecount("win\r\nline"), 2);
+        assert_eq!(linecount("mac\rline"), 1);
+    }
+
+    #[test]
+    fn test_linecount_delta() {
+        assert_eq!(linecount("") - 1, 0);
+        assert_eq!(linecount("hello\n") - 1, 0);
+        assert_eq!(linecount("win\r\n") - 1, 0);
+    }
+
+    #[test]
+    fn test_ismultiline() {
+        assert!(!ismultiline(""));
+        assert!(!ismultiline("hello"));
+        assert!(ismultiline("hello\nworld"));
+        assert!(ismultiline("line1\nline2"));
+    }
+
+    #[test]
+    fn test_sloc_consistency() {
+        let result = countlines("");
+        assert_eq!(result.totl, 0);
+        let result = countlines("x=1\n");
+        assert_eq!(result.totl, 1);
+        let result = countlines("\n\n");
+        assert_eq!(result.totl, 2);
     }
 }

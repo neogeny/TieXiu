@@ -185,6 +185,7 @@ mod directives {
 
 mod patterns {
     use super::*;
+    use serde_json::json;
     use tiexiu::parse_input;
 
     #[test]
@@ -207,7 +208,7 @@ mod patterns {
         "#;
         let grammar = tiexiu::compile(grammar, &[])?;
         let tree = parse_input(&grammar, "hello", &[])?;
-        assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
+        assert_eq!(tree.to_value(), json!("hello"));
         Ok(())
     }
 
@@ -219,7 +220,7 @@ mod patterns {
         "#;
         let grammar = tiexiu::compile(grammar, &[])?;
         let tree = parse_input(&grammar, "start", &[])?;
-        assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
+        assert_eq!(tree.to_value(), json!("hello"));
         Ok(())
     }
 
@@ -231,7 +232,7 @@ mod patterns {
         "#;
         let grammar = tiexiu::compile(grammar, &[])?;
         let tree = parse_input(&grammar, "HELLO", &[])?;
-        assert!(matches!(tree, tiexiu::trees::Tree::Node { .. }));
+        assert_eq!(tree.to_value(), json!("HELLO"));
         Ok(())
     }
 
