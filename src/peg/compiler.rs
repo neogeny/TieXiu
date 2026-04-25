@@ -82,8 +82,8 @@ impl GrammarCompiler {
 
         let mut rulemap: RuleMap = RuleMap::new();
         let rule_trees = map_get(map, "Grammar", "rules")?.list_value();
-        for rtree in rule_trees {
-            let rule = self.compile_rule(&rtree)?;
+        for rtree in rule_trees.iter() {
+            let rule = self.compile_rule(rtree)?;
             rulemap.insert(rule.name.clone(), rule.into());
         }
 

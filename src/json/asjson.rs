@@ -95,7 +95,11 @@ mod tests {
         let cases: Vec<Tree> = vec![
             Tree::Nil,
             Tree::Text("hello".into()),
-            Tree::Seq(vec![Tree::Text("a".into()), Tree::Text("b".into())].into_boxed_slice()),
+            Tree::Seq(
+                vec![Tree::Text("a".into()), Tree::Text("b".into())]
+                    .into_boxed_slice()
+                    .into(),
+            ),
         ];
 
         for tree in cases {

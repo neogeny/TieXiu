@@ -3,32 +3,33 @@
 
 use super::map::TreeMap;
 use crate::cfg::types::{Define, Ref, Str};
+use std::rc::Rc;
 
 pub type TreeRef = Ref<Tree>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct KeyValue(pub Str, pub Ref<Tree>);
+pub struct KeyValue(pub Str, pub Rc<Tree>);
 
 #[derive(Clone, PartialEq)]
 pub enum Tree {
-    Text(Str),           // Tokens or patterns
-    Seq(Ref<[Tree]>),    // Sequences of values
-    Closed(Ref<[Tree]>), // Non-mergeable list of values
-    Map(Ref<TreeMap>),   // A mapping of named elements
+    Text(Str),          // Tokens or patterns
+    Seq(Rc<[Tree]>),    // Sequences of values
+    Closed(Rc<[Tree]>), // Non-mergeable list of values
+    Map(Rc<TreeMap>),   // A mapping of named elements
 
     Node {
         // The result of parsing a rule call
         typename: Str,
-        tree: Ref<Tree>,
+        tree: Rc<Tree>,
     },
 
     // INTERNAL
     // The folowing variants do not appear in merged trees
-    Nil,                       // Parsing that didn't consume any input
-    Named(KeyValue),           // Named elements add to the merged TreeMap
-    NamedAsList(KeyValue),     // Named elements forced into a list
-    Override(Ref<Tree>),       // Adds value to the merged tree
-    OverrideAsList(Ref<Tree>), // Adds value to the merged tree, forces list
+    Nil,                      // Parsing that didn't consume any input
+    Named(KeyValue),          // Named elements add to the merged TreeMap
+    NamedAsList(KeyValue),    // Named elements forced into a list
+    Override(Rc<Tree>),       // Adds value to the merged tree
+    OverrideAsList(Rc<Tree>), // Adds value to the merged tree, forces list
 
     Bottom, // The marker for failure used in memoization
 }
@@ -43,7 +44,7 @@ impl From<Vec<Tree>> for Tree {
             .into_iter()
             .filter(|item| !matches!(item, Tree::Nil))
             .collect();
-        Tree::Seq(clean.into_boxed_slice())
+        Tree::Seq(clean.into_boxed_slice().into())
     }
 }
 
@@ -53,7 +54,7 @@ impl<const N: usize> From<[Tree; N]> for Tree {
             .into_iter()
             .filter(|item| !matches!(item, Tree::Nil))
             .collect();
-        Tree::Seq(clean.into_boxed_slice())
+        Tree::Seq(clean.into_boxed_slice().into())
     }
 }
 
@@ -75,7 +76,9 @@ impl TreeMerge {
 impl Tree {
     pub fn define(&mut self, names: &[Define]) {
         if let Tree::Map(map) = self {
-            map.define(names);
+            let mut newmap = map.as_ref().clone();
+            newmap.define(names);
+            *map = newmap.into();
         }
     }
 
@@ -86,7 +89,7 @@ impl Tree {
         }
     }
 
-    pub fn list_value(&self) -> Ref<[Tree]> {
+    pub fn list_value(&self) -> Rc<[Tree]> {
         match self {
             Tree::Seq(items) | Tree::Closed(items) => items.clone(),
             _ => [].into(),
@@ -117,7 +120,7 @@ impl Tree {
             .unwrap_or_else(|| "".into())
     }
 
-    pub fn get_list(&self, key: &str) -> Ref<[Tree]> {
+    pub fn get_list(&self, key: &str) -> Rc<[Tree]> {
         self.get(key)
             .map(|n| n.list_value().clone())
             .unwrap_or_else(|| [].into())
@@ -139,24 +142,24 @@ impl Tree {
             (Self::Nil, n) => n,
             (s, Self::Nil) => s,
             (Self::Seq(list), node) => {
-                let mut v = list.into_vec();
+                let mut v = list.to_vec();
                 v.push(node);
-                Self::Seq(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice().into())
             }
-            (s, n) => Self::Seq(vec![s, n].into_boxed_slice()),
+            (s, n) => Self::Seq(vec![s, n].into_boxed_slice().into()),
         }
     }
 
     pub fn append_as_list(self, node: Self) -> Self {
         match (self, node) {
-            (Self::Nil, n) => Self::Seq(vec![n].into_boxed_slice()),
+            (Self::Nil, n) => Self::Seq(vec![n].into_boxed_slice().into()),
             (s, Self::Nil) => s,
             (Self::Seq(list), n) => {
-                let mut v = list.into_vec();
+                let mut v = list.to_vec();
                 v.push(n);
-                Self::Seq(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice().into())
             }
-            (s, n) => Self::Seq(vec![s, n].into_boxed_slice()),
+            (s, n) => Self::Seq(vec![s, n].into_boxed_slice().into()),
         }
     }
 
@@ -165,19 +168,19 @@ impl Tree {
             (Self::Nil, n) => n,
             (s, Self::Nil) => s,
             (Self::Seq(l1), Self::Seq(l2)) => {
-                let mut v = l1.into_vec();
-                v.extend(l2.into_vec());
-                Self::Seq(v.into_boxed_slice())
+                let mut v = l1.to_vec();
+                v.extend(l2.to_vec());
+                Self::Seq(v.into_boxed_slice().into())
             }
             (Self::Seq(l1), n) => {
-                let mut v = l1.into_vec();
+                let mut v = l1.to_vec();
                 v.push(n);
-                Self::Seq(v.into_boxed_slice())
+                Self::Seq(v.into_boxed_slice().into())
             }
             (s, Self::Seq(l2)) => {
                 let mut v = vec![s];
-                v.extend(l2.into_vec());
-                Self::Seq(v.into_boxed_slice())
+                v.extend(l2.to_vec());
+                Self::Seq(v.into_boxed_slice().into())
             }
             (s, n) => s.append(n),
         }
@@ -207,7 +210,7 @@ impl Tree {
 
                 let mut out = Tree::Nil;
                 elements
-                    .into_iter()
+                    .iter()
                     .for_each(|s| out = out.clone().append(s.clean_and_merge(gather)));
                 out
             }
@@ -216,10 +219,7 @@ impl Tree {
                 //  Tree::Closed is the product of the Exp closure node kinds.
                 //  The current semantics inherited from TatSu are to keep them
                 //  intact, with no merging
-                let clean: Vec<Tree> = elements
-                    .into_iter()
-                    .map(|s| s.clean_and_merge(gather))
-                    .collect();
+                let clean: Vec<Tree> = elements.iter().map(|s| s.clean_and_merge(gather)).collect();
                 Tree::Closed(clean.into())
             }
             Tree::Named(keyval) => {
