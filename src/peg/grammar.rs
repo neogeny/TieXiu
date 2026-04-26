@@ -86,9 +86,12 @@ impl Grammar {
         self.keywords = vec.into_boxed_slice();
     }
 
+    /// Check if a string is a reserved keyword.
+    /// Avoids allocation by searching the sorted slice directly.
     pub fn is_keyword(&self, name: &str) -> bool {
-        let name: Box<str> = name.into();
-        self.keywords.binary_search(&name).is_ok()
+        self.keywords
+            .binary_search_by(|k| k.as_ref().cmp(name))
+            .is_ok()
     }
 
     pub fn start_rule(&self) -> Result<&Rule, ParseError> {

@@ -128,7 +128,7 @@ impl Exp {
     pub fn lookahead_str(&self) -> Str {
         self.la
             .as_ref()
-            .map(|la| la.iter().map(|s| &**s).collect::<Vec<_>>().join(" "))
+            .map(|la| la.iter().map(AsRef::as_ref).collect::<Vec<_>>().join(" "))
             .unwrap_or_default()
             .into_boxed_str()
     }

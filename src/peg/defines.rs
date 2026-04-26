@@ -8,9 +8,7 @@ impl Exp {
     pub(super) fn cache_defines(&mut self) {
         let mut names: DefineSet = DefineSet::new();
         self._defines(&mut names);
-        if !names.is_empty() {
-            self.df = Some(names.into_iter().collect::<Vec<_>>().into());
-        }
+        self.df = Some(names.into_iter().collect::<Vec<_>>().into());
     }
 
     fn _defines(&self, names: &mut DefineSet) {

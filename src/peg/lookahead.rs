@@ -27,11 +27,9 @@ impl Exp {
             lookaheads.extend(exp.cache_lookahead());
         }
 
-        if !lookaheads.is_empty() {
-            let mut vec: Vec<Str> = lookaheads.iter().cloned().collect();
-            vec.sort();
-            self.la = Some(vec.into_boxed_slice().into());
-        }
+        let mut vec: Vec<Str> = lookaheads.iter().cloned().collect();
+        vec.sort();
+        self.la = Some(vec.into_boxed_slice().into());
 
         lookaheads
     }
