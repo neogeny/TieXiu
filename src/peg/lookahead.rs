@@ -30,7 +30,7 @@ impl Exp {
         if !lookaheads.is_empty() {
             let mut vec: Vec<Str> = lookaheads.iter().cloned().collect();
             vec.sort();
-            self.la = vec.into_boxed_slice();
+            self.la = Some(vec.into_boxed_slice().into());
         }
 
         lookaheads

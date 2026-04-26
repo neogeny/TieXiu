@@ -8,8 +8,8 @@ impl Exp {
     pub fn new(exp: ExpKind) -> Self {
         Self {
             kind: exp,
-            la: [].into(),
-            df: [].into(),
+            la: None,
+            df: None,
         }
     }
 

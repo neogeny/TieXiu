@@ -6,9 +6,11 @@ use crate::cfg::types::DefineSet;
 
 impl Exp {
     pub(super) fn cache_defines(&mut self) {
-        let mut names = DefineSet::new();
+        let mut names: DefineSet = DefineSet::new();
         self._defines(&mut names);
-        self.df = names.iter().cloned().collect();
+        if !names.is_empty() {
+            self.df = Some(names.into_iter().collect::<Vec<_>>().into());
+        }
     }
 
     fn _defines(&self, names: &mut DefineSet) {

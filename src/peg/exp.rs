@@ -12,6 +12,7 @@ use crate::util::pyre;
 use derivative::Derivative;
 use std::fmt;
 use std::ops::Deref;
+use std::rc::Rc;
 
 pub type ERef = Ref<Exp>;
 pub type ERefArr = Ref<[Exp]>;
@@ -20,8 +21,10 @@ pub type ERefArr = Ref<[Exp]>;
 #[derivative(Clone, Debug, Default)]
 pub struct Exp {
     pub kind: ExpKind,
-    pub la: Ref<[Str]>,    // the lookahead set
-    pub df: Ref<[Define]>, // the defines set
+    #[derivative(Debug(format_with = "debug_none"))]
+    pub la: Option<Rc<[Str]>>, // the lookahead set
+    #[derivative(Debug(format_with = "debug_none"))]
+    pub df: Option<Rc<[Define]>>, // the defines set
 }
 
 // NOTE
@@ -124,10 +127,9 @@ impl Exp {
 
     pub fn lookahead_str(&self) -> Str {
         self.la
-            .iter()
-            .map(|s| &**s)
-            .collect::<Vec<_>>()
-            .join(" ")
+            .as_ref()
+            .map(|la| la.iter().map(|s| &**s).collect::<Vec<_>>().join(" "))
+            .unwrap_or_default()
             .into_boxed_str()
     }
 
@@ -136,7 +138,9 @@ impl Exp {
         match self.do_parse(ctx) {
             Err(err) => Err(err),
             Ok(Yeap(ctx, mut tree)) => {
-                tree.define(&self.df);
+                if let Some(df) = self.df.as_ref() {
+                    tree.define(df);
+                }
                 Ok(Yeap(ctx, tree))
             }
         }

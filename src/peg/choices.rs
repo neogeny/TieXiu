@@ -6,6 +6,7 @@ use super::parser::{ParseResult, Yeap};
 use crate::engine::Ctx;
 use crate::peg::ParseError;
 use crate::trees::Tree;
+use crate::types::Ref;
 
 impl Exp {
     pub fn parse_choice<C: Ctx>(&self, mut ctx: C, options: &[Exp]) -> ParseResult<C> {
@@ -31,7 +32,8 @@ impl Exp {
                 }
             }
         }
-        Err(furthest.unwrap_or(ctx.failure(start, ParseError::NoViableOption(self.la.clone()))))
+        let la_box: Box<[Ref<str>]> = self.la.as_ref().map(|la| la.as_ref()).unwrap_or(&[]).into();
+        Err(furthest.unwrap_or(ctx.failure(start, ParseError::NoViableOption(la_box))))
     }
 
     pub fn parse_optional<C: Ctx>(&self, mut ctx: C, exp: &Exp) -> ParseResult<C> {
