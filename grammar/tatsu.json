@@ -1374,14 +1374,14 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
-              "name": "rule_include"
+              "name": "named"
             }
           },
           {
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
-              "name": "named"
+              "name": "term"
             }
           },
           {
@@ -1395,7 +1395,7 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
-              "name": "term"
+              "name": "rule_include"
             }
           }
         ]
@@ -1713,13 +1713,6 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
-              "name": "void"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
               "name": "gather"
             }
           },
@@ -1776,6 +1769,20 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
+              "name": "atom"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
+              "name": "void"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
               "name": "skip_to"
             }
           },
@@ -1805,13 +1812,6 @@
             "exp": {
               "__class__": "Call",
               "name": "cut_deprecated"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
-              "name": "atom"
             }
           }
         ]
@@ -2775,6 +2775,34 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
+              "name": "token"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
+              "name": "call"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
+              "name": "pattern"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
+              "name": "group"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
               "name": "eol"
             }
           },
@@ -2796,20 +2824,6 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
-              "name": "group"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
-              "name": "token"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
               "name": "alert"
             }
           },
@@ -2825,20 +2839,6 @@
             "exp": {
               "__class__": "Call",
               "name": "dot"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
-              "name": "pattern"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
-              "name": "call"
             }
           }
         ]
@@ -3352,7 +3352,7 @@
         "sequence": [
           {
             "__class__": "Pattern",
-            "pattern": "r"
+            "pattern": "r(?=[\"'])"
           },
           {
             "__class__": "Override",
