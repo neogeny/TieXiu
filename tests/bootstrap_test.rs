@@ -284,7 +284,7 @@ mod parse_special {
         // TODO: cause of failure - verify special form parsing
         let grammar = r#"@@grammar :: D start: /./"#;
         let tree = parse_grammar(grammar, &[])?;
-        let json = tree.to_model_json_string()?;
+        let json = tree.to_json_string()?;
         eprintln!("{:#}", json);
         assert!(json.contains("Dot"));
         Ok(())

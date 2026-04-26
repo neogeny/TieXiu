@@ -2789,6 +2789,13 @@
             "__class__": "Option",
             "exp": {
               "__class__": "Call",
+              "name": "dot"
+            }
+          },
+          {
+            "__class__": "Option",
+            "exp": {
+              "__class__": "Call",
               "name": "pattern"
             }
           },
@@ -2832,13 +2839,6 @@
             "exp": {
               "__class__": "Call",
               "name": "constant"
-            }
-          },
-          {
-            "__class__": "Option",
-            "exp": {
-              "__class__": "Call",
-              "name": "dot"
             }
           }
         ]
