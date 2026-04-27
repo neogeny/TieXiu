@@ -230,8 +230,8 @@ impl GrammarCompiler {
             }
             "Rule" => Exp::nil(),
             "RuleInclude" => {
-                let name = map_get(tree, &typename, "name")?.value();
-                Exp::rule_include(&name)
+                let name = tree.value();
+                Exp::rule_include(name.as_ref())
             }
             "Sequence" => {
                 let tree_inner = tree
