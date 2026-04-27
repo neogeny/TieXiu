@@ -1,4 +1,5 @@
 name: Release
+
 on:
   workflow_dispatch:
     inputs:
@@ -8,16 +9,20 @@ on:
         type: boolean
         default: false
 
+# Ensures the runner uses the modern Node.js 24 runtime for actions
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }} (${{ matrix.target || 'default' }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        # Standard matrix for Windows, Linux, and macOS (Intel + Apple Silicon)
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: macos-latest
@@ -31,17 +36,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12' # Or whichever version you prefer
+          python-version: '3.12'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --features pyo3
+          # --zig is a flag for the maturin command, not an input to the action
+          args: --release --out dist --features pyo3 --zig
           sccache: 'true'
           container: off
-          zig: true
-          # manylinux: auto
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
