@@ -17,7 +17,7 @@ impl<O> Translates<O> for Tree {
         match &self {
             Tree::Nil | Tree::Bottom => trans.translate(self, &[]),
             Tree::Text(_) => trans.translate(self, &[]),
-            Tree::Seq(nodes) | Tree::Closed(nodes) => {
+            Tree::Seq(nodes) | Tree::List(nodes) => {
                 let outputs = nodes
                     .iter()
                     .map(|branch| branch.translate_with(trans))

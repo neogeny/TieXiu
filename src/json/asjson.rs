@@ -45,7 +45,7 @@ impl Tree {
         match self {
             Tree::Bottom | Tree::Nil => Value::Null,
             Tree::Text(t) => Value::String(t.to_string()),
-            Tree::Seq(items) | Tree::Closed(items) => {
+            Tree::Seq(items) | Tree::List(items) => {
                 Value::Array(items.iter().map(Tree::to_json).collect())
             }
             Tree::Map(m) => {

@@ -48,7 +48,7 @@ impl fmt::Display for Tree {
             Self::Nil => write!(f, "NIL"),
             Self::Bottom => write!(f, "BOTTOM"),
             Self::Seq(items) => write!(f, "s(&[{}])", fmt_items(items)),
-            Self::Closed(items) => write!(f, "c(&[{}])", fmt_items(items)),
+            Self::List(items) => write!(f, "c(&[{}])", fmt_items(items)),
             Self::Node { typename, tree } => {
                 write!(f, "n({}, {})", typename, tree)
             }

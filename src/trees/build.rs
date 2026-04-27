@@ -10,8 +10,12 @@ impl Tree {
         Self::Text(value.into())
     }
 
-    pub fn list(items: &[Tree]) -> Tree {
+    pub fn seq(items: &[Tree]) -> Tree {
         Self::Seq(items.into())
+    }
+
+    pub fn list(items: &[Tree]) -> Tree {
+        Self::List(items.into())
     }
 
     pub fn map(entries: TreeMap) -> Tree {
@@ -64,7 +68,7 @@ mod tests {
 
     #[test]
     fn list_tree() {
-        let t = Tree::list(&[Tree::text("a"), Tree::text("b")]);
+        let t = Tree::seq(&[Tree::text("a"), Tree::text("b")]);
         assert!(matches!(t, Tree::Seq(_)));
     }
 

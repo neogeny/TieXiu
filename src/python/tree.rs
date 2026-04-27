@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::Tree;
 use crate::trees::KeyValue;
+use crate::Tree;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyString, PyTuple};
 
@@ -20,7 +20,7 @@ fn to_python(tree: &Tree, py: Python<'_>) -> PyResult<Py<PyAny>> {
             let py_list = PyList::new(py, py_items)?;
             Ok(py_list.into())
         }
-        Tree::Closed(items) => {
+        Tree::List(items) => {
             let py_items: Vec<Py<PyAny>> = items
                 .iter()
                 .map(|item| to_python(item, py))

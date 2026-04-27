@@ -55,7 +55,7 @@ impl TreeMap {
                 for item in items.iter() {
                     self.insert_as_list(key, item.clone());
                 }
-            } else if let Tree::Closed(items) = value {
+            } else if let Tree::List(items) = value {
                 for item in items.iter() {
                     self.insert_as_list(key, item.clone());
                 }
@@ -70,7 +70,7 @@ impl TreeMap {
         for (k, aslist) in keys {
             let key = self.safe_key(k);
             if !entries.iter().any(|(k, _)| k == &key) {
-                let val = if *aslist { Tree::list(&[]) } else { Tree::Nil };
+                let val = if *aslist { Tree::seq(&[]) } else { Tree::Nil };
                 entries.push((key, val));
             }
         }
@@ -137,12 +137,12 @@ mod tests {
         Tree::Text(s.into())
     }
 
-    fn list(items: &[&str]) -> Tree {
+    fn seq(items: &[&str]) -> Tree {
         Tree::Seq(items.iter().map(|s| text(s)).collect())
     }
 
-    fn closed(items: &[&str]) -> Tree {
-        Tree::Closed(items.iter().map(|s| text(s)).collect())
+    fn list(items: &[&str]) -> Tree {
+        Tree::List(items.iter().map(|s| text(s)).collect())
     }
 
     #[test]
@@ -184,18 +184,18 @@ mod tests {
     #[test]
     fn insert_list_once() {
         let mut map = TreeMap::new();
-        map.insert("foo", list(&["a", "b"]));
-        assert_eq!(map.get("foo"), Some(&list(&["a", "b"])));
+        map.insert("foo", seq(&["a", "b"]));
+        assert_eq!(map.get("foo"), Some(&seq(&["a", "b"])));
     }
 
     #[test]
     fn insert_list_twice() {
         let mut map = TreeMap::new();
-        map.insert("foo", list(&["a", "b"]));
-        map.insert("foo", list(&["c", "d"]));
+        map.insert("foo", seq(&["a", "b"]));
+        map.insert("foo", seq(&["c", "d"]));
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::Seq([text("a"), text("b"), list(&["c", "d"])].into()))
+            Some(&Tree::Seq([text("a"), text("b"), seq(&["c", "d"])].into()))
         );
     }
 
@@ -238,6 +238,24 @@ mod tests {
     #[test]
     fn insert_as_list_with_list_once() {
         let mut map = TreeMap::new();
+        map.insert_as_list("foo", seq(&["a", "b"]));
+        assert_eq!(map.get("foo"), Some(&Tree::Seq([seq(&["a", "b"])].into())));
+    }
+
+    #[test]
+    fn insert_as_list_with_seq_twice() {
+        let mut map = TreeMap::new();
+        map.insert_as_list("foo", seq(&["a", "b"]));
+        map.insert_as_list("foo", seq(&["c", "d"]));
+        assert_eq!(
+            map.get("foo"),
+            Some(&Tree::Seq([seq(&["a", "b"]), seq(&["c", "d"])].into()))
+        );
+    }
+
+    #[test]
+    fn insert_as_list_with_seq_once() {
+        let mut map = TreeMap::new();
         map.insert_as_list("foo", list(&["a", "b"]));
         assert_eq!(map.get("foo"), Some(&Tree::Seq([list(&["a", "b"])].into())));
     }
@@ -250,29 +268,6 @@ mod tests {
         assert_eq!(
             map.get("foo"),
             Some(&Tree::Seq([list(&["a", "b"]), list(&["c", "d"])].into()))
-        );
-    }
-
-    #[test]
-    fn insert_as_list_with_closed_once() {
-        let mut map = TreeMap::new();
-        map.insert_as_list("foo", closed(&["a", "b"]));
-        assert_eq!(
-            map.get("foo"),
-            Some(&Tree::Seq([closed(&["a", "b"])].into()))
-        );
-    }
-
-    #[test]
-    fn insert_as_list_with_closed_twice() {
-        let mut map = TreeMap::new();
-        map.insert_as_list("foo", closed(&["a", "b"]));
-        map.insert_as_list("foo", closed(&["c", "d"]));
-        assert_eq!(
-            map.get("foo"),
-            Some(&Tree::Seq(
-                [closed(&["a", "b"]), closed(&["c", "d"])].into()
-            ))
         );
     }
 
@@ -351,12 +346,12 @@ mod tests {
         map.insert_as_list("foo", text("a"));
 
         let mut other = TreeMap::new();
-        other.insert_as_list("foo", list(&["b", "c"]));
+        other.insert_as_list("foo", seq(&["b", "c"]));
         map.update(&other);
 
         assert_eq!(
             map.get("foo"),
-            Some(&Tree::Seq([text("a"), list(&["b", "c"])].into()))
+            Some(&Tree::Seq([text("a"), seq(&["b", "c"])].into()))
         );
     }
 }

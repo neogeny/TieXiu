@@ -40,7 +40,7 @@ fn _parse_map(node: &Tree) -> CompileResult<&TreeMap> {
 
 fn _parse_list(node: &Tree) -> CompileResult<&[Tree]> {
     match node {
-        Tree::Seq(list) | Tree::Closed(list) => Ok(list),
+        Tree::Seq(list) | Tree::List(list) => Ok(list),
         _ => Err(CompileError::ExpectedList(format!("{:?}", node))),
     }
 }

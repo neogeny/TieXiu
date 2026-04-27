@@ -12,10 +12,10 @@ pub struct KeyValue(pub Str, pub Rc<Tree>);
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Tree {
-    Text(Str),          // Tokens or patterns
-    Seq(Rc<[Tree]>),    // Sequences of values
-    Closed(Rc<[Tree]>), // Non-mergeable list of values
-    Map(Rc<TreeMap>),   // A mapping of named elements
+    Text(Str),        // Tokens or patterns
+    Seq(Rc<[Tree]>),  // Sequences of values
+    List(Rc<[Tree]>), // Non-mergeable list of values
+    Map(Rc<TreeMap>), // A mapping of named elements
 
     Node {
         // The result of parsing a rule call
@@ -91,7 +91,7 @@ impl Tree {
 
     pub fn list_value(&self) -> Rc<[Tree]> {
         match self {
-            Tree::Seq(items) | Tree::Closed(items) => items.clone(),
+            Tree::Seq(items) | Tree::List(items) => items.clone(),
             _ => [].into(),
         }
     }
@@ -132,7 +132,7 @@ impl Tree {
 
     pub fn closed(self) -> Self {
         match self {
-            Tree::Seq(items) => Tree::Closed(items),
+            Tree::Seq(items) => Tree::List(items),
             _ => self,
         }
     }
@@ -214,13 +214,13 @@ impl Tree {
                     .for_each(|s| out = out.clone().append(s.clean_and_merge(gather)));
                 out
             }
-            Tree::Closed(elements) => {
+            Tree::List(elements) => {
                 // NOTE:
                 //  Tree::Closed is the product of the Exp closure node kinds.
                 //  The current semantics inherited from TatSu are to keep them
                 //  intact, with no merging
                 let clean: Vec<Tree> = elements.iter().map(|s| s.clean_and_merge(gather)).collect();
-                Tree::Closed(clean.into())
+                Tree::List(clean.into())
             }
             Tree::Named(keyval) => {
                 let KeyValue(name, val) = keyval;
@@ -254,7 +254,7 @@ impl Tree {
             Tree::Text(text) => text.len(),
             Tree::Override(inner) | Tree::OverrideAsList(inner) => inner.width(),
             Tree::Nil | Tree::Bottom => 0,
-            Tree::Seq(items) | Tree::Closed(items) => items.iter().map(|item| item.width()).sum(),
+            Tree::Seq(items) | Tree::List(items) => items.iter().map(|item| item.width()).sum(),
             Tree::Map(map) => map.iter().map(|(_, node)| node.width()).sum(),
             Tree::Named(pair) | Tree::NamedAsList(pair) => {
                 let KeyValue(_, val) = pair;
@@ -303,7 +303,7 @@ mod tests {
         let raw = Tree::Seq([Tree::Bottom, Tree::Nil, Tree::Bottom].into());
         let result = raw.node_tree(); // normalize doesn't close
 
-        if let Tree::Closed(v) = result {
+        if let Tree::List(v) = result {
             assert_eq!(v.len(), 2); // Nil is gone, only the two Bottoms remain
             assert_eq!(v[0], Tree::Bottom);
             assert_eq!(v[1], Tree::Bottom);

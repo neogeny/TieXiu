@@ -3,8 +3,8 @@
 
 //! Tests for AST/Tree functionality
 
-use tiexiu::Result;
 use tiexiu::trees::Tree;
+use tiexiu::Result;
 
 #[test]
 fn test_ast_pickling() -> Result<()> {
@@ -31,7 +31,7 @@ fn test_tree_text() -> Result<()> {
 
 #[test]
 fn test_tree_list() -> Result<()> {
-    let t = Tree::list(&[Tree::text("a"), Tree::text("b")]);
+    let t = Tree::seq(&[Tree::text("a"), Tree::text("b")]);
     assert!(matches!(t, Tree::Seq(_)));
     Ok(())
 }

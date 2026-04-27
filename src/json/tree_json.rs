@@ -42,7 +42,7 @@ impl Tree {
             Tree::Nil => named("Nil", []),
             Tree::Bottom => named("Bottom", []),
             Tree::Text(text) => named("Text", [("text", Value::String(text.to_string()))]),
-            Tree::Seq(items) | Tree::Closed(items) => named(
+            Tree::Seq(items) | Tree::List(items) => named(
                 "List",
                 [(
                     "items",

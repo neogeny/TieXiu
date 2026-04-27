@@ -16,8 +16,8 @@ pub fn s(items: &[Tree]) -> Tree {
     Tree::Seq(items.into())
 }
 
-pub fn c(items: &[Tree]) -> Tree {
-    Tree::Closed(items.into())
+pub fn l(items: &[Tree]) -> Tree {
+    Tree::List(items.into())
 }
 
 pub fn m(entries: &[(&str, Tree)]) -> Tree {
