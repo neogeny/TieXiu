@@ -58,14 +58,3 @@ fn test_to_snake_case() -> Result<()> {
     }
     Ok(())
 }
-
-#[test]
-#[ignore = "unicode to_snake_case not yet implemented"]
-fn test_to_snake_case_unicode() -> Result<()> {
-    let cases = [("naïve", "naïve")];
-
-    for (name, expected) in cases {
-        let _ = (name, expected);
-    }
-    Ok(())
-}

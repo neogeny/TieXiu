@@ -153,6 +153,7 @@ impl GrammarCompiler {
             "Alert" => {
                 let msgtree = map_get(tree, &typename, "message")?;
                 let msgexp = self.parse_exp(msgtree)?;
+                // FIXME value defaulted to 0
                 if let ExpKind::Constant(m) = msgexp.kind {
                     Exp::alert(&m, 0)
                 } else {

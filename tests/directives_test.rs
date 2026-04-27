@@ -32,10 +32,11 @@ fn whitespace_directive() -> Result<()> {
 // When implemented, it should disable automatic whitespace between tokens,
 // allowing 'a' 'b' to match "ab" without requiring a space.
 #[test]
-#[ignore = "@@whitespace :: None not implemented"]
 fn whitespace_none_directive() -> Result<()> {
     let grammar = r#"
         @@whitespace :: None
+        @@nameguard :: False
+        
         start: 'a' 'b'
     "#;
     let grammar = tiexiu::compile(grammar, &[])?;

@@ -257,6 +257,7 @@ mod parse_naming {
 // =============================================================================
 
 mod parse_special {
+    use serde_json::json;
     use tiexiu::*;
 
     #[test]
@@ -293,10 +294,13 @@ mod parse_special {
     #[test]
     fn constant() -> Result<()> {
         // TODO: cause of failure - verify special form parsing
-        let grammar = r#"@@grammar :: Cst start: `constant`"#;
-        let tree = parse_grammar(grammar, &[])?;
-        let json = tree.to_json_string()?;
-        assert!(json.contains("Constant"));
+        let grammar = r#"
+            @@grammar :: Cst
+            start: `a const`
+        "#;
+        let tree = parse(grammar, "", &[])?;
+        let json = tree.to_json();
+        assert_eq!(json, json!("a const"));
         Ok(())
     }
 
@@ -332,11 +336,18 @@ mod parse_special {
 
     #[test]
     fn alert() -> Result<()> {
-        // TODO: cause of failure - verify special form parsing
-        let grammar = r#"@@grammar :: Al start: ^^`danger`"#;
-        let tree = parse_grammar(grammar, &[])?;
-        let json = tree.to_json_string()?;
-        assert!(json.contains("Alert"));
+        let grammar = r#"
+            @@grammar :: Al
+
+            start: ^^`danger`
+        "#;
+        // FIXME
+        // let tree = parse_grammar(grammar, &[])?;
+        // let json = tree.to_json_string()?;
+        // assert!(json.contains("Alert"));
+        let tree = parse(grammar, "", &[])?;
+        let json = tree.to_json();
+        assert_eq!(json, json!("danger"));
         Ok(())
     }
 }

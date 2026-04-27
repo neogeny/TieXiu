@@ -83,7 +83,7 @@ pub trait Ctx: CtxI + Clone + Debug {
         let result = {
             let wordlike = token.chars().all(|c| c.is_alphanumeric());
             let escaped = escape(token);
-            if wordlike && *escaped == *token {
+            if wordlike && *escaped == *token && self.cursor().name_guard() {
                 let bound = if self.cursor().ignore_case() {
                     format!(r"{}\b", token)
                 } else {

@@ -17,6 +17,7 @@ pub trait Cursor: Debug + Configurable {
     fn reset(&mut self, mark: usize);
     fn textstr(&self) -> &str;
     fn ignore_case(&self) -> bool;
+    fn name_guard(&self) -> bool;
 
     fn lookahead(&self, start: usize) -> &str {
         self.textstr()[start..].lines().next().unwrap_or("")

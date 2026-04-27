@@ -14,6 +14,7 @@ use std::rc::Rc;
 #[derive(Debug, Clone)]
 pub struct CursorHeavy {
     ignorecase: bool,
+    nameguard: bool,
     patterns: Rc<TokenizingPatterns>,
 }
 
@@ -38,6 +39,7 @@ impl StrCursor {
             offset: 0,
             heavy: CursorHeavy {
                 ignorecase: false,
+                nameguard: true,
                 patterns: TokenizingPatterns::default().into(),
             }
             .into(),
@@ -50,6 +52,7 @@ impl StrCursor {
             offset: 0,
             heavy: CursorHeavy {
                 ignorecase: false,
+                nameguard: true,
                 patterns: patterns.into(),
             }
             .into(),
@@ -92,6 +95,7 @@ impl Configurable for StrCursor {
         }
         self.heavy = CursorHeavy {
             ignorecase: cfg.contains(&CfgKey::IgnoreCase),
+            nameguard: !cfg.contains(&CfgKey::NoNameGuard),
             patterns: self.heavy.patterns.clone(),
         }
         .into()
@@ -113,6 +117,10 @@ impl Cursor for StrCursor {
 
     fn ignore_case(&self) -> bool {
         self.heavy.ignorecase
+    }
+
+    fn name_guard(&self) -> bool {
+        self.heavy.nameguard
     }
 
     fn at_end(&self) -> bool {
@@ -175,6 +183,7 @@ impl Cursor for StrCursor {
     fn set_tokenizing(&mut self, patterns: &TokenizingPatterns) {
         self.heavy = CursorHeavy {
             ignorecase: self.heavy.ignorecase,
+            nameguard: self.heavy.nameguard,
             patterns: patterns.clone().into(),
         }
         .into()
