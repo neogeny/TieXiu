@@ -29,7 +29,7 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: macos-latest # Cross-compiling x86_64 on the ARM runner
+          - os: macos-13 # Explicitly use the Intel runner to avoid cross-compilation linking issues
             target: x86_64-apple-darwin
 
     steps:
@@ -40,23 +40,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Rust Toolchain
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Build wheels (Linux & macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          # --zig is key for seamless cross-compilation on macOS/Linux
-          args: --release --out dist --features pyo3 --zig
-          sccache: 'true'
-
-      - name: Build wheels (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
+          # Removed --zig to use native Apple linkers on macOS for better compatibility
           args: --release --out dist --features pyo3
           sccache: 'true'
 

@@ -1,26 +1,19 @@
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/neogeny/TieXiu?utm_source=badge)
-
 # 金秀  铁修 TieXiu
 
 A high-performance port of **TatSu** to Rust.
 
-**TieXiu** (铁修) is a PEG (Parsing Expression Grammar) engine that implements the flexibility and power of the original **[TatSu][]
-** lineage into a memory-safe, high-concurrency architecture optimized for modern CPU caches.
+**TieXiu** (铁修) is a PEG (Parsing Expression Grammar) engine that implements the flexibility and power of the original **[TatSu][]** lineage into a memory-safe, high-concurrency architecture optimized for modern CPU caches.
 
 [TatSu]: https://tatsu.readthedocs.io/en/stable/
 
-**TieXiu** is a tool that takes grammars in extended `EBNF`_ as input, and
-outputs `memoizing`_ (`Packrat`_) `PEG`_ parsers as a Rust model. The classic
-variations of EBNF_ (Tomassetti, EasyExtend, Wirth) and `ISO EBNF`_ are
-supported as input grammar formats.
+## Roadmap
 
-The [TatSu Documentation][] provides a vision of where the **TieXiu** project is heading. A copy of the grammar syntax can can be accessed locally in the [SYNTAX](SYNTAX.md) document.
+The [TatSu Documentation][] provides a vision of where the **TieXiu** projects is heading. A copy of the grammar syntax can can be accessed locally in the [SYNTAX](SYNTAX.md) document.
+
+**TatSu** is a mature project with an important user base so it's difficult to make certain changes even if they are improvements or fixes for long-standing quirks (as well known within experienced software engineers, a long-lived quirk becomes a feature). **TieXiu** is an opportunity to start from scratch, with a modern approach, even if the grammar syntax and its semantics are preserved.
 
 [TatSu Documentation]: https://tatsu.readthedocs.io/
-
-**TatSu
-** is a mature project with an important user base so it's difficult to make certain changes even if they are improvements or fixes for long-standing quirks (as well known within experienced software engineers, a long-lived quirk becomes a feature).
-**TieXiu** is an opportunity to start from scratch, with a modern approach, even if the grammar syntax and its semantics are preserved.
 
 ## Current Project Status: Alpha
 
@@ -52,7 +45,7 @@ The project is functionally complete.
     ```
 
 * [x] Compilation of **TatSu**/**TieXiu** grammars into a `tiexiu::peg::Grammar` object that implements parsing is complete.
-
+ 
 * [x] Pretty-printing a `Grammar` back to grammar text is complete.
 
 * [ ] Most tests pass, but most need reviewed because they were ported by an AI Agent from their Python versions in **TatSu**, so they may not be in fact testling anyhting.
@@ -64,23 +57,20 @@ The project is functionally complete.
 ### Lean Parsing Context
 
 **TieXiu** uses the runtime stack as the parsing state stack. A state
-change has a 16-byte stack footprint consisting of two pointers: one for the *Volatile State* (Input Cursor) and one for the *Heavy Stated* (Grammar + Memoization Cache). This allows for deep recursive descent with
+change has a 16-byte stack footprint consisting of two  pointers: one for the *Volatile State* (Input Cursor) and one for the *Heavy Stated* (Grammar + Memoization Cache). This allows for deep recursive descent with
 minimal stack pressure and $O(1)$ branching costs. The `Cursor`
 implementation for parsing text (`StrCursor`) uses 16 bytes (`&str` +
 `usize`) and has copy-on-write semantics during a parse (grammar elements
 that don't advance over the input share the same cursor).
 
+
 ### Copy-on-Write State Transitios
 
-Backtracking in **TieXiu** is *lazy*. Cloning a context/state only increments reference counts. The engine leverages the Rust runtime stack to handle state changes. Branching at choice points is a
-*16-byte* clone of the state, with a
-*16-byte* (for text) allocation only when the state is mutated. Failed parses restore the cursor position and register the furthest failure position for error reporting. The state returned occupies the same space as the original state.
+Backtracking in **TieXiu** is *lazy*. Cloning a context/state only increments reference counts. The engine leverages the Rust runtime stack to handle state changes. Branching at choice points is a *16-byte* clone of the state, with a *16-byte* (for text) allocation only when the state is mutated. Failed parses restore the cursor position and register the furthest failure position for error reporting. The state returned occupies the same space as the original state.
 
-A CST may use
-*64-bytes* per atomic node plus space proportional to the input matched, but CST are only kept for the currently successful path on the parse, and are dropped as soon as an option fails. CST are compacted on the boundary of the successful parse of a grammar rule node.
+A CST may use *64-bytes* per atomic node plus space proportional to the input matched, but CST are only kept for the currently successful path on the parse, and are dropped as soon as an option fails. CST are compacted on the boundary of the successful parse of a grammar rule node.
 
-The failure path returns the furthest position reached in the input and a message about the error encountered there. The same error value is passed back during backtracking until a branch point is reached and another path can be tried. At branching, the error value belonging to the furthes position in the input is chosen to pass back. The error value also passes back the
-_cut_ state so branches can commit to a failed alternative if it was fixed with a cut.
+The failure path returns the furthest position reached in the input and a message about the error encountered there. The same error value is passed back during backtracking until a branch point is reached and another path can be tried. At branching, the error value belonging to the furthes position in the input is chosen to pass back. The error value also passes back the _cut_ state so branches can commit to a failed alternative if it was fixed with a cut.
 
 ### Left Recursion Support
 
@@ -89,20 +79,16 @@ grammars. A pre-pass _analysis_ identifies and marks recursive cycles, while the
 
 ### Complete Grammar Model
 
-The building blocks for grammar models are implemented with a clear chain of ownership. The `Grammar` acts as the root container owning the `Rule` map, while each `Rule` owns its
-`Model` definition. This hierarchy eliminates reference proliferation and simplifies lifetime management.
+The building blocks for grammar models are implemented with a clear chain of ownership. The `Grammar` acts as the root container owning the `Rule` map, while each `Rule` owns its `Model` definition. This hierarchy eliminates reference proliferation and simplifies lifetime management.
 
 ### Milestone: From CST to AST
 
-The algebra for creating **Concrete Syntax Trees (CST)** was ported from
-**TatSu** to **TieXiu**, with optimizations. Instead of computing the
-resulting CST during parsing, the engine generates unoptimized trees that
-are normalized into their concrete versions at rule boundaries. **TieXiu** uses the **TatSu** semantics for **Abstract Syntax Tree (AST)
-**, in which named elements in a rule definition force the result to be a mapping of names to parsed elements.
-
-Rust doesn't allow the creation of synthetic types at runtime, so parsing to native types will require code generation for the desired model and deserialization of the JSON-compatible result of a parse into the desired model nodes.
-**TiexSiu**'s own `compiler.rs` may be used a an example of how to navigate a `Tree` to produce an object model (a `Grammar` in the case of `compiler.rs`).  `Tree.to_value()` can be used to objtain a
-`serde_json::Value` version of a `Tree`, and some may prefer to use that
+ The algebra for creating **Concrete Syntax Trees (CST)** was ported from
+ **TatSu** to **TieXiu**, with optimizations. Instead of computing the
+ resulting CST during parsing, the engine generates unoptimized trees that
+ are normalized into their concrete versions at rule boundaries. **TieXiu** uses the **TatSu** semantics for **Abstract Syntax Tree (AST)**, in which named elements in a rule definition force the result to be a mapping of names to parsed elements. 
+ 
+Rust doesn't allow the creation of synthetic types at runtime, so parsing to native types will require code generation for the desired model and deserialization of the JSON-compatible result of a parse into the desired model nodes. **TiexSiu**'s own `compiler.rs` may be used a an example of how to navigate a `Tree` to produce an object model (a `Grammar` in the case of `compiler.rs`).  `Tree.to_value()` can be used to objtain a `serde_json::Value` version of a `Tree`, and some may prefer to use that 
 
 ### Packrat & Memoization
 
@@ -110,18 +96,15 @@ All branches in a parse use a shared *Memoization Cache* to achieve the `O(N) ` 
 
 ### The Bootstrap Plan
 
-* [x] A critical upcoming milestone is the **Bootstrap Process**. The roadmap includes **Self-Hosting** through the implementation of a **TieXiu
-  ** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
+* [x] A critical upcoming milestone is the **Bootstrap Process**. The roadmap includes **Self-Hosting** through the implementation of a **TieXiu** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
 
-* [ ] After the initial bootstrap (**TieXiu** parsing grammars in its own grammar language) either **TieXiu** or **TatSu** will generate the Rust code necessary for faster parser bootstrap. Like in recent versions of *
-  *TatSu** the generated Rust code will not be procedural code that reimplements parsing, but a model of the parser that can be pre-compiled into Rust projects. The model will be obtained with:
+* [ ] After the initial bootstrap (**TieXiu** parsing grammars in its own grammar language) either **TieXiu** or **TatSu** will generate the Rust code necessary for faster parser bootstrap. Like in recent versions of **TatSu** the generated Rust code will not be procedural code that reimplements parsing, but a model of the parser that can be pre-compiled into Rust projects. The model will be obtained with:
 
     ```rust
     format!("{:#?}", grammar);
     ```
 
-* [ ] At the moment **TieXiu** is capable of reading the JSON representation of grammars that **TatSu
-  ** generates. In a two-step process the JSON is read and parsed to a model close to its structure. In a second step the intermediate model is translated to a grammar model that can be use for parsing.
+* [ ] At the moment **TieXiu** is capable of reading the JSON representation of grammars that **TatSu** generates. In a two-step process the JSON is read and parsed to a model close to its structure. In a second step the intermediate model is translated to a grammar model that can be use for parsing.
 
 * [x] The model pretty-prints to the original grammar text in TatSu-compatibleEBNF
 * [x] **TieXiu** is capable of parsing the JSON representation of the **TatSu** EBNF grammar language
