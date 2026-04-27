@@ -29,7 +29,7 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: macos-13 # Intel-based runner for x86_64 macOS
+          - os: macos-13
             target: x86_64-apple-darwin
 
     steps:
@@ -69,7 +69,7 @@ jobs:
     if: github.event.inputs.publish == 'true'
     needs: [build_wheels]
     permissions:
-      # Required for trusted publishing if not using tokens
+      # Required for trusted publishing
       id-token: write
     steps:
       - name: Download all wheels
@@ -80,9 +80,9 @@ jobs:
           merge-multiple: true
 
       - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          command: upload
-          args: --non-interactive --skip-existing dist/*
+          # If using Trusted Publishing (OIDC), no token is needed.
+          # Otherwise, uncomment the line below:
+          # password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/
