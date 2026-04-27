@@ -40,7 +40,7 @@ cli = [
     "dep:clap",
     "dep:syntect",
 ]
-pyo3 = ["dep:pyo3"]
+pyo3 = ["dep:pyo3", "dep:pythonize"]
 pcre2 = ["dep:pcre2"]
 regex = ["dep:regex"]
 
@@ -53,6 +53,7 @@ console = "0.16.3"
 
 # --- PyO3 Dependencies ---
 pyo3 = { version = "0.28", features = ["extension-module"], optional = true }
+# pythonize = { version = "0.23", features = ["arbitrary_precision"], optional = true }
 
 # --- CLI Dependencies (Optional) ---
 clap = { version = "4.6", features = ["derive"], optional = true }
@@ -67,6 +68,11 @@ regex = { version = "1.12.3", optional = true }
 unicode-width = "0.2.2"
 derivative = "2.2.0"
 evalexpr = "13.1.0"
+pythonize = {
+    version = "0.28.0",
+    features = ["arbitrary_precision", "serde_json"],
+    optional = true
+}
 
 # --- Debug & Benchmarking ---
 [dev-dependencies]
