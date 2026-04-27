@@ -1,11 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::parser::Parser;
 use super::rule::RuleRef;
 use crate::cfg::types::{Define, Str};
-use crate::engine::Ctx;
-use crate::peg::error::ParseResult;
 use crate::types::Ref;
 use derivative::Derivative;
 use std::fmt;
@@ -108,12 +105,6 @@ pub enum ExpKind {
         // #[derivative(Debug(format_with = "debug_none"))]
         exp: Option<ERef>,
     },
-}
-
-impl<C: Ctx> Parser<C> for Exp {
-    fn parse(&self, ctx: C) -> ParseResult<C> {
-        self.parse(ctx)
-    }
 }
 
 #[cfg(test)]

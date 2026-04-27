@@ -32,7 +32,7 @@ Repository = "https://github.com/neogeny/tiexiu"
 Issues = "https://github.com/neogeny/tiexiu/issues"
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = ["pyo3/extension-module", "pyo3"]
 module-name = "tiexiu.tiexiu"
 python-source = "python"
 

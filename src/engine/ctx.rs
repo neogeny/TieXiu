@@ -36,6 +36,10 @@ pub trait Ctx: CtxI + Clone + Debug {
     fn untrack(&mut self, key: &MemoKey) -> usize;
     fn tracer(&self) -> &dyn Tracer;
 
+    fn intern(&mut self, s: &str) -> Str {
+        s.into()
+    }
+
     #[track_caller]
     fn failure(&self, start: usize, source: ParseError) -> Nope {
         Nope::new(start, self, source)
@@ -65,11 +69,11 @@ pub trait Ctx: CtxI + Clone + Debug {
     }
 
     fn dot(&mut self) -> bool {
-        self.next().is_some()
+        self.next()
     }
 
-    fn next(&mut self) -> Option<char> {
-        self.cursor_mut().next()
+    fn next(&mut self) -> bool {
+        self.cursor_mut().next().is_some()
     }
 
     fn get_pattern(&mut self, pattern: &str) -> Pattern;
@@ -98,12 +102,12 @@ pub trait Ctx: CtxI + Clone + Debug {
         result
     }
 
-    fn match_pattern(&mut self, pattern: &str) -> Option<String> {
+    fn match_pattern(&mut self, pattern: &str) -> Option<Str> {
         let re = self.get_pattern(pattern);
         let result = self.cursor_mut().match_pattern(&re);
         if let Some(matched) = result {
             self.tracer().trace_match(self, matched.as_str(), pattern);
-            Some(matched)
+            Some(self.intern(matched.as_str()))
         } else {
             self.tracer().trace_no_match(self, pattern);
             None

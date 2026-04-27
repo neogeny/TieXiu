@@ -7,7 +7,7 @@ use super::memo::{KeyTrack, MemoCache};
 use super::trace::{NULL_TRACER, Tracer};
 use crate::input::Cursor;
 use crate::parser::TokenStack;
-use crate::types::{Ref, Str};
+use crate::types::{Ref, Str, StrSet};
 use crate::util::fuse::Fuse;
 use crate::util::pyre::Pattern;
 use std::collections::HashMap;
@@ -38,6 +38,7 @@ pub struct HeavyState<'t> {
     pub memos: MemoCache,
     pub patterns: PatternCache,
     pub keywords: Ref<[Str]>,
+    pub strings: StrSet,
     pub tracer: &'t dyn Tracer,
 }
 
@@ -66,6 +67,7 @@ impl<'t> HeavyState<'t> {
             memos: MemoCache::new(),
             patterns: PatternCache::new(),
             keywords: [].into(),
+            strings: StrSet::new(),
             tracer: &NULL_TRACER,
         }
     }
@@ -75,6 +77,16 @@ impl<'t> HeavyState<'t> {
             .entry(pattern.to_string())
             .or_insert_with(|| Pattern::new(pattern).unwrap())
             .clone()
+    }
+
+    pub fn intern(&mut self, s: &str) -> Str {
+        if let Some(existing) = self.strings.get(s) {
+            return existing.clone();
+        }
+
+        let new: Str = s.into();
+        self.strings.insert(new.clone());
+        new
     }
 }
 

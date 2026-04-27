@@ -105,7 +105,7 @@ where
     fn configure(&mut self, cfg: &Cfg) {
         self.cursor_mut().configure(cfg);
 
-        if cfg.contains(&crate::cfg::CfgKey::Trace) {
+        if cfg.contains(&CfgKey::Trace) {
             self.set_trace(true);
         }
     }
@@ -146,6 +146,10 @@ where
 
     fn tracer(&self) -> &dyn Tracer {
         self.heavy.borrow().tracer
+    }
+
+    fn intern(&mut self, s: &str) -> Str {
+        self.with_heavy_mut(|heavy| heavy.intern(s))
     }
 
     fn get_pattern(&mut self, pattern: &str) -> Pattern {

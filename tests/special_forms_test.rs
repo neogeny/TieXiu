@@ -57,8 +57,8 @@ fn dot() -> Result<()> {
     "#;
     let grammar = tiexiu::compile(grammar, &[])?;
     let tree = parse_input(&grammar, "ab", &[])?;
-    // Dot matches any character
-    assert_eq!(tree.to_json(), json!(["a", "b"]));
+    // Dot matches any character, but does not retur it
+    assert_eq!(tree.to_json(), json!("b"));
     Ok(())
 }
 

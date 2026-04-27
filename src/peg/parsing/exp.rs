@@ -4,9 +4,16 @@
 use crate::api::error::nope::ParseResult;
 use crate::engine::Ctx;
 use crate::peg::error::nope::Yeap;
+use crate::peg::{Exp, ExpKind, ParseError, Parser};
+use crate::trees::Tree;
 use crate::types::Str;
 use crate::util::pyre;
-use crate::{Exp, ExpKind, ParseError, Tree};
+
+impl<C: Ctx> Parser<C> for Exp {
+    fn parse(&self, ctx: C) -> ParseResult<C> {
+        self.parse(ctx)
+    }
+}
 
 impl Exp {
     pub fn initialize_caches(&mut self) {
@@ -67,8 +74,8 @@ impl Exp {
             }
             ExpKind::Fail => Err(ctx.failure(start, ParseError::Fail)),
             ExpKind::Dot => {
-                if let Some(c) = ctx.next() {
-                    Ok(Yeap(ctx, Tree::Text(c.to_string().into())))
+                if ctx.next() {
+                    Ok(Yeap(ctx, Tree::Nil))
                 } else {
                     Err(ctx.failure(start, ParseError::NoMoreInput))
                 }
@@ -97,7 +104,7 @@ impl Exp {
             }
             ExpKind::Pattern(pattern) => {
                 if let Some(matched) = ctx.match_pattern(pattern) {
-                    Ok(Yeap(ctx, Tree::Text(matched.into())))
+                    Ok(Yeap(ctx, Tree::Text(matched.clone())))
                 } else {
                     Err(ctx.failure(
                         start,
