@@ -54,7 +54,7 @@ fancy-regex = "0.18"
 console = "0.16.3"
 
 # --- PyO3 Dependencies ---
-pyo3 = { version = "0.28", features = ["extension-module", "abi3-py38"], optional = true }
+pyo3 = { version = "0.28", features = ["extension-module", "abi3-py312"], optional = true }
 # pythonize = { version = "0.23", features = ["arbitrary_precision"], optional = true }
 
 # --- CLI Dependencies (Optional) ---
