@@ -37,6 +37,8 @@ Issues = "https://github.com/neogeny/tiexiu/issues"
 features = ["pyo3", "pyo3/abi3-py312", "pyo3/generate-import-lib"]
 module-name = "tiexiu.tiexiu"
 python-source = "python"
+#compatibility = "abi3"
+compatibility = "off"
 
 [tool.uv.sources]
 tiexiu = { workspace = true }
