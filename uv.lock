@@ -112,9 +112,6 @@ wheels = [
 [[package]]
 name = "tiexiu"
 source = { editable = "." }
-dependencies = [
-    { name = "maturin" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -129,7 +126,6 @@ test = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "maturin", specifier = ">=1.13.1" }]
 
 [package.metadata.requires-dev]
 dev = [
