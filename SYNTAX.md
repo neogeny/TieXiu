@@ -678,3 +678,270 @@ the `@@left_recursion` directive:
 ```ebnf
 @@left_recursion :: False
 ``
+
+
+## Grammar Syntax
+
+```console
+start ●─grammar─■
+
+grammar ●─ title=(`TATSU`) ──┬→─────────────────────────────────┬── rules+=(rule) ──┬→─────────────────────────────┬──⇥＄
+                             ├→──┬─ directives+=(directive) ─┬──┤                   ├→──┬─ rules+=(rule) ───────┬──┤
+                             │   └─ keywords+=(keyword) ─────┘  │                   │   └─ keywords+=(keyword) ─┘  │
+                             └─────────────────────────────────<┘                   └─────────────────────────────<┘
+
+directive ●─"@@"─ !["keyword"] ✂ ──┬─ name=(──┬─"comments"─────┬─)  ✂ "::" ✂  value=(regex) ────────────┬─ ✂ ─■
+                                   │          └─"eol_comments"─┘                                        │
+                                   ├─ name=("whitespace")  ✂ "::" ✂  value=(──┬─regex───┬─) ────────────┤
+                                   │                                          ├─string──┤               │
+                                   │                                          ├─"None"──┤               │
+                                   │                                          ├─"False"─┤               │
+                                   │                                          └─`None`──┘               │
+                                   ├─ name=(──┬─"nameguard"──────┬─)  ✂ ──┬─"::" ✂  value=(boolean) ─┬──┤
+                                   │          ├─"ignorecase"─────┤        └─ value=(``) ─────────────┘  │
+                                   │          ├─"left_recursion"─┤                                      │
+                                   │          ├─"parseinfo"──────┤                                      │
+                                   │          └─"memoization"────┘                                      │
+                                   ├─ name=("grammar")  ✂ "::" ✂  value=(word) ─────────────────────────┤
+                                   └─ name=("namechars")  ✂ "::" ✂  value=(string) ─────────────────────┘
+
+keywords ●───┬─keyword─┬───■
+             └────────<┘
+
+keyword ●─"@@keyword" ✂ "::"──┬─ +=(──┬─word───┬─) ─ ![──┬─":"─┬─]─┬───■
+                              │       └─string─┘         └─"="─┘   │
+                              └───────────────────────────────────<┘
+
+params ●─ +=(first_param) ──┬→────────────────────────────┬───■
+                            ├→"," +=(literal) ─ !["="] ✂ ─┤
+                            └────────────────────────────<┘
+
+first_param ●───┬─path────┬──■
+                └─literal─┘
+
+kwparams ●───┬─"," │ pair─┬───■
+             └───────────<┘
+
+the_params_at_last ●───┬─ kwparams=(kwparams) ────────────────────────┬──■
+                       ├─ params=(params) "," ✂  kwparams=(kwparams) ─┤
+                       └─ params=(params) ────────────────────────────┘
+
+paramdef ●───┬─"[" ✂  >(the_params_at_last) "]"─┬──■
+             ├─"(" ✂  >(the_params_at_last) ")"─┤
+             └─"::" ✂  params=(params) ─────────┘
+
+rule ●─ decorators=(──┬→──────────┬──)  name=(name)  ✂ ──┬─→ >(paramdef) ─┬───┬─→"<" ✂  base=(known_name) ─┬─ ∅ /=|::=|:=?/─ ✂  exp=(expre) ENDRULE ✂ ─■
+                      ├→decorator─┤                      └─→──────────────┘   └─→──────────────────────────┘
+                      └──────────<┘
+
+ENDRULE ●───┬─DEDENT─┬─
+            ├─BLANK──┤
+            ├─";"────┤ ─┘
+            └─⇥＄
+
+DEDENT ●─EOL/\S/──■
+
+BLANK ●─EOLEOL─■
+
+EOL ●─/(?m)[ \t]*$/─/(?m)(?:\r?\n|\r)?/──■
+
+decorator ●─"@"─ !["@"] ✂  =(──┬─"override"─┬─) ─■
+                               ├─"name"─────┤
+                               ├─"isname"───┤
+                               └─"nomemo"───┘
+
+pair ●─ +=(word) "=" ✂  +=(literal) ─■
+
+expre ●───┬─choice───┬──■
+          └─sequence─┘
+
+choice ●───┬─→"|" ✂ ─┬─ +=(option) ──┬─"|" ✂  +=(option) ─┬───■
+           └─→───────┘               └───────────────────<┘
+
+option ●─sequence─■
+
+sequence ●───┬── &[element","]──┬─"," │ element─┬───┬──■
+             │                  └──────────────<┘   │
+             └───┬── ![ENDRULE]element─┬────────────┘
+                 └────────────────────<┘
+
+element ●───┬─named────────┬──■
+            ├─term─────────┤
+            ├─override─────┤
+            └─rule_include─┘
+
+rule_include ●─">" ✂  =(known_name) ─■
+
+named ●───┬─named_list───┬──■
+          └─named_single─┘
+
+named_list ●─ name=(name) /\+[:=]/─ ✂  exp=(term) ─■
+
+named_single ●─ name=(name) /[:=]/─ ✂  exp=(term) ─■
+
+override ●───┬─override_list──────────────┬──■
+             ├─override_single────────────┤
+             └─override_single_deprecated─┘
+
+override_list ●─/\+=|@\+:/─ ✂  =(term) ─■
+
+override_single ●─/=|@:/─ ✂  =(term) ─■
+
+override_single_deprecated ●─"@" ✂  =(term) ─■
+
+term ●───┬─gather─────────────┬──■
+         ├─join───────────────┤
+         ├─left_join──────────┤
+         ├─right_join─────────┤
+         ├─empty_closure──────┤
+         ├─positive_closure───┤
+         ├─closure────────────┤
+         ├─optional───────────┤
+         ├─atom───────────────┤
+         ├─void───────────────┤
+         ├─skip_to────────────┤
+         ├─lookahead──────────┤
+         ├─negative_lookahead─┤
+         ├─cut────────────────┤
+         └─cut_deprecated─────┘
+
+group ●── !["(?:"]"(" ✂  =(expre) ")" ✂ ─■
+
+skip ●─"(?:" ✂  =(expre) ")" ✂ ─■
+
+gather ●── &[atom".{"] ✂ ──┬─positive_gather─┬──■
+                           └─normal_gather───┘
+
+positive_gather ●─ sep=(atom) ".{" exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
+
+normal_gather ●─ sep=(atom) ".{" ✂  exp=(expre) "}"──┬─→"*" ✂ ─┬─ ✂ ─■
+                                                     └─→───────┘
+
+join ●── &[atom"%{"] ✂ ──┬─positive_join─┬──■
+                         └─normal_join───┘
+
+positive_join ●─ sep=(atom) "%{" exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
+
+normal_join ●─ sep=(atom) "%{" ✂  exp=(expre) "}"──┬─→"*" ✂ ─┬─ ✂ ─■
+                                                   └─→───────┘
+
+left_join ●─ sep=(atom) "<{" ✂  exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
+
+right_join ●─ sep=(atom) ">{" ✂  exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
+
+positive_closure ●───┬─"{" =(expre) "}"/(?!\+=)[+-]/─ ✂ ─┬──■
+                     └─ =(atom) /(?!\+=)[+]/─ ✂ ─────────┘
+
+closure ●───┬─"{" =(expre) "}"──┬─→"*"─┬─ ✂ ─┬──■
+            │                   └─→────┘     │
+            └─ =(atom) "*" ✂ ────────────────┘
+
+empty_closure ●─"{}" ✂  =( ∅ ) ─■
+
+optional ●───┬─"[" ✂  =(expre) "]" ✂ ───────────┬──■
+             └─ =(atom) ─ ![──┬─"?\""─┬─]"?" ✂ ─┘
+                              ├─"?'"──┤
+                              └─"?/"──┘
+
+lookahead ●─"&" ✂  =(term) ─■
+
+negative_lookahead ●─"!" ✂  =(term) ─■
+
+skip_to ●─"->" ✂  =(term) ─■
+
+atom ●───┬─token────┬──■
+         ├─call─────┤
+         ├─dot──────┤
+         ├─pattern──┤
+         ├─group────┤
+         ├─eol──────┤
+         ├─eof──────┤
+         ├─skip─────┤
+         ├─alert────┤
+         └─constant─┘
+
+call ●─word─■
+
+void ●─"()" ✂ ─■
+
+fail ●─"!()" ✂ ─■
+
+cut ●─"~" ✂ ─■
+
+cut_deprecated ●─">>" ✂ ─■
+
+known_name ●─name ✂ ─■
+
+name ●─word─■
+
+constant ●── &["`"]──┬─/(?ms)```((?:.|\n)*?)```/──┬──■
+                     ├─"`" =(literal) "`"─────────┤
+                     └─/`(.*?)`/──────────────────┘
+
+alert ●─ level=(/\^+/─)  message=(constant) ─■
+
+token ●───┬─string─────┬──■
+          └─raw_string─┘
+
+literal ●───┬─string─────┬──■
+            ├─raw_string─┤
+            ├─boolean────┤
+            ├─word───────┤
+            ├─hex────────┤
+            ├─float──────┤
+            ├─int────────┤
+            └─null───────┘
+
+string ●── &[──┬─"\""─┬─]──┬─multiline_string─┬──■
+               └─"'"──┘    ├─singlequoted─────┤
+                           └─doublequoted─────┘
+
+singlequoted ●─SINGLEQUOTED─■
+
+doublequoted ●─DOUBLEQUOTED─■
+
+raw_string ●─/r(?=["'])/─ =(STRING) ─■
+
+STRING ●───┬─SINGLEQUOTED─┬──■
+           └─DOUBLEQUOTED─┘
+
+SINGLEQUOTED ●─/'((?:[^'\n]|\\'|\\\\)*?)/─ ✂ ─■
+
+DOUBLEQUOTED ●─/"((?:[^"\n]|\\"|\\\\)*?)"/─ ✂ ─■
+
+multiline_string ●───┬─/(?ms)'''((?:\\\\|\\.|(?!''').)*?)/─ ✂ ────┬──■
+                     └─/(?ms)"""((?:\\\\|\\.|(?!""").)*?)"""/─ ✂ ─┘
+
+hex ●─/0[xX](?:\d|[a-fA-F])+/──■
+
+float ●─/[-+]?(?:\d+\.\d*|\d*\.\d+)(?:[Ee][-+]?\d+)?/──■
+
+int ●─/[-+]?\d+/──■
+
+path ●─/(?!\d)\w+(?:::(?!\d)\w+)+/──■
+
+word ●─/(?!\d)\w+/──■
+
+dot ●─"/./"─■
+
+pattern ●─regex─■
+
+regex ●───┬─deprecated_regex───────────────┬──■
+          └── !["?/"]──┬─REGEX──────────┬──┘
+                       └─"?" =(STRING) ─┘
+
+REGEX ●── &["/"]/(?ms)/((?:[^/\\]|\\/|\\.)*)//─ ✂ ─■
+
+deprecated_regex ●─"?/" ✂  =(/(?ms)((?:[^/\\]|\\/|\\.)*)/─)  ✂ "/?"─■
+
+boolean ●───┬─"True"──┬──■
+            └─"False"─┘
+
+null ●─"None"─■
+
+eof ●─"$" ✂ ─■
+
+eol ●─"$->"─■
+
+
+```
