@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::api::{boot_grammar_json, boot_grammar_pretty, compile, load, parse_input};
+use crate::api::{boot_grammar_pretty, boot_grammar_to_json_string, compile, load, parse_input};
 use crate::cfg::CfgA;
 pub use crate::json::exp_json::*;
 pub use crate::peg::pretty::*;
@@ -141,7 +141,7 @@ pub fn cli() -> Result<()> {
                 (boot_grammar()?.railroads(), "apl")
             } else {
                 // Since json is default_value_t = true, this is the fallthrough
-                (boot_grammar_json(cfga)?, "json")
+                (boot_grammar_to_json_string(cfga)?, "json")
             }
         }
         Commands::Run {

@@ -3,7 +3,7 @@
 
 [package]
 name = "TieXiu"
-version = "0.1.1-alpha.5"
+version = "0.1.1-alpha.6"
 edition = "2024"
 authors = ["Juancarlo Añez <apalala@gmail.com>"]
 description = "A port of the TatSu PEG parser generator to Rust"
@@ -11,6 +11,16 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/neogeny/tiexiu"
 readme = "README.md"
 exclude = ["pyproject.toml", "__pycache__"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+# The default target for the documentation
+default-target = "x86_64-unknown-linux-gnu"
+
+# Crucial for PyO3: This allows the doc build to succeed without a
+# real Python interpreter or headers present on the docs.rs builder.
+rustdoc-args = ["--cfg", "docsrs"]
 
 #[lints.clippy]
 #collapsible_match = "allow"

@@ -23,6 +23,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Topic :: Software Development :: Compilers",
     "Topic :: Text Processing :: General",
+    "Development Status :: 3 - Alpha",
 ]
 
 [project.urls]

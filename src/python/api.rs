@@ -86,7 +86,7 @@ pub(crate) fn load_boot_as_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<
     } else {
         Vec::new()
     };
-    let result = crate::api::load_boot_as_json(&cfg)
+    let result = crate::api::boot_grammar_to_json_string(&cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     Ok(result)
 }
@@ -99,7 +99,7 @@ pub(crate) fn boot_grammar_as_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResu
     } else {
         Vec::new()
     };
-    let result = crate::api::boot_grammar_json(&cfg)
+    let result = crate::api::boot_grammar_to_json_string(&cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     Ok(result)
 }
@@ -133,7 +133,7 @@ pub(crate) fn parse_to_json(
     } else {
         Vec::new()
     };
-    let result = crate::api::parse_to_json(grammar, text, &cfg)
+    let result = crate::api::parse_to_json_string(grammar, text, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     Ok(result)
 }

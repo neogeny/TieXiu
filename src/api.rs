@@ -12,10 +12,6 @@ pub use crate::trees::Tree;
 pub use crate::util;
 pub use crate::{Error, Result};
 
-pub(crate) fn boot_grammar() -> Result<Grammar> {
-    Ok(crate::json::boot::boot_grammar()?)
-}
-
 pub fn parse_grammar(grammar: &str, cfg: &CfgA) -> Result<Tree> {
     parse_grammar_with(StrCursor::new(grammar), cfg)
 }
@@ -112,26 +108,18 @@ pub fn pretty_tree_json(tree: &Tree, _cfg: &CfgA) -> Result<String> {
     tree.to_json_string().map_err(Error::from)
 }
 
-pub fn load_boot(_cfg: &CfgA) -> Result<Grammar> {
-    boot_grammar()
+pub fn parse(grammar: &str, text: &str, cfg: &CfgA) -> Result<Tree> {
+    let parser = compile(grammar, cfg)?;
+    parse_input(&parser, text, cfg)
 }
 
-pub fn load_boot_as_json(cfg: &CfgA) -> Result<String> {
-    let grammar = load_boot(cfg)?;
-    grammar.to_json_string().map_err(Error::from)
+pub fn parse_to_json(grammar: &str, text: &str, cfg: &CfgA) -> Result<serde_json::Value> {
+    let parser = compile(grammar, cfg)?;
+    parse_input_to_json(&parser, text, cfg)
 }
-
-pub fn boot_grammar_json(_cfg: &CfgA) -> Result<String> {
-    let boot = boot_grammar()?;
-    match boot.to_json_string() {
-        Ok(s) => Ok(s),
-        Err(e) => Err(e.into()),
-    }
-}
-
-pub fn boot_grammar_pretty(_cfg: &CfgA) -> Result<String> {
-    let boot = boot_grammar()?;
-    Ok(boot.pretty_print())
+pub fn parse_to_json_string(grammar: &str, text: &str, cfg: &CfgA) -> Result<String> {
+    let parser = compile(grammar, cfg)?;
+    parse_input_to_json_string(&parser, text, cfg)
 }
 
 pub fn parse_input(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<Tree> {
@@ -143,7 +131,12 @@ pub fn parse_input(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<Tree> {
     }
 }
 
-pub fn parse_input_to_json_str(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<String> {
+pub fn parse_input_to_json(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<serde_json::Value> {
+    let tree = parse_input(parser, text, cfg)?;
+    Ok(tree.to_json())
+}
+
+pub fn parse_input_to_json_string(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<String> {
     let tree = parse_input(parser, text, cfg)?;
     match tree.to_json_string() {
         Ok(string) => Ok(string),
@@ -151,12 +144,25 @@ pub fn parse_input_to_json_str(parser: &Grammar, text: &str, cfg: &CfgA) -> Resu
     }
 }
 
-pub fn parse(grammar: &str, text: &str, cfg: &CfgA) -> Result<Tree> {
-    let parser = compile(grammar, cfg)?;
-    parse_input(&parser, text, cfg)
+pub fn boot_grammar() -> Result<Grammar> {
+    Ok(crate::json::boot::boot_grammar()?)
 }
 
-pub fn parse_to_json(grammar: &str, text: &str, cfg: &CfgA) -> Result<String> {
-    let parser = compile(grammar, cfg)?;
-    parse_input_to_json_str(&parser, text, cfg)
+pub fn load_boot(_cfg: &CfgA) -> Result<Grammar> {
+    boot_grammar()
+}
+
+pub fn boot_grammar_to_json(cfg: &CfgA) -> Result<serde_json::Value> {
+    let grammar = load_boot(cfg)?;
+    Ok(grammar.to_json())
+}
+
+pub fn boot_grammar_to_json_string(cfg: &CfgA) -> Result<String> {
+    let grammar = load_boot(cfg)?;
+    grammar.to_json_string().map_err(Error::from)
+}
+
+pub fn boot_grammar_pretty(_cfg: &CfgA) -> Result<String> {
+    let boot = boot_grammar()?;
+    Ok(boot.pretty_print())
 }

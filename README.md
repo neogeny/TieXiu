@@ -1,11 +1,10 @@
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/neogeny/TieXiu?utm_source=badge)
 
-# 金秀  铁修 TieXiu
+# 铁修 TieXiu
 
 A high-performance port of **TatSu** to Rust.
 
-**TieXiu** (铁修) is a PEG (Parsing Expression Grammar) engine that implements the flexibility and power of the original **[TatSu][]
-** lineage into a memory-safe, high-concurrency architecture optimized for modern CPU caches.
+**TieXiu** (铁修) is a PEG (Parsing Expression Grammar) engine that implements the flexibility and power of the original **[TatSu][] ** lineage into a memory-safe, high-concurrency architecture optimized for modern CPU caches.
 
 [TatSu]: https://tatsu.readthedocs.io/en/stable/
 
@@ -18,127 +17,87 @@ The [TatSu Documentation][] provides a vision of where the **TieXiu** project is
 
 [TatSu Documentation]: https://tatsu.readthedocs.io/
 
-**TatSu
-** is a mature project with an important user base so it's difficult to make certain changes even if they are improvements or fixes for long-standing quirks (as well known within experienced software engineers, a long-lived quirk becomes a feature).
-**TieXiu** is an opportunity to start from scratch, with a modern approach, even if the grammar syntax and its semantics are preserved.
+**TieXiu** is foremost a Rust library that is also published as a Python library with the help of PyO3/Maturin. The Rust API may return objects of types in the internal parser or tree model. The Python API has strings as input and `json.dumps()` compatible Python objects as output.
 
-## Current Project Status: Alpha
+**TatSu** is a mature project with an important user base so it's difficult to make certain changes even if they are improvements or fixes for long-standing quirks (as well known within experienced software engineers, a long-lived quirk becomes a feature). **TieXiu** is an opportunity to start from scratch, with a modern approach, even if the grammar syntax and its semantics are preserved.
 
-The project is functionally complete.
+## Non-Features
 
-* [x] Implementation is complete for the core execution engine, the grammar model, the parsing engine, and support for left-recursive grammars.
+Most features of **TatSu** are available in **TieXiu**. Some features have not yet been implemented, and a few never will:
 
-* [x] Result `Tree` construction is complete, with automated conversion to `serde__json::Value`, which provides access to the `serde` suite of serializers.
+* [ ] Generation of synthetic classes from grammar parameters will not be implemented in Rust.
+* [ ] Generation of source code with an object model for deinitions in the grammar may be implemented if a way is found to make the parser or postprocessing bind the Tree output of a parse to the model ([serde_json][] provides the infrastructure for trying).
+* [ ] Code generation of a parser recently moved in **TatSu** to the loading of a model of the Grammar and using it as parser. Although the generated procedural parser may produce 1.3x increased throughput in Python, supporting generated code is hard and it complicates the internal interfaces. For Rust, **TieXiu** alreay knows how to load _fast_ a Grammar model from **TatSu** JSON, which it can already produce. and a generated model constructor would be precompiled.
+* [ ] Parsing of boolean and numeric values happens in **TatSu** through synthetic models, which call the constructors for those types passing the parsed strings. 
 
-    ```rust
-    #[test]
-    fn test_optional_closure() -> Result<()> {
-        let grammar = r#"
-            start = foo+:"x" foo:{"y"}* {foo:"z"}* ;
-        "#;
-    
-        let model = compile(grammar, &[])?;
-        let ast = parse_input(&model, "x y y z z")?;
-        assert_eq!(
-            ast,
-            m(&[("foo", s(&[t("x"), c(&[t("y"), t("y")]), t("z"), t("z")]))])
-        );
-        assert_eq!(
-            ast.to_value(), 
-            serde_json::json!({"foo":["x", ["y","y"], "z", "z"]})
-  );
-        Ok(())
-    }
-    ```
+[serde_json]: https://docs.rs/serde_json/latest/serde_json/ 
 
-* [x] Compilation of **TatSu**/**TieXiu** grammars into a `tiexiu::peg::Grammar` object that implements parsing is complete.
+## API
 
-* [x] Pretty-printing a `Grammar` back to grammar text is complete.
+The needs of most users are met by parsing input with the rules in a grammar and reciving the structure output as a JSON-compatible value. For other use cases, **TieXiu** exposes its internal model and APIs (to be docummented).
 
-* [ ] Most tests pass, but most need reviewed because they were ported by an AI Agent from their Python versions in **TatSu**, so they may not be in fact testling anyhting.
 
-    ```console
-    Summary [   4.543s] 310 tests run: 256 passed, 54 failed, 8 skipped
-    ```
+## The Python API
 
-### Lean Parsing Context
+The return values of `Any` are of the basic Python types, as defined in the `json` module documentation (see [Encoders and Decoders][] ). 
 
-**TieXiu** uses the runtime stack as the parsing state stack. A state
-change has a 16-byte stack footprint consisting of two pointers: one for the *Volatile State* (Input Cursor) and one for the *Heavy Stated* (Grammar + Memoization Cache). This allows for deep recursive descent with
-minimal stack pressure and $O(1)$ branching costs. The `Cursor`
-implementation for parsing text (`StrCursor`) uses 16 bytes (`&str` +
-`usize`) and has copy-on-write semantics during a parse (grammar elements
-that don't advance over the input share the same cursor).
+[Encoders and Decoders]: https://docs.python.org/3/library/json.html#json-to-py-table
 
-### Copy-on-Write State Transitios
+| JSON          | Python |
+|---------------|--------|
+| object        | dict   |
+| array         | list   |
+| string        | str    |
+| number (int)  | int    |
+| number (real) | float  |
+| true          | True   |
+| false         | False  |
+| null          | None   |
 
-Backtracking in **TieXiu** is *lazy*. Cloning a context/state only increments reference counts. The engine leverages the Rust runtime stack to handle state changes. Branching at choice points is a
-*16-byte* clone of the state, with a
-*16-byte* (for text) allocation only when the state is mutated. Failed parses restore the cursor position and register the furthest failure position for error reporting. The state returned occupies the same space as the original state.
+Keyword arguments can be passed for runtime configuration. The only recognized argument is `trace=`.
 
-A CST may use
-*64-bytes* per atomic node plus space proportional to the input matched, but CST are only kept for the currently successful path on the parse, and are dropped as soon as an option fails. CST are compacted on the boundary of the successful parse of a grammar rule node.
+These functions are available from package `tiexiu`.
 
-The failure path returns the furthest position reached in the input and a message about the error encountered there. The same error value is passed back during backtracking until a branch point is reached and another path can be tried. At branching, the error value belonging to the furthes position in the input is chosen to pass back. The error value also passes back the
-_cut_ state so branches can commit to a failed alternative if it was fixed with a cut.
+```python
+def parse(grammar: str, text: str, **kwargs: Any) -> Any
+def parse_grammar(grammar: str, **kwargs: Any) -> Any:
+def parse_grammar_to_json(grammar: str, **kwargs: Any) -> Any:
+def parse_to_json(grammar: str, text: str, **kwargs: Anyt) -> Any:
+def pretty(grammar: str, **kwargs: Any) -> str:
+def compile_to_json(grammar: str, **kwargs: Any) -> Any:
+```
 
-### Left Recursion Support
+## The Rust API
 
-TieXiu features a complete implementation for handling left-recursive
-grammars. A pre-pass _analysis_ identifies and marks recursive cycles, while the _runtime_ includes the necessary logic to grow the recursive content by iteration instead of recursion.
+```rust
+pub fn parse_grammar(grammar: &str, cfg: &CfgA) -> Result<Tree>;
+pub fn parse_grammar_to_json(grammar: &str, cfg: &CfgA) -> Result<serde_json::Value>;
+pub fn parse_grammar_to_json_string(grammar: &str, cfg: &CfgA) -> Result<String>;
+pub fn parse_grammar_with<U>(cursor: U, cfg: &CfgA) -> Result<Tree>
+pub fn parse_grammar_to_json_with<U>(cursor: U, cfg: &CfgA) -> Result<serde_json::Value>
+pub fn compile(grammar: &str, cfg: &CfgA) -> Result<Grammar>;
+pub fn compile_to_json(grammar: &str, cfg: &CfgA) -> Result<serde_json::Value>;
+pub fn compile_to_json_string(grammar: &str, cfg: &CfgA) -> Result<String>;
+pub fn compile_with<U>(cursor: U, cfg: &CfgA) -> Result<Grammar>
+pub fn compile_to_json_with<U>(cursor: U, cfg: &CfgA) -> Result<serde_json::Value>
+pub fn load(json: &str, _cfg: &CfgA) -> Result<Grammar>;
+pub fn load_to_json(json: &str, cfg: &CfgA) -> Result<serde_json::Value>;
+pub fn load_tree(json: &str, _cfg: &CfgA) -> Result<Tree>;
+pub fn load_tree_to_json(json: &str, cfg: &CfgA) -> Result<serde_json::Value>;
+pub fn grammar_pretty(grammar: &str, cfg: &CfgA) -> Result<String>;
+pub fn pretty_tree(tree: &Tree, _cfg: &CfgA) -> Result<String>;
+pub fn pretty_tree_json(tree: &Tree, _cfg: &CfgA) -> Result<String>;
+pub fn parse(grammar: &str, text: &str, cfg: &CfgA) -> Result<Tree>;
+pub fn parse_to_json(grammar: &str, text: &str, cfg: &CfgA) -> Result<serde_json::Value>;
+pub fn parse_to_json_string(grammar: &str, text: &str, cfg: &CfgA) -> Result<String>;
+pub fn parse_input(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<Tree>;
+pub fn parse_input_to_json(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<serde_json::Value>;
+pub fn parse_input_to_json_string(parser: &Grammar, text: &str, cfg: &CfgA) -> Result<String>;
+```
 
-### Complete Grammar Model
+## Roadmap
 
-The building blocks for grammar models are implemented with a clear chain of ownership. The `Grammar` acts as the root container owning the `Rule` map, while each `Rule` owns its
-`Model` definition. This hierarchy eliminates reference proliferation and simplifies lifetime management.
-
-### Milestone: From CST to AST
-
-The algebra for creating **Concrete Syntax Trees (CST)** was ported from
-**TatSu** to **TieXiu**, with optimizations. Instead of computing the
-resulting CST during parsing, the engine generates unoptimized trees that
-are normalized into their concrete versions at rule boundaries. **TieXiu** uses the **TatSu** semantics for **Abstract Syntax Tree (AST)
-**, in which named elements in a rule definition force the result to be a mapping of names to parsed elements.
-
-Rust doesn't allow the creation of synthetic types at runtime, so parsing to native types will require code generation for the desired model and deserialization of the JSON-compatible result of a parse into the desired model nodes.
-**TiexSiu**'s own `compiler.rs` may be used a an example of how to navigate a `Tree` to produce an object model (a `Grammar` in the case of `compiler.rs`).  `Tree.to_value()` can be used to objtain a
-`serde_json::Value` version of a `Tree`, and some may prefer to use that
-
-### Packrat & Memoization
-
-All branches in a parse use a shared *Memoization Cache* to achieve the `O(N) ` complexity of packrat parsers. The cache is pruned at `cut` points to place a bound on memory use and make the lookups more efficient.
-
-### The Bootstrap Plan
-
-* [x] A critical upcoming milestone is the **Bootstrap Process**. The roadmap includes **Self-Hosting** through the implementation of a **TieXiu
-  ** grammar that describes its own EBNF. Grammars, including the grammar for grammars, will be passed to **TieXiu** using **TatSu**'s JSON export format for deseriallization into models.
-
-* [ ] After the initial bootstrap (**TieXiu** parsing grammars in its own grammar language) either **TieXiu** or **TatSu** will generate the Rust code necessary for faster parser bootstrap. Like in recent versions of *
-  *TatSu** the generated Rust code will not be procedural code that reimplements parsing, but a model of the parser that can be pre-compiled into Rust projects. The model will be obtained with:
-
-    ```rust
-    format!("{:#?}", grammar);
-    ```
-
-* [ ] At the moment **TieXiu** is capable of reading the JSON representation of grammars that **TatSu
-  ** generates. In a two-step process the JSON is read and parsed to a model close to its structure. In a second step the intermediate model is translated to a grammar model that can be use for parsing.
-
-* [x] The model pretty-prints to the original grammar text in TatSu-compatibleEBNF
-* [x] **TieXiu** is capable of parsing the JSON representation of the **TatSu** EBNF grammar language
-* [x] **TieXiu** should be capable of parsing the EBNF text for the **TatSu** grammar language
-* [x] Any EBNF grammar should be parsed by the tool and applied to input in the language described by the gramar
-
-## Features
-
-* [x] **16-byte Handle Size**: Optimized for L1 cache and deep recursion.
-* [x] **32-byte State Changes**: Efficient CoW allocation on the Rust runtime stack.
-* [x] **Complete Parsing Engine**: Core PEG execution logic is fully implemented.
-* [x] **Left Recursion**: Both analysis and runtime support are complete.
-* [x] **Complete Grammar Model**: Rules and Models are fully defined and owned.
-* [x] **Thread-Safe Grammar**: Static grammar structure can be shared across multiple threads.
-* [x] **Efficient Memoization**: Global cache consistency across backtracking branches.
-* [x] **Object-Safe Cursors**: Abstract `Cursor` trait allows for string, byte, or custom stream inputs.
-* [x] **Self-Hosting Bootstrap**: (Planned) Engine parsing its own EBNF.
+The project is functionally complete, as described before. Comments about the implementation strategies and possible improvements are now in [RODADMAP](ROADMAP.md).
 
 ## License
 
@@ -156,254 +115,265 @@ Unless explicitly stated otherwise, any contribution intentionally submitted for
 ## Grammar Syntax
 
 ```console
+start ●─grammar─■
 
-    start ●─grammar─■
+grammar ●─ title=(`TATSU`) ──┬→─────────────────────────────────┬── rules+=(rule) ──┬→─────────────────────────────┬──⇥＄
+                             ├→──┬─ directives+=(directive) ─┬──┤                   ├→──┬─ rules+=(rule) ───────┬──┤
+                             │   └─ keywords+=(keyword) ─────┘  │                   │   └─ keywords+=(keyword) ─┘  │
+                             └─────────────────────────────────<┘                   └─────────────────────────────<┘
 
-    grammar[Grammar] ●─ [title](`TATSU`)──┬→───────────────────────────────────┬── [`rules`]+(rule)──┬→───────────────────────────────┬──⇥＄
-                                          ├→──┬─ [`directives`]+(directive)─┬──┤                     ├→──┬─ [`rules`]+(rule)───────┬──┤
-                                          │   └─ [`keywords`]+(keyword)─────┘  │                     │   └─ [`keywords`]+(keyword)─┘  │
-                                          └───────────────────────────────────<┘                     └───────────────────────────────<┘
+directive ●─"@@"─ !["keyword"] ✂ ──┬─ name=(──┬─"comments"─────┬─)  ✂ "::" ✂  value=(regex) ────────────┬─ ✂ ─■
+                                   │          └─"eol_comments"─┘                                        │
+                                   ├─ name=("whitespace")  ✂ "::" ✂  value=(──┬─regex───┬─) ────────────┤
+                                   │                                          ├─string──┤               │
+                                   │                                          ├─"None"──┤               │
+                                   │                                          ├─"False"─┤               │
+                                   │                                          └─`None`──┘               │
+                                   ├─ name=(──┬─"nameguard"──────┬─)  ✂ ──┬─"::" ✂  value=(boolean) ─┬──┤
+                                   │          ├─"ignorecase"─────┤        └─ value=(``) ─────────────┘  │
+                                   │          ├─"left_recursion"─┤                                      │
+                                   │          ├─"parseinfo"──────┤                                      │
+                                   │          └─"memoization"────┘                                      │
+                                   ├─ name=("grammar")  ✂ "::" ✂  value=(word) ─────────────────────────┤
+                                   └─ name=("namechars")  ✂ "::" ✂  value=(string) ─────────────────────┘
+
+keywords ●───┬─keyword─┬───■
+             └────────<┘
 
-    directive ●─'@@'─ !['keyword'] ✂ ───┬─ [name](──┬─'comments'─────┬─) ✂ ─'::' ✂ ─ [value](regex)────────────┬─ ✂ ──■
-                                        │           └─'eol_comments'─┘                                         │
-                                        ├─ [name]('whitespace') ✂ ─'::' ✂ ─ [value](──┬─regex───┬─)────────────┤
-                                        │                                             ├─string──┤              │
-                                        │                                             ├─'None'──┤              │
-                                        │                                             ├─'False'─┤              │
-                                        │                                             └─`None`──┘              │
-                                        ├─ [name](──┬─'nameguard'──────┬─) ✂ ───┬─'::' ✂ ─ [value](boolean)─┬──┤
-                                        │           ├─'ignorecase'─────┤        └─ [value](`True`)──────────┘  │
-                                        │           ├─'left_recursion'─┤                                       │
-                                        │           ├─'parseinfo'──────┤                                       │
-                                        │           └─'memoization'────┘                                       │
-                                        ├─ [name]('grammar') ✂ ─'::' ✂ ─ [value](word)─────────────────────────┤
-                                        └─ [name]('namechars') ✂ ─'::' ✂ ─ [value](string)─────────────────────┘
-
-    keywords ●───┬─keywords─┬───■
-                 └─────────<┘
-
-    keyword ●─'@@keyword' ✂ ─'::' ✂ ───┬→──────────────────────────────────┬───■
-                                       ├→ @+(──┬─word───┬─)─ ![──┬─':'─┬─]─┤
-                                       │       └─string─┘        └─'='─┘   │
-                                       └──────────────────────────────────<┘
+keyword ●─"@@keyword" ✂ "::"──┬─ +=(──┬─word───┬─) ─ ![──┬─":"─┬─]─┬───■
+                              │       └─string─┘         └─"="─┘   │
+                              └───────────────────────────────────<┘
 
-    the_params_at_last ●───┬─ [kwparams](kwparams)─────────────────────────┬──■
-                           ├─ [params](params)',' ✂ ─ [kwparams](kwparams)─┤
-                           └─ [params](params)─────────────────────────────┘
+params ●─ +=(first_param) ──┬→────────────────────────────┬───■
+                            ├→"," +=(literal) ─ !["="] ✂ ─┤
+                            └────────────────────────────<┘
 
-    paramdef ●───┬─'[' ✂ ─ >(the_params_at_last) ']'─┬──■
-                 ├─'(' ✂ ─ >(the_params_at_last) ')'─┤
-                 └─'::' ✂ ─ [params](params)─────────┘
+first_param ●───┬─path────┬──■
+                └─literal─┘
 
-    rule[Rule] ●─ [decorators](──┬→──────────┬──) [name](name) ✂ ───┬─→ >(paramdef) ─┬───┬─→'<' ✂ ─ [base](known_name)─┬───┬─'='──┬─ ✂ ─ [exp](expre)ENDRULE ✂ ──■
-                                 ├→decorator─┤                      └─→──────────────┘   └─→───────────────────────────┘   ├─':='─┤
-                                 └──────────<┘                                                                             └─':'──┘
+kwparams ●───┬─"," │ pair─┬───■
+             └───────────<┘
 
-    ENDRULE ●───┬── &[UNINDENTED]──────┬──■
-                ├─EMPTYLINE──┬─→';'─┬──┤
-                │            └─→────┘  │
-                ├─⇥＄                  │
-                └─';'──────────────────┘
+the_params_at_last ●───┬─ kwparams=(kwparams) ────────────────────────┬──■
+                       ├─ params=(params) "," ✂  kwparams=(kwparams) ─┤
+                       └─ params=(params) ────────────────────────────┘
 
-    UNINDENTED ●─/(?=\s*(?:\r?\n|\r)[^\s])/──■
+paramdef ●───┬─"[" ✂  >(the_params_at_last) "]"─┬──■
+             ├─"(" ✂  >(the_params_at_last) ")"─┤
+             └─"::" ✂  params=(params) ─────────┘
 
-    EMPTYLINE ●─/(?:\s*(?:\r?\n|\r)){2,}/──■
+rule ●─ decorators=(──┬→──────────┬──)  name=(name)  ✂ ──┬─→ >(paramdef) ─┬───┬─→"<" ✂  base=(known_name) ─┬─ ∅ /=|::=|:=?/─ ✂  exp=(expre) ENDRULE ✂ ─■
+                      ├→decorator─┤                      └─→──────────────┘   └─→──────────────────────────┘
+                      └──────────<┘
 
-    decorator ●─'@'─ !['@'] ✂ ─ @(──┬─'override'─┬─)─■
-                                    ├─'name'─────┤
-                                    └─'nomemo'───┘
+ENDRULE ●───┬─DEDENT─┬─
+            ├─BLANK──┤
+            ├─";"────┤ ─┘
+            └─⇥＄
 
-    params ●─ @+(first_param)──┬→────────────────────────────┬───■
-                               ├→',' @+(literal)─ !['='] ✂ ──┤
-                               └────────────────────────────<┘
+DEDENT ●─EOL/\S/──■
 
-    first_param ●───┬─path────┬──■
-                    └─literal─┘
+BLANK ●─EOLEOL─■
 
-    kwparams ●───┬→────────────┬───■
-                 ├→',' ✂ ─pair─┤
-                 └────────────<┘
+EOL ●─/(?m)[ \t]*$/─/(?m)(?:\r?\n|\r)?/──■
 
-    pair ●─ @+(word)'=' ✂ ─ @+(literal)─■
+decorator ●─"@"─ !["@"] ✂  =(──┬─"override"─┬─) ─■
+                               ├─"name"─────┤
+                               ├─"isname"───┤
+                               └─"nomemo"───┘
 
-    expre ●───┬─choice───┬──■
-              └─sequence─┘
+pair ●─ +=(word) "=" ✂  +=(literal) ─■
 
-    choice[Choice] ●───┬─→'|' ✂ ──┬─ @+(option)──┬─'|' ✂ ─ @+(option)─┬───■
-                       └─→────────┘              └───────────────────<┘
+expre ●───┬─choice───┬──■
+          └─sequence─┘
 
-    option[Option] ●─ @(sequence)─■
+choice ●───┬─→"|" ✂ ─┬─ +=(option) ──┬─"|" ✂  +=(option) ─┬───■
+           └─→───────┘               └───────────────────<┘
 
-    sequence[Sequence] ●───┬── &[element',']──┬→───────────────┬───┬──■
-                           │                  ├→',' ✂ ─element─┤   │
-                           │                  └───────────────<┘   │
-                           └───┬── ![ENDRULE]element─┬─────────────┘
-                               └────────────────────<┘
+option ●─sequence─■
 
-    element ●───┬─rule_include─┬──■
-                ├─named────────┤
-                ├─override─────┤
-                └─term─────────┘
+sequence ●───┬── &[element","]──┬─"," │ element─┬───┬──■
+             │                  └──────────────<┘   │
+             └───┬── ![ENDRULE]element─┬────────────┘
+                 └────────────────────<┘
 
-    rule_include[RuleInclude] ●─'>' ✂ ─ @(known_name)─■
+element ●───┬─named────────┬──■
+            ├─term─────────┤
+            ├─override─────┤
+            └─rule_include─┘
 
-    named ●───┬─named_list───┬──■
-              └─named_single─┘
+rule_include ●─">" ✂  =(known_name) ─■
 
-    named_list[NamedList] ●─ [name](name)'+:' ✂ ─ [exp](term)─■
+named ●───┬─named_list───┬──■
+          └─named_single─┘
 
-    named_single[Named] ●─ [name](name)':' ✂ ─ [exp](term)─■
+named_list ●─ name=(name) /\+[:=]/─ ✂  exp=(term) ─■
 
-    override ●───┬─override_list──────────────┬──■
-                 ├─override_single────────────┤
-                 └─override_single_deprecated─┘
+named_single ●─ name=(name) /[:=]/─ ✂  exp=(term) ─■
 
-    override_list[OverrideList] ●─'@+:' ✂ ─ @(term)─■
+override ●───┬─override_list──────────────┬──■
+             ├─override_single────────────┤
+             └─override_single_deprecated─┘
 
-    override_single[Override] ●─'@:' ✂ ─ @(term)─■
+override_list ●─/\+=|@\+:/─ ✂  =(term) ─■
 
-    override_single_deprecated[Override] ●─'@' ✂ ─ @(term)─■
+override_single ●─/=|@:/─ ✂  =(term) ─■
 
-    term ●───┬─void───────────────┬──■
-             ├─gather─────────────┤
-             ├─join───────────────┤
-             ├─left_join──────────┤
-             ├─right_join─────────┤
-             ├─empty_closure──────┤
-             ├─positive_closure───┤
-             ├─closure────────────┤
-             ├─optional───────────┤
-             ├─skip_to────────────┤
-             ├─lookahead──────────┤
-             ├─negative_lookahead─┤
-             ├─cut────────────────┤
-             ├─cut_deprecated─────┤
-             └─atom───────────────┘
+override_single_deprecated ●─"@" ✂  =(term) ─■
 
-    group[Group] ●─'(' ✂ ─ @(expre)')' ✂ ──■
+term ●───┬─gather─────────────┬──■
+         ├─join───────────────┤
+         ├─left_join──────────┤
+         ├─right_join─────────┤
+         ├─empty_closure──────┤
+         ├─positive_closure───┤
+         ├─closure────────────┤
+         ├─optional───────────┤
+         ├─atom───────────────┤
+         ├─void───────────────┤
+         ├─skip_to────────────┤
+         ├─lookahead──────────┤
+         ├─negative_lookahead─┤
+         ├─cut────────────────┤
+         └─cut_deprecated─────┘
 
-    gather ●── &[atom'.{'] ✂ ───┬─positive_gather─┬──■
-                                └─normal_gather───┘
+group ●── !["(?:"]"(" ✂  =(expre) ")" ✂ ─■
 
-    positive_gather[PositiveGather] ●─ [sep](atom)'.{' [exp](expre)'}'──┬─'+'─┬─ ✂ ──■
-                                                                        └─'-'─┘
+skip ●─"(?:" ✂  =(expre) ")" ✂ ─■
 
-    normal_gather[Gather] ●─ [sep](atom)'.{' ✂ ─ [exp](expre)'}'──┬─→'*' ✂ ──┬─ ✂ ──■
-                                                                  └─→────────┘
+gather ●── &[atom".{"] ✂ ──┬─positive_gather─┬──■
+                           └─normal_gather───┘
 
-    join ●── &[atom'%{'] ✂ ───┬─positive_join─┬──■
-                              └─normal_join───┘
+positive_gather ●─ sep=(atom) ".{" exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
 
-    positive_join[PositiveJoin] ●─ [sep](atom)'%{' [exp](expre)'}'──┬─'+'─┬─ ✂ ──■
-                                                                    └─'-'─┘
+normal_gather ●─ sep=(atom) ".{" ✂  exp=(expre) "}"──┬─→"*" ✂ ─┬─ ✂ ─■
+                                                     └─→───────┘
 
-    normal_join[Join] ●─ [sep](atom)'%{' ✂ ─ [exp](expre)'}'──┬─→'*' ✂ ──┬─ ✂ ──■
-                                                              └─→────────┘
+join ●── &[atom"%{"] ✂ ──┬─positive_join─┬──■
+                         └─normal_join───┘
 
-    left_join[LeftJoin] ●─ [sep](atom)'<{' ✂ ─ [exp](expre)'}'──┬─'+'─┬─ ✂ ──■
-                                                                └─'-'─┘
+positive_join ●─ sep=(atom) "%{" exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
 
-    right_join[RightJoin] ●─ [sep](atom)'>{' ✂ ─ [exp](expre)'}'──┬─'+'─┬─ ✂ ──■
-                                                                  └─'-'─┘
+normal_join ●─ sep=(atom) "%{" ✂  exp=(expre) "}"──┬─→"*" ✂ ─┬─ ✂ ─■
+                                                   └─→───────┘
 
-    positive_closure[PositiveClosure] ●───┬─'{' @(expre)'}'──┬─'-'─┬─ ✂ ──┬──■
-                                          │                  └─'+'─┘      │
-                                          └─ @(atom)'+' ✂ ────────────────┘
+left_join ●─ sep=(atom) "<{" ✂  exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
 
-    closure[Closure] ●───┬─'{' @(expre)'}'──┬─→'*'─┬─ ✂ ──┬──■
-                         │                  └─→────┘      │
-                         └─ @(atom)'*' ✂ ─────────────────┘
+right_join ●─ sep=(atom) ">{" ✂  exp=(expre) "}"/(?!\+=)[+-]/─ ✂ ─■
 
-    empty_closure[EmptyClosure] ●─'{}' ✂ ─ @( ∅ )─■
+positive_closure ●───┬─"{" =(expre) "}"/(?!\+=)[+-]/─ ✂ ─┬──■
+                     └─ =(atom) /(?!\+=)[+]/─ ✂ ─────────┘
 
-    optional[Optional] ●───┬─'[' ✂ ─ @(expre)']' ✂ ──────────┬──■
-                           └─ @(atom)─ ![──┬─'?"'─┬─]'?' ✂ ──┘
-                                           ├─"?'"─┤
-                                           └─'?/'─┘
+closure ●───┬─"{" =(expre) "}"──┬─→"*"─┬─ ✂ ─┬──■
+            │                   └─→────┘     │
+            └─ =(atom) "*" ✂ ────────────────┘
 
-    lookahead[Lookahead] ●─'&' ✂ ─ @(term)─■
+empty_closure ●─"{}" ✂  =( ∅ ) ─■
 
-    negative_lookahead[NegativeLookahead] ●─'!' ✂ ─ @(term)─■
+optional ●───┬─"[" ✂  =(expre) "]" ✂ ───────────┬──■
+             └─ =(atom) ─ ![──┬─"?\""─┬─]"?" ✂ ─┘
+                              ├─"?'"──┤
+                              └─"?/"──┘
 
-    skip_to[SkipTo] ●─'->' ✂ ─ @(term)─■
+lookahead ●─"&" ✂  =(term) ─■
 
-    atom ●───┬─group────┬──■
-             ├─token────┤
-             ├─alert────┤
-             ├─constant─┤
-             ├─call─────┤
-             ├─pattern──┤
-             ├─dot──────┤
-             └─eof──────┘
+negative_lookahead ●─"!" ✂  =(term) ─■
 
-    call[Call] ●─word─■
+skip_to ●─"->" ✂  =(term) ─■
 
-    void[Void] ●─'()' ✂ ──■
+atom ●───┬─token────┬──■
+         ├─call─────┤
+         ├─dot──────┤
+         ├─pattern──┤
+         ├─group────┤
+         ├─eol──────┤
+         ├─eof──────┤
+         ├─skip─────┤
+         ├─alert────┤
+         └─constant─┘
 
-    fail[Fail] ●─'!()' ✂ ──■
+call ●─word─■
 
-    cut[Cut] ●─'~' ✂ ──■
+void ●─"()" ✂ ─■
 
-    cut_deprecated[Cut] ●─'>>' ✂ ──■
+fail ●─"!()" ✂ ─■
 
-    known_name ●─name ✂ ──■
+cut ●─"~" ✂ ─■
 
-    name ●─word─■
+cut_deprecated ●─">>" ✂ ─■
 
-    constant[Constant] ●── &['`']──┬─/(?ms)```((?:.|\n)*?)```/──┬──■
-                                   ├─'`' @(literal)'`'──────────┤
-                                   └─/`(.*?)`/──────────────────┘
+known_name ●─name ✂ ─■
 
-    alert[Alert] ●─ [level](/\^+/─) [message](constant)─■
+name ●─word─■
 
-    token[Token] ●───┬─string─────┬──■
-                     └─raw_string─┘
+constant ●── &["`"]──┬─/(?ms)```((?:.|\n)*?)```/──┬──■
+                     ├─"`" =(literal) "`"─────────┤
+                     └─/`(.*?)`/──────────────────┘
 
-    literal ●───┬─string─────┬──■
-                ├─raw_string─┤
-                ├─boolean────┤
-                ├─word───────┤
-                ├─hex────────┤
-                ├─float──────┤
-                ├─int────────┤
-                └─null───────┘
+alert ●─ level=(/\^+/─)  message=(constant) ─■
 
-    string ●─STRING─■
+token ●───┬─string─────┬──■
+          └─raw_string─┘
 
-    raw_string ●─//─ @(STRING)─■
+literal ●───┬─string─────┬──■
+            ├─raw_string─┤
+            ├─boolean────┤
+            ├─word───────┤
+            ├─hex────────┤
+            ├─float──────┤
+            ├─int────────┤
+            └─null───────┘
 
-    STRING ●───┬─ @(/"((?:[^"\n]|\\"|\\\\)*?)"/─) ✂ ─────┬──■
-               └─ @(/r"'((?:[^'\n]|\\'|\\\\)*?)'"/─) ✂ ──┘
+string ●── &[──┬─"\""─┬─]──┬─multiline_string─┬──■
+               └─"'"──┘    ├─singlequoted─────┤
+                           └─doublequoted─────┘
 
-    hex ●─/0[xX](?:\d|[a-fA-F])+/──■
+singlequoted ●─SINGLEQUOTED─■
 
-    float ●─/[-+]?(?:\d+\.\d*|\d*\.\d+)(?:[Ee][-+]?\d+)?/──■
+doublequoted ●─DOUBLEQUOTED─■
 
-    int ●─/[-+]?\d+/──■
+raw_string ●─/r(?=["'])/─ =(STRING) ─■
 
-    path ●─/(?!\d)\w+(?:::(?!\d)\w+)+/──■
+STRING ●───┬─SINGLEQUOTED─┬──■
+           └─DOUBLEQUOTED─┘
 
-    word ●─/(?!\d)\w+/──■
+SINGLEQUOTED ●─/'((?:[^'\n]|\\'|\\\\)*?)/─ ✂ ─■
 
-    dot[Dot] ●─'/./'─■
+DOUBLEQUOTED ●─/"((?:[^"\n]|\\"|\\\\)*?)"/─ ✂ ─■
 
-    pattern[Pattern] ●─regexes─■
+multiline_string ●───┬─/(?ms)'''((?:\\\\|\\.|(?!''').)*?)/─ ✂ ────┬──■
+                     └─/(?ms)"""((?:\\\\|\\.|(?!""").)*?)"""/─ ✂ ─┘
 
-    regexes ●───┬→─────────────┬───■
-                ├→'+' ✂ ─regex─┤
-                └─────────────<┘
+hex ●─/0[xX](?:\d|[a-fA-F])+/──■
 
-    regex ●───┬─'/' ✂ ─ @(/(?:[^/\\]|\\/|\\.)*/─)'/' ✂ ──┬──■
-              ├─'?' @(STRING)────────────────────────────┤
-              └─deprecated_regex─────────────────────────┘
+float ●─/[-+]?(?:\d+\.\d*|\d*\.\d+)(?:[Ee][-+]?\d+)?/──■
 
-    deprecated_regex ●─'?/' ✂ ─ @(/(?:.|\n)*?(?=/\?)/─)//\?+/─ ✂ ──■
+int ●─/[-+]?\d+/──■
 
-    boolean ●───┬─'True'──┬──■
-                └─'False'─┘
+path ●─/(?!\d)\w+(?:::(?!\d)\w+)+/──■
 
-    null ●─'None'─■
+word ●─/(?!\d)\w+/──■
 
-    eof[EOF] ●─'$' ✂ ──■
-    
+dot ●─"/./"─■
+
+pattern ●─regex─■
+
+regex ●───┬─deprecated_regex───────────────┬──■
+          └── !["?/"]──┬─REGEX──────────┬──┘
+                       └─"?" =(STRING) ─┘
+
+REGEX ●── &["/"]/(?ms)/((?:[^/\\]|\\/|\\.)*)//─ ✂ ─■
+
+deprecated_regex ●─"?/" ✂  =(/(?ms)((?:[^/\\]|\\/|\\.)*)/─)  ✂ "/?"─■
+
+boolean ●───┬─"True"──┬──■
+            └─"False"─┘
+
+null ●─"None"─■
+
+eof ●─"$" ✂ ─■
+
+eol ●─"$->"─■
+
+
 ```

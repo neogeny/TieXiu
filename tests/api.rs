@@ -24,7 +24,7 @@ fn test_parse() -> Result<()> {
 
 #[test]
 fn test_parse_to_json() -> Result<()> {
-    let json_str = tiexiu::api::parse_to_json("start = /a/", "a", &[])?;
+    let json_str = tiexiu::api::parse_to_json_string("start = /a/", "a", &[])?;
     eprintln!("TREE {:?}", json_str);
     assert!(json_str.contains("\"a\""));
     Ok(())
