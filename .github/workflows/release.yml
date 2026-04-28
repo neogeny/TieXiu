@@ -25,12 +25,16 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            args: --zig
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            args: "" # Native MSVC works best on Windows runners
           - os: macos-latest
             target: aarch64-apple-darwin
+            args: --zig
           - os: macos-latest
             target: x86_64-apple-darwin
+            args: --zig
 
     steps:
       - uses: actions/checkout@v6
@@ -44,7 +48,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --features pyo3 --zig
+          args: --release --out dist --features pyo3 ${{ matrix.args }}
           sccache: 'true'
 
       - name: Upload artifacts
