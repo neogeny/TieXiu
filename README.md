@@ -8,6 +8,12 @@ A high-performance port of **TatSu** to Rust.
 
 [TatSu]: https://tatsu.readthedocs.io/en/stable/
 
+### Why Still Alpha?
+
+Although **TieXiu** is functionally complete, extending the _alpha_ period allows for adjusting the API and its signatures to the user experience. The plan is to later go through a _beta_ period to flush out any remaining quirks or bugs. 
+
+## About
+
 **TieXiu** is a tool that takes grammars in extended `EBNF`_ as input, and
 outputs `memoizing`_ (`Packrat`_) `PEG`_ parsers as a Rust model. The classic
 variations of EBNF_ (Tomassetti, EasyExtend, Wirth) and `ISO EBNF`_ are
