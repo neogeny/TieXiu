@@ -39,7 +39,8 @@ module-name = "tiexiu.tiexiu"
 python-source = "python"
 #compatibility = "abi3"
 #compatibility = "off"
-compatibility = "manylinux2014"
+#compatibility = "manylinux2014"
+compatibility = "manylinux_2_28"
 
 [tool.uv.sources]
 tiexiu = { workspace = true }
