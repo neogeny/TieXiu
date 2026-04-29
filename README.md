@@ -36,6 +36,7 @@ Most features of **TatSu** are available in **TieXiu**. Some features have not y
 * [ ] Code generation of a parser recently moved in **TatSu** to the loading of a model of the Grammar and using it as parser. Although the generated procedural parser may produce 1.3x increased throughput in Python, supporting generated code is hard and it complicates the internal interfaces. For Rust, **TieXiu** alreay knows how to load _fast_ a Grammar model from **TatSu** JSON, which it can already produce. and a generated model constructor would be precompiled.
 * [ ] Parsing of boolean and numeric values happens in **TatSu** through synthetic models, which call the constructors for those types passing the parsed strings. 
 * [ ] Interpolation and evaluation of _\`constant\`_ expressions hasn't had any known use cases with **TatSu**. They will not be implemented in **TieXiu** until a use case appears. 
+* [ ] The `@@include` directive for textual includes was always a bad idea.
 
 [serde_json]: https://docs.rs/serde_json/latest/serde_json/ 
 
