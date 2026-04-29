@@ -1,17 +1,25 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-//! Tests for left recursion - uses compile() which has BUG
+//! Tests for left recursion - translated from TatSu's grammar/left_recursion_test.py
 
+use serde_json::json;
+use tiexiu::api::compile;
 use tiexiu::Result;
 
 #[test]
 fn test_direct_left_recursion() -> Result<()> {
     let grammar = r#"
-        start = expr ;
-        expr = expr '+' term | term ;
-        term = /\d+/ ;
+        @@left_recursion :: True
+        start = expression $ ;
+        expression = expression '+' factor | expression '-' factor | factor ;
+        factor = number ;
+        number = /[0-9]+/ ;
     "#;
-    let _result = tiexiu::api::compile(grammar, &[])?;
+    let model = compile(grammar, &[])?;
+
+    let ast = tiexiu::parse_input(&model, "10 - 20", &[])?;
+    assert_eq!(ast.to_json(), json!(["10", "-", "20"]));
+
     Ok(())
 }

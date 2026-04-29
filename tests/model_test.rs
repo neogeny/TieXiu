@@ -3,12 +3,12 @@
 
 //! Tests translated from TatSu's model_test.py
 
-use tiexiu::Result;
+use serde_json::json;
 use tiexiu::api::compile;
+use tiexiu::Result;
 
 #[test]
 fn test_children() -> Result<()> {
-    // TODO: cause of failure - verify Tree/Node parent-child relationship
     let grammar = r#"
         @@grammar::Calc
 
@@ -18,17 +18,20 @@ fn test_children() -> Result<()> {
         term = 'x' ;
     "#;
 
-    compile(grammar, &[])?;
+    let model = compile(grammar, &[])?;
+    let ast = tiexiu::parse_input(&model, "x", &[])?;
+    assert_eq!(ast.to_json(), json!("x"));
     Ok(())
 }
 
 #[test]
 fn test_node_kwargs() -> Result<()> {
-    // TODO: cause of failure - verify Node construction logic
     let grammar = r#"
         start = 'value' ;
     "#;
 
-    compile(grammar, &[])?;
+    let model = compile(grammar, &[])?;
+    let ast = tiexiu::parse_input(&model, "value", &[])?;
+    assert_eq!(ast.to_json(), json!("value"));
     Ok(())
 }
