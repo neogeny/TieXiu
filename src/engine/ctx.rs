@@ -8,7 +8,7 @@ use crate::engine::state::CallStack;
 use crate::engine::trace::Tracer;
 use crate::input::Cursor;
 use crate::peg::Rule;
-use crate::peg::error::ParseError;
+use crate::peg::error::ParseFailure;
 use crate::peg::error::{Nope, ParseResult, Yeap};
 use crate::trees::tree::Tree;
 use crate::types::Str;
@@ -41,7 +41,7 @@ pub trait Ctx: CtxI + Clone + Debug {
     }
 
     #[track_caller]
-    fn failure(&self, start: usize, source: ParseError) -> Nope {
+    fn failure(&self, start: usize, source: ParseFailure) -> Nope {
         Nope::new(start, self, source)
     }
 
@@ -62,7 +62,8 @@ pub trait Ctx: CtxI + Clone + Debug {
         if result {
             self.tracer().trace_success(self);
         } else {
-            self.tracer().trace_failure(self, &ParseError::ExpectingEof);
+            self.tracer()
+                .trace_failure(self, &ParseFailure::ExpectingEof);
         }
         self.leave();
         result
@@ -199,7 +200,7 @@ pub trait Ctx: CtxI + Clone + Debug {
                     && ctx.is_keyword(name)
                 {
                     ctx.memoize(&key, &Tree::Bottom, ctx.mark());
-                    let error = ParseError::ReservedWord(name.clone());
+                    let error = ParseFailure::ReservedWord(name.clone());
                     ctx.tracer().trace_failure(&ctx, &error);
                     return Err(self.failure(start, error));
                 }
@@ -225,7 +226,7 @@ pub trait Ctx: CtxI + Clone + Debug {
         if let Some(memo) = self.memo(&key) {
             return match memo.tree {
                 Tree::Bottom => {
-                    let err = ParseError::FailedParse(name.into());
+                    let err = ParseFailure::FailedParse(name.into());
                     Err(self.failure(start, err))
                 }
                 _ => {
@@ -288,7 +289,7 @@ pub trait Ctx: CtxI + Clone + Debug {
         if lasttree == Tree::Bottom {
             let nope = lastnope.unwrap_or(self.failure(
                 start,
-                ParseError::FailedRecursion(
+                ParseFailure::FailedRecursion(
                     key.name.clone(),
                     start,
                     lastmark,

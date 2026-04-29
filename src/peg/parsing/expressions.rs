@@ -4,7 +4,7 @@
 use crate::api::error::nope::ParseResult;
 use crate::engine::Ctx;
 use crate::peg::error::nope::Yeap;
-use crate::peg::{Exp, ExpKind, ParseError, Parser};
+use crate::peg::{Exp, ExpKind, ParseFailure::*, Parser};
 use crate::trees::Tree;
 use crate::types::Str;
 use crate::util::pyre;
@@ -48,14 +48,11 @@ impl Exp {
             ExpKind::EmptyClosure => Ok(Yeap(ctx, Tree::from(vec![]).closed())),
             ExpKind::Nil => Ok(Yeap(ctx, Tree::Nil)),
             ExpKind::RuleInclude { name, exp } => match exp {
-                None => {
-                    // Err(ctx.failure(start, ParseError::RuleNotLinked(name.clone())))
-                    panic!("Unlinked rule {name}")
-                }
+                None => Err(ctx.failure(start, RuleNotLinked(name.clone()))),
                 Some(exp) => exp.parse(ctx),
             },
             ExpKind::Call { name, rule } => match rule {
-                None => Err(ctx.failure(start, ParseError::RuleNotLinked(name.clone()))),
+                None => Err(ctx.failure(start, RuleNotLinked(name.clone()))),
                 Some(rule) => match ctx.call(name, rule.as_ref()) {
                     Ok(ok) => Ok(ok),
                     Err(mut nope) => {
@@ -72,26 +69,26 @@ impl Exp {
                 ctx.match_void();
                 Ok(Yeap(ctx, Tree::Nil))
             }
-            ExpKind::Fail => Err(ctx.failure(start, ParseError::Fail)),
+            ExpKind::Fail => Err(ctx.failure(start, Fail)),
             ExpKind::Dot => {
                 if ctx.next() {
                     Ok(Yeap(ctx, Tree::Nil))
                 } else {
-                    Err(ctx.failure(start, ParseError::NoMoreInput))
+                    Err(ctx.failure(start, NoMoreInput))
                 }
             }
             ExpKind::Eol => {
                 if ctx.match_eol() {
                     Ok(Yeap(ctx, Tree::Nil))
                 } else {
-                    Err(ctx.failure(start, ParseError::ExpectingEol))
+                    Err(ctx.failure(start, ExpectingEol))
                 }
             }
             ExpKind::Eof => {
                 if ctx.parse_eof() {
                     Ok(Yeap(ctx, Tree::Nil))
                 } else {
-                    Err(ctx.failure(start, ParseError::ExpectingEof))
+                    Err(ctx.failure(start, ExpectingEof))
                 }
             }
 
@@ -99,7 +96,7 @@ impl Exp {
                 if ctx.match_token(token) {
                     Ok(Yeap(ctx, Tree::Text(token.clone())))
                 } else {
-                    Err(ctx.failure(start, ParseError::ExpectedToken(token.clone())))
+                    Err(ctx.failure(start, ExpectedToken(token.clone())))
                 }
             }
             ExpKind::Pattern(pattern) => {
@@ -108,7 +105,7 @@ impl Exp {
                 } else {
                     Err(ctx.failure(
                         start,
-                        ParseError::ExpectedPattern(pyre::truncate_pattern(pattern, 16).into()),
+                        ExpectedPattern(pyre::truncate_pattern(pattern, 16).into()),
                     ))
                 }
             }
@@ -154,7 +151,7 @@ impl Exp {
             },
             ExpKind::NegativeLookahead(exp) => {
                 if let Ok(Yeap(_, _)) = exp.parse(ctx.push()) {
-                    Err(ctx.failure(start, ParseError::NotExpecting(exp.lookahead_str())))
+                    Err(ctx.failure(start, NotExpecting(exp.lookahead_str())))
                 } else {
                     Ok(Yeap(ctx, Tree::Nil))
                 }
@@ -277,7 +274,7 @@ mod tests {
     use crate::engine::strctx::StrCtx;
     use crate::exp::*;
     use crate::input::StrCursor;
-    use crate::peg::ParseError;
+    use crate::peg::ParseFailure;
     use crate::peg::Rule;
     use crate::rule::RuleRef;
 
@@ -299,7 +296,7 @@ mod tests {
         println!("exp1 on 'a c x': {:?}", result1_err);
         let err1 = result1_err.unwrap_err();
         assert_eq!(err1.mark, 2);
-        assert_eq!(err1.source, ParseError::ExpectedToken("b".into()).into());
+        assert_eq!(err1.source, ParseFailure::ExpectedToken("b".into()).into());
 
         let exp2 = Exp::sequence(vec![Exp::token("a"), Exp::token("c"), Exp::token("d")]);
         let result2_ok = exp2.parse(StrCtx::new(StrCursor::new("a c d"), &[]));
@@ -310,7 +307,7 @@ mod tests {
         println!("exp2 on 'a c x': {:?}", result2_err);
         let err2 = result2_err.unwrap_err();
         assert_eq!(err2.mark, 4);
-        assert_eq!(err2.source, ParseError::ExpectedToken("d".into()).into());
+        assert_eq!(err2.source, ParseFailure::ExpectedToken("d".into()).into());
 
         let exp = Exp::choice(vec![exp1, exp2]);
         let ctx = StrCtx::new(StrCursor::new("a c x"), &[]);
@@ -320,7 +317,7 @@ mod tests {
         let err = result.unwrap_err();
 
         assert_eq!(err.mark, 4);
-        assert_eq!(err.source, ParseError::ExpectedToken("d".into()).into());
+        assert_eq!(err.source, ParseFailure::ExpectedToken("d".into()).into());
     }
 
     #[test]

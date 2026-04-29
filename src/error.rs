@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::json::error::JsonError;
-use crate::peg::ParseError;
+use crate::peg::ParseFailure;
 use crate::peg::error::{CompileError, Nope};
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -33,11 +33,11 @@ pub enum Error {
     #[error("grammar compilation failed: {0}")]
     Compile(#[from] CompileError),
 
-    #[error("parse failure: {0}")]
-    ParseFailure(#[from] Nope),
+    #[error("parse failure: {0:#?}")]
+    ParseError(#[from] Nope),
 
     #[error("parse error: {0}")]
-    Parse(#[from] ParseError),
+    Parse(#[from] ParseFailure),
 
     #[error("failed to serialize JSON output: {0}")]
     Json(#[from] serde_json::Error),

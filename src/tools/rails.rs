@@ -377,6 +377,7 @@ fn walk_grammar(grammar: &Grammar) -> Rails {
 mod tests {
     use super::*;
     use crate::cfg::constants::PATH_CALC_GRAMMAR_JSON;
+    use crate::error::Result;
 
     #[test]
     fn test_make_rail() {
@@ -468,18 +469,18 @@ mod tests {
     }
 
     #[test]
-    fn test_simple_grammar() {
+    fn test_simple_grammar() -> Result<()> {
         use crate::api::compile;
         let grammar = compile(
             r"
         start = 'a';
         ",
             &[],
-        )
-        .expect("compile failed");
+        )?;
         let result = grammar.railroads();
         eprintln!("simple grammar railroads:\n{}", result);
         assert!(!result.is_empty());
+        Ok(())
     }
 
     #[test]

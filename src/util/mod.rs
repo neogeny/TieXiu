@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub mod cfg;
+pub mod ensure;
 pub mod error;
 pub mod finally;
 pub mod fold;

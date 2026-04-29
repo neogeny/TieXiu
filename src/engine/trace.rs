@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::CtxI;
-use crate::peg::ParseError;
+use crate::peg::ParseFailure;
 use console::{Term, style};
 use std::fmt::Debug;
 use std::io::Write;
@@ -95,7 +95,7 @@ pub trait Tracer: Debug {
         self.trace_event(ctx, Event::Success, "");
     }
 
-    fn trace_failure(&self, ctx: &dyn CtxI, error: &ParseError) {
+    fn trace_failure(&self, ctx: &dyn CtxI, error: &ParseFailure) {
         let errstr = format!(" {}", style(error).red());
         self.trace_event(ctx, Event::Failure, &errstr);
     }

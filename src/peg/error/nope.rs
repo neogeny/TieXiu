@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::parse_error::ParseError;
+use super::failure::ParseFailure;
 use crate::Tree;
 use crate::cfg::types::{Ref, Str};
 use crate::engine::state::CallStack;
@@ -24,7 +24,7 @@ pub struct Nope {
     pub start: usize,
     pub mark: usize, // The position where the disaster occurred
     pub cutseen: bool,
-    pub source: Ref<ParseError>,
+    pub source: Ref<ParseFailure>,
     pub report: Ref<DisasterReport>,
 }
 
@@ -44,7 +44,7 @@ impl std::error::Error for Nope {
 
 impl Nope {
     #[track_caller]
-    pub fn new(start: usize, ctx: &dyn CtxI, error: ParseError) -> Self {
+    pub fn new(start: usize, ctx: &dyn CtxI, error: ParseFailure) -> Self {
         let context = DisasterReport {
             pos: ctx.cursor().pos(),
             la: ctx.cursor().lookahead(start).into(),

@@ -3,7 +3,7 @@
 
 use crate::error as liberror;
 use crate::json::error::JsonError;
-use crate::peg::ParseError;
+use crate::peg::ParseFailure;
 use crate::peg::error::CompileError;
 use thiserror::Error;
 
@@ -16,7 +16,7 @@ pub enum Error {
     Json(#[from] serde_json::Error),
 
     #[error("parse failed: {0}")]
-    Parse(#[from] ParseError),
+    Parse(#[from] ParseFailure),
 
     #[error("grammar compilation failed: {0}")]
     Compile(#[from] CompileError),

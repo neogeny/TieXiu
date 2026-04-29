@@ -1,13 +1,13 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::error::{ParseError, ParseResult, Yeap};
+use super::error::{ParseFailure, ParseResult, Yeap};
 use super::parser::Parser;
 pub use super::pretty::*;
 use super::rule::{Rule, RuleMap, RuleRef};
 use crate::cfg::*;
 use crate::engine::Ctx;
-use crate::peg::ParseError::RuleNotFound;
+use crate::peg::ParseFailure::RuleNotFound;
 use crate::rule::RuleName;
 use crate::types::{Ref, Str};
 use crate::{StrCursor, Tree, new_ctx};
@@ -96,9 +96,9 @@ impl Grammar {
             .is_ok()
     }
 
-    pub fn start_rule(&self) -> Result<RuleName, ParseError> {
+    pub fn start_rule(&self) -> Result<RuleName, ParseFailure> {
         if self.rules.is_empty() {
-            return Err(ParseError::NoRulesInGrammar);
+            return Err(ParseFailure::NoRulesInGrammar);
         }
         let start = "start";
         match self.rules.get(start) {
@@ -136,14 +136,14 @@ impl Grammar {
         }
     }
 
-    pub fn get_rule(&self, name: &str) -> Result<&Rule, ParseError> {
+    pub fn get_rule(&self, name: &str) -> Result<&Rule, ParseFailure> {
         self.rules
             .get(name)
             .map(|r| r.as_ref())
             .ok_or_else(|| RuleNotFound(name.into()))
     }
 
-    pub fn get_rule_ref(&self, name: &str) -> Result<RuleRef, ParseError> {
+    pub fn get_rule_ref(&self, name: &str) -> Result<RuleRef, ParseFailure> {
         self.rules
             .get(name)
             .cloned()
@@ -158,13 +158,13 @@ impl Grammar {
         self.get_rule_at(id)
     }
 
-    pub fn get_rule_id(&self, name: &str) -> Result<usize, ParseError> {
+    pub fn get_rule_id(&self, name: &str) -> Result<usize, ParseFailure> {
         self.rules
             .get_index_of(name)
             .ok_or_else(|| RuleNotFound(name.into()))
     }
 
-    pub fn get_rule_mut(&mut self, name: &str) -> Result<&mut Rule, ParseError> {
+    pub fn get_rule_mut(&mut self, name: &str) -> Result<&mut Rule, ParseFailure> {
         self.rules
             .get_mut(name)
             .map(Rc::make_mut)

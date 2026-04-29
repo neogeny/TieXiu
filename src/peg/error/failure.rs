@@ -3,10 +3,17 @@
 
 use crate::Tree;
 use crate::types::Str;
+use crate::util::ensure::Ensure;
 use thiserror::Error;
 
+impl From<Ensure> for ParseFailure {
+    fn from(err: Ensure) -> Self {
+        ParseFailure::Ensure(err.condition)
+    }
+}
+
 #[derive(Error, Debug, Clone, PartialEq)]
-pub enum ParseError {
+pub enum ParseFailure {
     /// Corresponds to Self::Fail
     #[error("Fail")]
     Fail,
@@ -61,6 +68,9 @@ pub enum ParseError {
 
     #[error("There are no rules in the grammar")]
     NoRulesInGrammar,
+
+    #[error("!({0})")]
+    Ensure(&'static str),
 }
 
 pub type CompileResult<T> = Result<T, CompileError>;

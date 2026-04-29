@@ -3,7 +3,7 @@
 
 use crate::Exp;
 use crate::engine::Ctx;
-use crate::peg::ParseError;
+use crate::peg::error::ParseFailure::*;
 use crate::peg::error::ParseResult;
 use crate::peg::error::{Nope, Yeap};
 use crate::trees::Tree;
@@ -34,7 +34,7 @@ impl Exp {
             }
         }
         let la_box: Box<[Ref<str>]> = self.la.as_ref().map(|la| la.as_ref()).unwrap_or(&[]).into();
-        Err(furthest.unwrap_or(ctx.failure(start, ParseError::NoViableOption(la_box))))
+        Err(furthest.unwrap_or(ctx.failure(start, NoViableOption(la_box))))
     }
 
     pub fn parse_optional<C: Ctx>(&self, mut ctx: C, exp: &Exp) -> ParseResult<C> {

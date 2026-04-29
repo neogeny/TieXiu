@@ -19,7 +19,7 @@ pub mod rule;
 // --- Public Re-exports (The "Facade") ---
 // This allows users to call `tiexiu::peg::Grammar`
 // instead of `tiexiu::peg::grammar::Grammar`
-pub use error::{CompileError, CompileResult, ParseError};
+pub use error::{CompileError, CompileResult, ParseFailure};
 pub use exp::{Exp, ExpKind};
 pub use grammar::Grammar;
 pub use parser::Parser;
