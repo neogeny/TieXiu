@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::Parser;
 use super::exp::Exp;
+use super::Parser;
 use crate::cfg::types::FlagMap;
 use crate::engine::Ctx;
 use crate::peg::error::{ParseResult, Yeap};
@@ -99,16 +99,25 @@ impl Rule {
     pub fn parse<C: Ctx>(&self, ctx: C) -> ParseResult<C> {
         let _text = ctx.cursor().textstr();
         match self.exp.parse(ctx) {
-            Ok(Yeap(ctx, mut tree)) => {
-                tree = tree.cook();
+            Ok(Yeap(ctx, tree)) => {
+                let folded = tree.fold();
                 Ok(Yeap(
                     ctx,
                     if self.params.is_empty() {
-                        tree
+                        folded
                     } else {
-                        Tree::Node {
-                            typename: self.params[0].clone(),
-                            tree: tree.into(),
+                        let typename = self.params[0].clone();
+                        if typename.as_ref() == "bool" {
+                            // HACK
+                            //  Work around legacy in the TatSu grammar.
+                            //  TieXiu doesn't implement semantic actions during parse.
+                            //  There is not easy type `Any` in Rust.
+                            folded
+                        } else {
+                            Tree::Node {
+                                typename,
+                                tree: folded.into(),
+                            }
                         }
                     },
                 ))

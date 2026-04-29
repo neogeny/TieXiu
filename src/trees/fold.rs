@@ -5,7 +5,7 @@ use super::tree::Tree;
 use crate::trees::KeyValue;
 
 pub trait Translator<O> {
-    fn translate(&mut self, tree: &Tree, branches: &[O]) -> O;
+    fn translate(&mut self, tree: &Tree, children: &[O]) -> O;
 }
 
 pub trait Translates<O> {

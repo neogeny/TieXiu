@@ -74,7 +74,7 @@ impl TreeMerge {
 }
 
 impl Tree {
-    pub fn cook(self) -> Tree {
+    pub fn fold(self) -> Tree {
         let mut gather = TreeMerge::new();
         let tree = self.clean_and_merge(&mut gather);
 
@@ -285,15 +285,15 @@ mod tests {
     #[test]
     fn test_node_nil_removal() {
         let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
-        let result = raw.cook();
+        let result = raw.fold();
 
-        assert_eq!(result, Tree::Bottom.cook());
+        assert_eq!(result, Tree::Bottom.fold());
     }
 
     #[test]
     fn test_node_nil_removal_to_bottom() {
         let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
-        let result = raw.cook();
+        let result = raw.fold();
 
         assert_eq!(result, Tree::Bottom);
     }
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn test_node_nil_removal_to_list() {
         let raw = Tree::Seq([Tree::Bottom, Tree::Nil, Tree::Bottom].into());
-        let result = raw.cook(); // normalize doesn't close
+        let result = raw.fold(); // normalize doesn't close
 
         if let Tree::List(v) = result {
             assert_eq!(v.len(), 2); // Nil is gone, only the two Bottoms remain
@@ -316,7 +316,7 @@ mod tests {
     fn test_node_nil_purging_preserves_count() {
         // Input: List([Nil, Bottom, Nil])
         let raw = Tree::Seq([Tree::Nil, Tree::Bottom, Tree::Nil].into());
-        let result = raw.cook();
+        let result = raw.fold();
 
         // Since it's effectively Bottom, and Bottom isn't a list,
         // it doesn't become a Closure of len 1. It just stays Bottom.
@@ -338,7 +338,7 @@ mod tests {
             ),
         );
 
-        let result = tree.cook();
+        let result = tree.fold();
 
         // Result should be a Map containing "a", "b", and "x"
         assert!(matches!(result, Tree::Map(_)));

@@ -6,7 +6,7 @@ use crate::cfg::CfgA;
 pub use crate::json::exp_json::*;
 pub use crate::peg::pretty::*;
 pub use crate::tools::rails::*;
-use crate::{CfgKey, Result, boot_grammar, config};
+use crate::{boot_grammar, config, CfgKey, Result};
 use clap;
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
@@ -152,7 +152,7 @@ pub fn cli() -> Result<()> {
             for input in inputs {
                 let text = std::fs::read_to_string(&input)?;
                 let tree = parse_input(&parser, &text, cfga)?;
-                output.push_str(format!("{}", tree.cook()).as_str());
+                output.push_str(format!("{}", tree.fold()).as_str());
                 output.push('\n');
             }
             (output, "text")
@@ -227,7 +227,7 @@ pub fn pygmentize(content: &str, extension: &str, use_color: bool) {
     use syntect::easy::HighlightLines;
     use syntect::highlighting::ThemeSet;
     use syntect::parsing::SyntaxSet;
-    use syntect::util::{LinesWithEndings, as_24_bit_terminal_escaped};
+    use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
