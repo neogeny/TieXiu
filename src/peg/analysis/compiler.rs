@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use crate::ExpKind;
 use crate::api::error::{CompileError, CompileResult};
 use crate::cfg::types::FlagMap;
 use crate::cfg::*;
@@ -9,7 +10,6 @@ use crate::peg::rule::{RuleMap, RuleRef};
 use crate::peg::{Exp, Grammar, Rule};
 use crate::trees::{Tree, TreeMap};
 use crate::types::Str;
-use crate::ExpKind;
 
 #[derive(Debug, Default)]
 pub struct GrammarCompiler {}
@@ -151,12 +151,12 @@ impl GrammarCompiler {
         let typename = typename.to_string();
         let exp: Exp = match typename.as_str() {
             "bool" => {
-                // HACK 
+                // HACK
                 //  Work around legacy stuff in the TatSu grammar.
                 //  TieXiu doesn't implement semantic actions during parse.
                 //  There is not easy type Any in Rust.
                 self.parse_exp(tree)?
-            },
+            }
             "Alert" => {
                 let msgtree = map_get(tree, &typename, "message")?;
                 let msgexp = self.parse_exp(msgtree)?;
