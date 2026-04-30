@@ -6,10 +6,8 @@ from typing import Any
 import tiexiu.tiexiu as rust
 
 
-def pegapi(**kwargs: Any) -> Any:
+def pegapi() -> Any:
     """Create TieXiu OO API instance."""
-    if kwargs:
-        return rust.pegapi(**kwargs)
     return rust.pegapi()
 
 def parse_grammar(grammar: str, **kwargs: Any) -> Any:
