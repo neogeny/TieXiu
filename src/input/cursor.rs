@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::cfg::*;
-use crate::input::tokenizing::TokenizingPatterns;
 use crate::input::Error;
+use crate::input::tokenizing::TokenizingPatterns;
 use crate::util::pyre::Pattern;
 use std::fmt::Debug;
 
@@ -68,7 +68,7 @@ pub trait Cursor: Debug + Configurable {
             match opt {
                 CfgKey::Wsp(p) => wsp = p.as_str(),
                 CfgKey::Cmt(p) => cmt = p.as_str(),
-               CfgKey::Eol(p) => eol = p.as_str(),
+                CfgKey::Eol(p) => eol = p.as_str(),
                 _ => {}
             }
         }

@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::Cursor;
 use super::error::Error;
 use super::tokenizing::TokenizingPatterns;
-use super::Cursor;
 use crate::cfg::keys::config;
 use crate::cfg::*;
 use crate::types::Str;
@@ -63,7 +63,6 @@ impl StrCursor {
             }
             .into(),
         }
-
     }
 
     pub fn with_patterns(text: &str, patterns: TokenizingPatterns) -> Result<Self, Error> {
@@ -114,9 +113,14 @@ impl Configurable for StrCursor {
         if let Ok(patterns) = self.tokenizing_from_cfg(&cfg) {
             self.set_tokenizing(&patterns);
         }
-        let source = cfg.iter()
+        let source = cfg
+            .iter()
             .filter_map(|k| {
-                if let CfgKey::Source(s) = k { Some(s) } else { None }
+                if let CfgKey::Source(s) = k {
+                    Some(s)
+                } else {
+                    None
+                }
             })
             .next()
             .unwrap_or(&self.heavy.source);
