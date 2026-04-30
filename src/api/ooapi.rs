@@ -59,7 +59,7 @@ impl TieXiu {
             let cache = self
                 .cache
                 .read()
-                .map_err(|_| crate::Error::from("lock poisoned"))?;
+                .map_err(|_| Error::from("lock poisoned"))?;
             if let Some(existing) = cache.get(&hash) {
                 return Ok(existing.clone());
             }
@@ -71,7 +71,7 @@ impl TieXiu {
         let mut cache = self
             .cache
             .write()
-            .map_err(|_| crate::Error::from("lock poisoned"))?;
+            .map_err(|_| Error::from("lock poisoned"))?;
         cache.insert(hash, compiled_grammar.clone());
         Ok(compiled_grammar)
     }
@@ -134,14 +134,14 @@ impl TieXiu {
 
     pub fn compile_to_json_with<U>(&mut self, cursor: U) -> Result<Value>
     where
-        U: crate::input::Cursor + Clone,
+        U: Cursor + Clone,
     {
         let grammar = self.compile_with(cursor)?;
         Ok(grammar.to_json())
     }
 
     pub fn load(&mut self, json: &str) -> Result<Grammar> {
-        Ok(Grammar::from_tatsu_json(json)?)
+        Ok(Grammar::from_json(json)?)
     }
 
     pub fn load_to_json(&mut self, json: &str) -> Result<Value> {

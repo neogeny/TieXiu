@@ -84,7 +84,7 @@ where
 }
 
 pub fn load_grammar_from_json(json: &str, _cfg: &CfgA) -> Result<Grammar> {
-    Ok(Grammar::from_tatsu_json(json)?)
+    Ok(Grammar::from_json(json)?)
 }
 
 pub fn load_grammar_from_json_to_json(json: &str, cfg: &CfgA) -> Result<Value> {
