@@ -20,139 +20,12 @@ pub struct JsonSerializationHelper {
     path: Vec<String>,
 }
 
-impl JsonSerializationHelper {
-    fn new(value: Value) -> Self {
-        Self {
-            value,
-            path: Vec::new(),
-        }
-    }
-
-    fn push(&self, class: &str) -> Self {
-        let mut path = self.path.clone();
-        path.push(class.to_string());
-        Self {
-            value: self.value.clone(),
-            path,
-        }
-    }
-
-    fn get_obj(&self) -> Result<&serde_json::Map<String, Value>, JsonError> {
-        self.value
-            .as_object()
-            .ok_or_else(|| self.error("Expected object"))
-    }
-
-    fn error(&self, msg: &str) -> JsonError {
-        let path_str = self.path.join(" -> ");
-        if path_str.is_empty() {
-            JsonError::Other(msg.into())
-        } else {
-            JsonError::Other(format!("{} at {}", msg, path_str))
-        }
-    }
-
-    fn get_class(&self) -> Result<String, JsonError> {
-        if let Ok(obj) = self.get_obj() {
-            obj.get("__class__")
-                .and_then(|v| v.as_str())
-                .map(String::from)
-                .ok_or_else(|| self.error("Missing __class__"))
-        } else {
-            Err(self.error("Missing __class__"))
-        }
-    }
-
-    fn get_string(&self, field: &str) -> Result<String, JsonError> {
-        if let Ok(obj) = self.get_obj() {
-            obj.get(field)
-                .and_then(|v| v.as_str())
-                .map(String::from)
-                .ok_or_else(|| self.error(&format!("Missing field: {}", field)))
-        } else {
-            Err(self.error(&format!("Missing field: {}", field)))
-        }
-    }
-
-    fn get_nested(&self, field: &str) -> Result<JsonSerializationHelper, JsonError> {
-        let obj = self.get_obj()?;
-        let value = obj
-            .get(field)
-            .ok_or_else(|| self.error(&format!("Missing field: {}", field)))?;
-
-        // Push field name and __class__ for better error reporting
-        let nested_path = if let Some(child_obj) = value.as_object() {
-            if let Some(class) = child_obj.get("__class__").and_then(|v: &Value| v.as_str()) {
-                format!("{}:{}", field, class)
-            } else {
-                field.to_string()
-            }
-        } else {
-            field.to_string()
-        };
-
-        Ok(self.push(&nested_path).with_value(value.clone()))
-    }
-
-    fn with_value(&self, value: Value) -> Self {
-        Self {
-            value,
-            path: self.path.clone(),
-        }
-    }
-
-    fn get_array(&self, field: &str) -> Result<Vec<JsonSerializationHelper>, JsonError> {
-        if let Ok(obj) = self.get_obj() {
-            if let Some(arr) = obj.get(field).and_then(|v: &Value| v.as_array()) {
-                return Ok(arr
-                    .iter()
-                    .enumerate()
-                    .map(|(i, v)| {
-                        let label = if let Some(child_obj) = v.as_object() {
-                            if let Some(class) =
-                                child_obj.get("__class__").and_then(|v: &Value| v.as_str())
-                            {
-                                format!("{}[{}]:{}", field, i, class)
-                            } else {
-                                format!("{}[{}]", field, i)
-                            }
-                        } else {
-                            format!("{}[{}]", field, i)
-                        };
-                        self.push(&label).with_value(v.clone())
-                    })
-                    .collect());
-            }
-        }
-        Err(self.error(&format!("Missing or not array: {}", field)))
-    }
-
-    fn opt_str(&self, field: &str) -> Option<&str> {
-        if let Ok(obj) = self.get_obj() {
-            obj.get(field).and_then(|v| v.as_str())
-        } else {
-            None
-        }
-    }
-
-    fn opt_bool(&self, field: &str, default: bool) -> bool {
-        if let Ok(obj) = self.get_obj() {
-            obj.get(field).and_then(|v| v.as_bool()).unwrap_or(default)
-        } else {
-            default
-        }
-    }
-
-    fn opt_u64(&self, field: &str) -> Option<u64> {
-        if let Ok(obj) = self.get_obj() {
-            obj.get(field).and_then(|v| v.as_u64())
-        } else {
-            None
-        }
-    }
-}
-
 impl Grammar {
+    pub fn from_json(json: &str) -> Result<Self, JsonError> {
+        let value: Value = serde_json::from_str(json)?;
+        Self::from_serde_json_value(&value)
+    }
+
     pub fn from_serde_json_value(value: &Value) -> Result<Self, JsonError> {
         let path = JsonSerializationHelper::new(value.clone());
         let class = path.get_class()?;
@@ -358,7 +231,140 @@ impl Exp {
             "Cut" => Ok(Exp::cut()),
             "EOF" => Ok(Exp::eof()),
             "EOL" => Ok(Exp::eol()),
+            "EmptyClosure" => Ok(Exp::empty_closure()),
             _ => Err(path.error(&format!("Unsupported: {}", class))),
+        }
+    }
+}
+
+impl JsonSerializationHelper {
+    fn new(value: Value) -> Self {
+        Self {
+            value,
+            path: Vec::new(),
+        }
+    }
+
+    fn push(&self, class: &str) -> Self {
+        let mut path = self.path.clone();
+        path.push(class.to_string());
+        Self {
+            value: self.value.clone(),
+            path,
+        }
+    }
+
+    fn get_obj(&self) -> Result<&serde_json::Map<String, Value>, JsonError> {
+        self.value
+            .as_object()
+            .ok_or_else(|| self.error("Expected object"))
+    }
+
+    fn error(&self, msg: &str) -> JsonError {
+        let path_str = self.path.join(" -> ");
+        if path_str.is_empty() {
+            JsonError::Other(msg.into())
+        } else {
+            JsonError::Other(format!("{} at {}", msg, path_str))
+        }
+    }
+
+    fn get_class(&self) -> Result<String, JsonError> {
+        if let Ok(obj) = self.get_obj() {
+            obj.get("__class__")
+                .and_then(|v| v.as_str())
+                .map(String::from)
+                .ok_or_else(|| self.error("Missing __class__"))
+        } else {
+            Err(self.error("Missing __class__"))
+        }
+    }
+
+    fn get_string(&self, field: &str) -> Result<String, JsonError> {
+        if let Ok(obj) = self.get_obj() {
+            obj.get(field)
+                .and_then(|v| v.as_str())
+                .map(String::from)
+                .ok_or_else(|| self.error(&format!("Missing field: {}", field)))
+        } else {
+            Err(self.error(&format!("Missing field: {}", field)))
+        }
+    }
+
+    fn get_nested(&self, field: &str) -> Result<JsonSerializationHelper, JsonError> {
+        let obj = self.get_obj()?;
+        let value = obj
+            .get(field)
+            .ok_or_else(|| self.error(&format!("Missing field: {}", field)))?;
+
+        // Push field name and __class__ for better error reporting
+        let nested_path = if let Some(child_obj) = value.as_object() {
+            if let Some(class) = child_obj.get("__class__").and_then(|v: &Value| v.as_str()) {
+                format!("{}:{}", field, class)
+            } else {
+                field.to_string()
+            }
+        } else {
+            field.to_string()
+        };
+
+        Ok(self.push(&nested_path).with_value(value.clone()))
+    }
+
+    fn with_value(&self, value: Value) -> Self {
+        Self {
+            value,
+            path: self.path.clone(),
+        }
+    }
+
+    fn get_array(&self, field: &str) -> Result<Vec<JsonSerializationHelper>, JsonError> {
+        if let Ok(obj) = self.get_obj() {
+            if let Some(arr) = obj.get(field).and_then(|v: &Value| v.as_array()) {
+                return Ok(arr
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| {
+                        let label = if let Some(child_obj) = v.as_object() {
+                            if let Some(class) =
+                                child_obj.get("__class__").and_then(|v: &Value| v.as_str())
+                            {
+                                format!("{}[{}]:{}", field, i, class)
+                            } else {
+                                format!("{}[{}]", field, i)
+                            }
+                        } else {
+                            format!("{}[{}]", field, i)
+                        };
+                        self.push(&label).with_value(v.clone())
+                    })
+                    .collect());
+            }
+        }
+        Err(self.error(&format!("Missing or not array: {}", field)))
+    }
+
+    fn opt_str(&self, field: &str) -> Option<&str> {
+        if let Ok(obj) = self.get_obj() {
+            obj.get(field).and_then(|v| v.as_str())
+        } else {
+            None
+        }
+    }
+
+    fn opt_bool(&self, field: &str, default: bool) -> bool {
+        if let Ok(obj) = self.get_obj() {
+            obj.get(field).and_then(|v| v.as_bool()).unwrap_or(default)
+        } else {
+            default
+        }
+    }
+
+    fn opt_u64(&self, field: &str) -> Option<u64> {
+        if let Ok(obj) = self.get_obj() {
+            obj.get(field).and_then(|v| v.as_u64())
+        } else {
+            None
         }
     }
 }
