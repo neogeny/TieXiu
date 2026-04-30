@@ -42,6 +42,10 @@ impl TieXiu {
         }
     }
 
+    pub fn update_cfg(&mut self, cfg: &[crate::cfg::CfgKey]) {
+        self.cfg = cfg.into();
+    }
+
     pub fn get(&mut self, grammar: &str) -> Option<Grammar> {
         let hash = compute_hash(grammar);
         self.cache.read().ok()?.get(&hash).cloned()

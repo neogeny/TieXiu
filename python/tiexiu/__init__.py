@@ -3,7 +3,6 @@
 
 from tiexiu.fnapi import (
     boot_grammar,
-    boot_grammar_as_json,
     boot_grammar_to_json,
     boot_grammar_pretty,
     compile,
@@ -16,13 +15,12 @@ from tiexiu.fnapi import (
     parse_grammar,
     parse_grammar_to_json,
     parse_to_json,
+    pegapi,
     pretty,
-    tiexiu,
 )
 
 __all__ = [
     "boot_grammar",
-    "boot_grammar_as_json",
     "boot_grammar_to_json",
     "boot_grammar_pretty",
     "compile",
@@ -35,6 +33,6 @@ __all__ = [
     "parse_grammar",
     "parse_grammar_to_json",
     "parse_to_json",
+    "pegapi",
     "pretty",
-    "tiexiu",
 ]

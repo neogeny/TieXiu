@@ -37,22 +37,28 @@ mod tiexiu {
     fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
         m.add_function(wrap_pyfunction!(api::parse_grammar, m)?)?;
         m.add_function(wrap_pyfunction!(api::parse_grammar_to_json, m)?)?;
+        m.add_function(wrap_pyfunction!(api::parse_grammar_to_json_string, m)?)?;
         m.add_function(wrap_pyfunction!(api::compile_to_json, m)?)?;
+        m.add_function(wrap_pyfunction!(api::compile_to_json_string, m)?)?;
         m.add_function(wrap_pyfunction!(api::pretty, m)?)?;
+        m.add_function(wrap_pyfunction!(api::grammar_pretty, m)?)?;
         m.add_function(wrap_pyfunction!(api::load_boot_as_json, m)?)?;
-        m.add_function(wrap_pyfunction!(api::boot_grammar_as_json, m)?)?;
+        m.add_function(wrap_pyfunction!(api::boot_grammar_to_json, m)?)?;
+        m.add_function(wrap_pyfunction!(api::boot_grammar_to_json_string, m)?)?;
+        m.add_function(wrap_pyfunction!(api::boot_grammar_pretty, m)?)?;
         m.add_function(wrap_pyfunction!(api::parse, m)?)?;
         m.add_function(wrap_pyfunction!(api::parse_to_json, m)?)?;
+        m.add_function(wrap_pyfunction!(api::parse_to_json_string, m)?)?;
 
         m.add_class::<TieXiuPy>()?;
 
-        m.add_function(wrap_pyfunction!(tiexiu, m)?)?;
+        m.add_function(wrap_pyfunction!(pegapi, m)?)?;
 
         Ok(())
     }
 
     #[pyfunction]
-    fn tiexiu() -> TieXiuPy {
-        TieXiuPy { cfg: Vec::new() }
+    fn pegapi() -> TieXiuPy {
+        TieXiuPy(crate::api::ooapi::TieXiu::new(&[]))
     }
 }

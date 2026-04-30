@@ -14,7 +14,7 @@ pub use serde_json::Value;
 
 pub use crate::api::ooapi::TieXiu;
 
-pub fn tiexiu() -> TieXiu {
+pub fn pegapi() -> TieXiu {
     TieXiu::new(&[])
 }
 

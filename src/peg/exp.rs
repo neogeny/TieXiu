@@ -6,7 +6,7 @@ use crate::cfg::types::{Define, Str};
 use crate::types::Ref;
 use derivative::Derivative;
 use std::fmt;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub type ERef = Ref<Exp>;
 pub type ERefArr = Ref<[Exp]>;
@@ -16,9 +16,9 @@ pub type ERefArr = Ref<[Exp]>;
 pub struct Exp {
     pub kind: ExpKind,
     #[derivative(Debug(format_with = "debug_none"))]
-    pub la: Option<Rc<[Str]>>, // the lookahead set
+    pub la: Option<Arc<[Str]>>, // the lookahead set
     #[derivative(Debug(format_with = "debug_none"))]
-    pub df: Option<Rc<[Define]>>, // the defines set
+    pub df: Option<Arc<[Define]>>, // the defines set
 }
 
 // NOTE

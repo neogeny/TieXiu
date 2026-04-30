@@ -38,15 +38,18 @@ pub(crate) fn parse_grammar(
 pub(crate) fn parse_grammar_to_json(
     grammar: &str,
     kwargs: Option<&Bound<'_, PyDict>>,
-) -> PyResult<String> {
+) -> PyResult<Py<PyAny>> {
     let cfg = if let Some(k) = kwargs {
         pykwargs_to_cfg(k)
     } else {
         Vec::new()
     };
-    let result = crate::api::parse_grammar_to_json_string(grammar, &cfg)
+    let value = crate::api::parse_grammar_to_json(grammar, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    Ok(result)
+    let py = unsafe { pyo3::Python::assume_attached() };
+    pythonize::pythonize(py, &value)
+        .map(|obj| obj.into())
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
 }
 
 #[pyfunction]
@@ -54,15 +57,18 @@ pub(crate) fn parse_grammar_to_json(
 pub(crate) fn compile_to_json(
     grammar: &str,
     kwargs: Option<&Bound<'_, PyDict>>,
-) -> PyResult<String> {
+) -> PyResult<Py<PyAny>> {
     let cfg = if let Some(k) = kwargs {
         pykwargs_to_cfg(k)
     } else {
         Vec::new()
     };
-    let result = crate::api::compile_to_json_string(grammar, &cfg)
+    let value = crate::api::compile_to_json(grammar, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    Ok(result)
+    let py = unsafe { pyo3::Python::assume_attached() };
+    pythonize::pythonize(py, &value)
+        .map(|obj| obj.into())
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
 }
 
 #[pyfunction]
@@ -80,26 +86,45 @@ pub(crate) fn pretty(grammar: &str, kwargs: Option<&Bound<'_, PyDict>>) -> PyRes
 
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub(crate) fn load_boot_as_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<String> {
+pub(crate) fn load_boot_as_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
     let cfg = if let Some(k) = kwargs {
         pykwargs_to_cfg(k)
     } else {
         Vec::new()
     };
-    let result = crate::api::boot_grammar_to_json_string(&cfg)
+    let value = crate::api::boot_grammar_to_json(&cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    Ok(result)
+    let py = unsafe { pyo3::Python::assume_attached() };
+    pythonize::pythonize(py, &value)
+        .map(|obj| obj.into())
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
 }
 
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub(crate) fn boot_grammar_as_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<String> {
+pub(crate) fn boot_grammar_to_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
     let cfg = if let Some(k) = kwargs {
         pykwargs_to_cfg(k)
     } else {
         Vec::new()
     };
-    let result = crate::api::boot_grammar_to_json_string(&cfg)
+    let value = crate::api::boot_grammar_to_json(&cfg)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    let py = unsafe { pyo3::Python::assume_attached() };
+    pythonize::pythonize(py, &value)
+        .map(|obj| obj.into())
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+}
+
+#[pyfunction]
+#[pyo3(signature = (**kwargs))]
+pub(crate) fn boot_grammar_pretty(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<String> {
+    let cfg = if let Some(k) = kwargs {
+        pykwargs_to_cfg(k)
+    } else {
+        Vec::new()
+    };
+    let result = crate::api::boot_grammar_pretty(&cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     Ok(result)
 }
@@ -127,13 +152,94 @@ pub(crate) fn parse_to_json(
     grammar: &str,
     text: &str,
     kwargs: Option<&Bound<'_, PyDict>>,
+) -> PyResult<Py<PyAny>> {
+    let cfg = if let Some(k) = kwargs {
+        pykwargs_to_cfg(k)
+    } else {
+        Vec::new()
+    };
+    let value = crate::api::parse_to_json(grammar, text, &cfg)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    let py = unsafe { pyo3::Python::assume_attached() };
+    pythonize::pythonize(py, &value)
+        .map(|obj| obj.into())
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+}
+
+#[pyfunction]
+#[pyo3(signature = (grammar, **kwargs))]
+pub(crate) fn parse_grammar_to_json_string(
+    grammar: &str,
+    kwargs: Option<&Bound<'_, PyDict>>,
 ) -> PyResult<String> {
     let cfg = if let Some(k) = kwargs {
         pykwargs_to_cfg(k)
     } else {
         Vec::new()
     };
-    let result = crate::api::parse_to_json_string(grammar, text, &cfg)
+    let value = crate::api::parse_grammar_to_json_string(grammar, &cfg)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    Ok(value)
+}
+
+#[pyfunction]
+#[pyo3(signature = (grammar, **kwargs))]
+pub(crate) fn compile_to_json_string(
+    grammar: &str,
+    kwargs: Option<&Bound<'_, PyDict>>,
+) -> PyResult<String> {
+    let cfg = if let Some(k) = kwargs {
+        pykwargs_to_cfg(k)
+    } else {
+        Vec::new()
+    };
+    let value = crate::api::compile_to_json_string(grammar, &cfg)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    Ok(value)
+}
+
+#[pyfunction]
+#[pyo3(signature = (grammar, text, **kwargs))]
+pub(crate) fn parse_to_json_string(
+    grammar: &str,
+    text: &str,
+    kwargs: Option<&Bound<'_, PyDict>>,
+) -> PyResult<String> {
+    let cfg = if let Some(k) = kwargs {
+        pykwargs_to_cfg(k)
+    } else {
+        Vec::new()
+    };
+    let value = crate::api::parse_to_json_string(grammar, text, &cfg)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    Ok(value)
+}
+
+#[pyfunction]
+#[pyo3(signature = (**kwargs))]
+pub(crate) fn boot_grammar_to_json_string(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<String> {
+    let cfg = if let Some(k) = kwargs {
+        pykwargs_to_cfg(k)
+    } else {
+        Vec::new()
+    };
+    let value = crate::api::boot_grammar_to_json_string(&cfg)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    Ok(value)
+}
+
+#[pyfunction]
+#[pyo3(signature = (grammar, **kwargs))]
+pub(crate) fn grammar_pretty(
+    grammar: &str,
+    kwargs: Option<&Bound<'_, PyDict>>,
+) -> PyResult<String> {
+    let cfg = if let Some(k) = kwargs {
+        pykwargs_to_cfg(k)
+    } else {
+        Vec::new()
+    };
+    let result = crate::api::grammar_pretty(grammar, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     Ok(result)
 }

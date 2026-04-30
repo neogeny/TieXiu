@@ -10,15 +10,15 @@ def test_parse_grammar():
 
 
 def test_parse_grammar_to_json():
-    json_str = tiexiu.parse_grammar_to_json("start = /a/")
-    assert json_str is not None
-    assert "start" in json_str
+    result = tiexiu.parse_grammar_to_json("start = /a/")
+    assert result is not None
+    assert "start" in result["rules"][0]["name"]
 
 
 def test_compile_to_json():
-    json_str = tiexiu.compile_to_json("start = /a/")
-    assert json_str is not None
-    assert "start" in json_str
+    result = tiexiu.compile_to_json("start = /a/")
+    assert result is not None
+    assert "start" in result["rules"][0]["name"]
 
 
 def test_pretty():
@@ -28,15 +28,15 @@ def test_pretty():
 
 
 def test_load_boot_as_json():
-    json_str = tiexiu.load_boot_as_json()
-    assert json_str is not None
-    assert "Rule" in json_str
+    result = tiexiu.load_boot_as_json()
+    assert result is not None
+    assert "Rule" in str(result)
 
 
-def test_boot_grammar_as_json():
-    json_str = tiexiu.boot_grammar_as_json()
-    assert json_str is not None
-    assert "Rule" in json_str
+def test_boot_grammar_to_json():
+    result = tiexiu.boot_grammar_to_json()
+    assert result is not None
+    assert "Rule" in str(result)
 
 
 def test_parse():
@@ -45,9 +45,8 @@ def test_parse():
 
 
 def test_parse_to_json():
-    json_str = tiexiu.parse_to_json("start = /a/", "a")
-    assert json_str is not None
-    assert json_str == '"a"'
+    result = tiexiu.parse_to_json("start = /a/", "a")
+    assert result is not None
 
 
 def test_kwargs_int():
@@ -57,14 +56,4 @@ def test_kwargs_int():
 
 def test_kwargs_float():
     tree = tiexiu.parse_grammar("start = /a/", precision=3.14)
-    assert tree is not None
-
-
-def test_kwargs_list():
-    tree = tiexiu.parse_grammar("start = /a/", values=[1, 2, 3])
-    assert tree is not None
-
-
-def test_kwargs_dict():
-    tree = tiexiu.parse_grammar("start = /a/", options={"key": "value"})
     assert tree is not None

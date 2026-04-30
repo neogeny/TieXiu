@@ -1,70 +1,176 @@
 # Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-import tiexiu.tiexiu as rust
+from typing import Any
 
 
-def parse_grammar(grammar, **kwargs):
+def parse_grammar(grammar: str, **kwargs: Any) -> Any:
+    """Parse grammar string to AST tree."""
+    import tiexiu.tiexiu as rust
     return rust.parse_grammar(grammar, **kwargs)
 
 
-def parse_grammar_to_json(grammar, **kwargs):
+def parse_grammar_to_json(grammar: str, **kwargs: Any) -> Any:
+    """Parse grammar to JSON (dict, list, etc.)."""
+    import tiexiu.tiexiu as rust
     return rust.parse_grammar_to_json(grammar, **kwargs)
 
 
-def compile(grammar, **kwargs):
+def parse_grammar_to_json_string(grammar: str, **kwargs: Any) -> str:
+    """Parse grammar to JSON string."""
+    import tiexiu.tiexiu as rust
+    return rust.parse_grammar_to_json_string(grammar, **kwargs)
+
+
+# def parse_grammar_with(cursor: Any, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - requires generic cursor support."""
+#     raise NotImplementedError("parse_grammar_with requires generic cursor support")
+
+
+# def parse_grammar_to_json_with(cursor: Any, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - requires generic cursor support."""
+#     raise NotImplementedError("parse_grammar_to_json_with requires generic cursor support")
+
+
+def compile(grammar: str, **kwargs: Any) -> Any:
+    """NOT IMPLEMENTED - returns Grammar."""
+    raise NotImplementedError("compile returns Grammar, not yet implemented")
+
+
+def compile_to_json(grammar: str, **kwargs: Any) -> Any:
+    """Compile grammar to JSON (dict, list, etc.)."""
+    import tiexiu.tiexiu as rust
     return rust.compile_to_json(grammar, **kwargs)
 
 
-def compile_to_json(grammar, **kwargs):
-    return rust.compile_to_json(grammar, **kwargs)
+def compile_to_json_string(grammar: str, **kwargs: Any) -> str:
+    """Compile grammar to JSON string."""
+    import tiexiu.tiexiu as rust
+    return rust.compile_to_json_string(grammar, **kwargs)
 
 
-def load(json_str, **kwargs):
-    return rust.load(json_str, **kwargs)
+# def compile_with(cursor: Any, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - requires generic cursor support."""
+#     raise NotImplementedError("compile_with requires generic cursor support")
 
 
-def load_tree(json_str, **kwargs):
-    return rust.load_tree(json_str, **kwargs)
+# def compile_to_json_with(cursor: Any, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - requires generic cursor support."""
+#     raise NotImplementedError("compile_to_json_with requires generic cursor support")
 
 
-def boot_grammar(**kwargs):
-    return rust.boot_grammar(**kwargs)
+def load(json: str, **kwargs: Any) -> Any:
+    """NOT IMPLEMENTED - returns Grammar."""
+    raise NotImplementedError("load returns Grammar, not yet implemented")
 
 
-def boot_grammar_to_json(**kwargs):
+# def load_to_json(json: str, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - returns Value."""
+#     raise NotImplementedError("load_to_json returns Value, not yet implemented")
+
+
+def load_tree(json: str, **kwargs: Any) -> Any:
+    """NOT IMPLEMENTED - returns Tree."""
+    raise NotImplementedError("load_tree returns Tree, not yet implemented")
+
+
+# def load_tree_to_json(json: str, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - returns Value."""
+#     raise NotImplementedError("load_tree_to_json returns Value, not yet implemented")
+
+
+def boot_grammar(**kwargs: Any) -> Any:
+    """NOT IMPLEMENTED - returns Grammar."""
+    raise NotImplementedError("boot_grammar returns Grammar, not yet implemented")
+
+
+def boot_grammar_to_json(**kwargs: Any) -> Any:
+    """Get bootstrap grammar as JSON (dict, list, etc.)."""
+    import tiexiu.tiexiu as rust
     return rust.boot_grammar_to_json(**kwargs)
 
 
-def boot_grammar_as_json(**kwargs):
-    return rust.boot_grammar_as_json(**kwargs)
+def boot_grammar_to_json_string(**kwargs: Any) -> str:
+    """Get bootstrap grammar as JSON string."""
+    import tiexiu.tiexiu as rust
+    return rust.boot_grammar_to_json_string(**kwargs)
 
 
-def boot_grammar_pretty(**kwargs):
-    return rust.boot_grammar(**kwargs)
+def boot_grammar_pretty(**kwargs: Any) -> str:
+    """Get bootstrap grammar as pretty-printed string."""
+    import tiexiu.tiexiu as rust
+    return rust.boot_grammar_pretty(**kwargs)
 
 
-def load_boot(**kwargs):
-    return rust.load_boot(**kwargs)
+def load_boot(**kwargs: Any) -> Any:
+    """NOT IMPLEMENTED - returns Grammar."""
+    raise NotImplementedError("load_boot returns Grammar, not yet implemented")
 
 
-def load_boot_as_json(**kwargs):
+def load_boot_as_json(**kwargs: Any) -> Any:
+    """Load bootstrap grammar as JSON (dict, list, etc.)."""
+    import tiexiu.tiexiu as rust
     return rust.load_boot_as_json(**kwargs)
 
 
-def pretty(grammar, **kwargs):
-    return rust.pretty(grammar, **kwargs)
+def grammar_pretty(grammar: str, **kwargs: Any) -> str:
+    """Pretty print grammar."""
+    import tiexiu.tiexiu as rust
+    return rust.grammar_pretty(grammar, **kwargs)
 
 
-def parse(grammar, text, **kwargs):
+# def pretty_tree(tree: Any, **kwargs: Any) -> str:
+#     """NOT IMPLEMENTED - requires Tree object."""
+#     raise NotImplementedError("pretty_tree requires Tree object, not yet implemented")
+
+
+# def pretty_tree_json(tree: Any, **kwargs: Any) -> str:
+#     """NOT IMPLEMENTED - requires Tree object."""
+#     raise NotImplementedError("pretty_tree_json requires Tree object, not yet implemented")
+
+
+def parse(grammar: str, text: str, **kwargs: Any) -> Any:
+    """Parse text with grammar, return AST tree."""
+    import tiexiu.tiexiu as rust
     return rust.parse(grammar, text, **kwargs)
 
 
-def parse_to_json(grammar, text, **kwargs):
+def parse_to_json(grammar: str, text: str, **kwargs: Any) -> Any:
+    """Parse text with grammar to JSON (dict, list, etc.)."""
+    import tiexiu.tiexiu as rust
     return rust.parse_to_json(grammar, text, **kwargs)
 
 
-def tiexiu(**kwargs):
+def parse_to_json_string(grammar: str, text: str, **kwargs: Any) -> str:
+    """Parse text with grammar to JSON string."""
+    import tiexiu.tiexiu as rust
+    return rust.parse_to_json_string(grammar, text, **kwargs)
+
+
+# def parse_input(parser: Any, text: str, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - requires Grammar object."""
+#     raise NotImplementedError("parse_input requires Grammar object, not yet implemented")
+
+
+# def parse_input_to_json(parser: Any, text: str, **kwargs: Any) -> Any:
+#     """NOT IMPLEMENTED - requires Grammar object."""
+#     raise NotImplementedError("parse_input_to_json requires Grammar object, not yet implemented")
+
+
+# def parse_input_to_json_string(parser: Any, text: str, **kwargs: Any) -> str:
+#     """NOT IMPLEMENTED - requires Grammar object."""
+#     raise NotImplementedError("parse_input_to_json_string requires Grammar object, not yet implemented")
+
+
+def pretty(grammar: str, **kwargs: Any) -> str:
+    """Pretty print grammar."""
+    import tiexiu.tiexiu as rust
+    return rust.pretty(grammar, **kwargs)
+
+
+def pegapi(**kwargs: Any) -> Any:
+    """Create TieXiu OO API instance."""
+    import tiexiu.tiexiu as rust
     if kwargs:
-        return rust.tiexiu(**kwargs)
-    return rust.tiexiu()
+        return rust.pegapi(**kwargs)
+    return rust.pegapi()

@@ -1,9 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::api::fnapi;
+use crate::api::ooapi::TieXiu;
 use crate::cfg::*;
-use crate::json::ToExpJson;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -19,10 +18,15 @@ fn pykwargs_to_cfg(kwargs: &Bound<'_, PyDict>) -> Vec<CfgKey> {
     cfg
 }
 
-#[pyclass]
-pub struct TieXiuPy {
-    pub cfg: Vec<CfgKey>,
+fn update_cfg_from_kwargs(tx: &mut TieXiu, kwargs: Option<&Bound<'_, PyDict>>) {
+    if let Some(k) = kwargs {
+        let cfg = pykwargs_to_cfg(k);
+        tx.update_cfg(&cfg);
+    }
 }
+
+#[pyclass]
+pub struct TieXiuPy(pub TieXiu);
 
 #[pymethods]
 impl TieXiuPy {
@@ -34,66 +38,215 @@ impl TieXiuPy {
         } else {
             Vec::new()
         };
-        Ok(Self { cfg })
+        Ok(Self(TieXiu::new(&cfg)))
     }
 
-    fn parse_grammar(&self, grammar: &str) -> PyResult<Py<PyAny>> {
-        let tree = fnapi::parse_grammar(grammar, &self.cfg)
+    fn get(&mut self, grammar: &str) -> Option<String> {
+        self.0.get(grammar).map(|_| "cached".to_string())
+    }
+
+    fn get_or_compile(&mut self, grammar: &str) -> PyResult<String> {
+        let _ = self
+            .0
+            .get_or_compile(grammar)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        Ok("compiled".to_string())
+    }
+
+    #[pyo3(signature = (grammar, **kwargs))]
+    fn parse_grammar(
+        &mut self,
+        grammar: &str,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .parse_grammar_to_json(grammar)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (grammar, **kwargs))]
+    fn parse_grammar_to_json(
+        &mut self,
+        grammar: &str,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .parse_grammar_to_json(grammar)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (grammar, **kwargs))]
+    fn compile(
+        &mut self,
+        grammar: &str,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .compile_to_json(grammar)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (grammar, **kwargs))]
+    fn compile_to_json(
+        &mut self,
+        grammar: &str,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .compile_to_json(grammar)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (json, **kwargs))]
+    fn load(&mut self, json: &str, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let grammar = self
+            .0
+            .load(json)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value = grammar.to_json_exp();
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (json, **kwargs))]
+    fn load_tree(&mut self, json: &str, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let tree = self
+            .0
+            .load_tree(json)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         super::tree::tree_to_py(tree)
     }
 
-    fn parse_grammar_to_json(&self, grammar: &str) -> PyResult<String> {
-        let result = fnapi::parse_grammar_to_json_string(grammar, &self.cfg)
+    #[pyo3(signature = (**kwargs))]
+    fn boot_grammar(&mut self, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let grammar = self
+            .0
+            .boot_grammar()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value = grammar.to_json_exp();
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    fn boot_grammar_pretty(&mut self) -> PyResult<String> {
+        let result = self
+            .0
+            .boot_grammar_pretty()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         Ok(result)
     }
 
-    fn compile(&self, grammar: &str) -> PyResult<String> {
-        let result = fnapi::compile_to_json_string(grammar, &self.cfg)
+    #[pyo3(signature = (**kwargs))]
+    fn boot_grammar_to_json(&mut self, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .boot_grammar_to_json()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (**kwargs))]
+    fn load_boot(&mut self, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let grammar = self
+            .0
+            .load_boot()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value = grammar.to_json_exp();
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (**kwargs))]
+    fn load_boot_as_json(&mut self, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .boot_grammar_to_json()
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    }
+
+    #[pyo3(signature = (grammar, **kwargs))]
+    fn pretty(&mut self, grammar: &str, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<String> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let result = self
+            .0
+            .grammar_pretty(grammar)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         Ok(result)
     }
 
-    fn compile_to_json(&self, grammar: &str) -> PyResult<String> {
-        let result = fnapi::compile_to_json_string(grammar, &self.cfg)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        Ok(result)
-    }
-
-    fn load(&self, json: &str) -> PyResult<String> {
-        let grammar = fnapi::load(json, &self.cfg)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        let result = grammar
-            .to_json_string()
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        Ok(result)
-    }
-
-    fn load_tree(&self, json: &str) -> PyResult<Py<PyAny>> {
-        let tree = fnapi::load_tree(json, &self.cfg)
+    #[pyo3(signature = (grammar, text, **kwargs))]
+    fn parse(
+        &mut self,
+        grammar: &str,
+        text: &str,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let tree = self
+            .0
+            .parse(grammar, text)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         super::tree::tree_to_py(tree)
     }
 
-    fn boot_grammar(&self) -> PyResult<String> {
-        let grammar = fnapi::boot_grammar()
+    #[pyo3(signature = (grammar, text, **kwargs))]
+    fn parse_to_json(
+        &mut self,
+        grammar: &str,
+        text: &str,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<Py<PyAny>> {
+        update_cfg_from_kwargs(&mut self.0, kwargs);
+        let value = self
+            .0
+            .parse_to_json(grammar, text)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        let result = grammar
-            .to_json_string()
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        Ok(result)
-    }
-
-    fn boot_grammar_to_json(&self) -> PyResult<String> {
-        let result = fnapi::boot_grammar_to_json_string(&self.cfg)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        Ok(result)
-    }
-
-    fn boot_grammar_pretty(&self) -> PyResult<String> {
-        let result = fnapi::boot_grammar_pretty(&self.cfg)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        Ok(result)
+        let py = unsafe { pyo3::Python::assume_attached() };
+        pythonize::pythonize(py, &value)
+            .map(|obj| obj.into())
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 }
