@@ -24,11 +24,9 @@ def test_parse_grammar_to_json():
 
 def test_compile():
     tx = tiexiu.pegapi()
-    # NOT IMPLEMENTED - returns Grammar
-    try:
-        result = tx.compile("start = /a/")
-    except NotImplementedError:
-        pass
+    result = tx.compile("start = /a/")
+    assert result is not None
+    assert result["name"] == "__COMPILED__"
 
 
 def test_compile_to_json():
@@ -40,11 +38,9 @@ def test_compile_to_json():
 
 def test_boot_grammar():
     tx = tiexiu.pegapi()
-    # NOT IMPLEMENTED - returns Grammar
-    try:
-        result = tx.boot_grammar()
-    except NotImplementedError:
-        pass
+    result = tx.boot_grammar()
+    assert result is not None
+    assert result["name"] == "TatSu"
 
 
 def test_boot_grammar_to_json():

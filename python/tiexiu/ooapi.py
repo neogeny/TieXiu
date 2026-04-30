@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-from typing import Protocol, Optional, Any
+from typing import Protocol, Any
 
 
 class TieXiu(Protocol):
@@ -24,24 +24,24 @@ class TieXiu(Protocol):
         ...
 
     def compile(self, grammar: str, **kwargs: Any) -> Any:
-        """NOT IMPLEMENTED - returns Grammar"""
-        raise NotImplementedError("compile returns Grammar, not yet implemented")
+        """Compile grammar to Grammar."""
+        ...
 
     def compile_to_json(self, grammar: str, **kwargs: Any) -> Any:
         """Compile grammar to JSON."""
         ...
 
-    def load(self, json: str, **kwargs: Any) -> Any:
-        """NOT IMPLEMENTED - returns Grammar"""
-        raise NotImplementedError("load returns Grammar, not yet implemented")
+    def load_from_json(self, json: str, **kwargs: Any) -> Any:
+        """Load grammar from JSON."""
+        ...
 
     def load_tree(self, json: str, **kwargs: Any) -> Any:
-        """NOT IMPLEMENTED - returns Tree"""
-        raise NotImplementedError("load_tree returns Tree, not yet implemented")
+        """Load tree from JSON."""
+        ...
 
     def boot_grammar(self, **kwargs: Any) -> Any:
-        """NOT IMPLEMENTED - returns Grammar"""
-        raise NotImplementedError("boot_grammar returns Grammar, not yet implemented")
+        """Get bootstrap grammar."""
+        ...
 
     def boot_grammar_to_json(self, **kwargs: Any) -> Any:
         """Get bootstrap grammar as JSON."""
@@ -52,8 +52,8 @@ class TieXiu(Protocol):
         ...
 
     def load_boot(self, **kwargs: Any) -> Any:
-        """NOT IMPLEMENTED - returns Grammar"""
-        raise NotImplementedError("load_boot returns Grammar, not yet implemented")
+        """Load bootstrap grammar."""
+        ...
 
     def load_boot_as_json(self, **kwargs: Any) -> Any:
         """Load bootstrap grammar as JSON."""
