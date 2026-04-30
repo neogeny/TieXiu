@@ -3,8 +3,8 @@
 
 use super::pythonize;
 use crate::cfg::*;
-use crate::python::pyooapi::TieXiuPy;
 use crate::python::GrammarPy;
+use crate::python::pyooapi::TieXiuPy;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
