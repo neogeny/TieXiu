@@ -2,17 +2,18 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::cfg::*;
-use crate::input::Error;
 use crate::input::tokenizing::TokenizingPatterns;
+use crate::input::Error;
 use crate::util::pyre::Pattern;
 use std::fmt::Debug;
 
-pub struct Location<'l> {
-    pub source: &'l str,
+pub struct Location {
+    pub source: String,
     pub pos: (usize, usize),
 }
 
 pub trait Cursor: Debug + Configurable {
+    fn source(&self) -> String;
     fn mark(&self) -> usize;
     fn reset(&mut self, mark: usize);
     fn textstr(&self) -> &str;
@@ -43,14 +44,14 @@ pub trait Cursor: Debug + Configurable {
         (line, col)
     }
 
-    fn location(&self) -> Location<'_> {
+    fn location(&self) -> Location {
         self.location_at(self.mark())
     }
 
-    fn location_at<'l>(&self, mark: usize) -> Location<'l> {
+    fn location_at(&self, mark: usize) -> Location {
         let pos = self.pos_at(mark);
         Location {
-            source: "input",
+            source: self.source(),
             pos,
         }
     }
@@ -67,7 +68,7 @@ pub trait Cursor: Debug + Configurable {
             match opt {
                 CfgKey::Wsp(p) => wsp = p.as_str(),
                 CfgKey::Cmt(p) => cmt = p.as_str(),
-                CfgKey::Eol(p) => eol = p.as_str(),
+               CfgKey::Eol(p) => eol = p.as_str(),
                 _ => {}
             }
         }

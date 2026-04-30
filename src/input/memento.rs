@@ -3,6 +3,8 @@ use console::style;
 use std::fmt;
 
 pub struct Memento {
+    /// the source of the error
+    pub source: Str,
     /// The specific error message (e.g., "expected semicolon")
     pub msg: Str,
     /// Absolute line number and content of captured lines
@@ -17,7 +19,7 @@ pub struct Memento {
 }
 
 impl Memento {
-    pub fn new(text: &str, start: usize, mark: usize, msg: &str) -> Self {
+    pub fn new(source: &str, text: &str, start: usize, mark: usize, msg: &str) -> Self {
         // 1. Get absolute positions (1-indexed)
         let abs_start = Self::pos_at(text, start);
         let abs_mark = Self::pos_at(text, mark);
@@ -41,6 +43,7 @@ impl Memento {
 
         Self {
             msg: Ref::from(msg),
+            source: source.into(),
             window: window_vec.into_boxed_slice(),
             abs_start,
             abs_mark,
@@ -67,7 +70,7 @@ impl Memento {
         // 1. Main Error Line: error: <msg>
         writeln!(f, "\n{}: {}", err_label, style(&self.msg).bold())?;
 
-        let filepath = "input";
+        let filepath = self.source.clone();
         // 2. Location Line: --> input:line:col
         writeln!(
             f,

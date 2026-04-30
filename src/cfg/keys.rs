@@ -53,6 +53,10 @@ pub enum CfgKey {
     NoLeftRecursion,
     NoParseInfo,
     NoMemoization,
+    
+    // Cursor
+    /// The source of the input
+    Source(String),
 }
 
 unsafe impl Send for CfgKey {}

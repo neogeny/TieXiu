@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::Cursor;
 use super::error::Error;
 use super::tokenizing::TokenizingPatterns;
+use super::Cursor;
 use crate::cfg::keys::config;
 use crate::cfg::*;
 use crate::types::Str;
@@ -15,6 +15,7 @@ use std::rc::Rc;
 pub struct CursorHeavy {
     ignorecase: bool,
     nameguard: bool,
+    source: String,
     patterns: Rc<TokenizingPatterns>,
 }
 
@@ -40,10 +41,29 @@ impl StrCursor {
             heavy: CursorHeavy {
                 ignorecase: false,
                 nameguard: true,
+                source: "some input".into(),
                 patterns: TokenizingPatterns::default().into(),
             }
             .into(),
         }
+    }
+    pub fn from_source(source: &str, text: &str, mut start: usize) -> Self {
+        start = start.min(text.len());
+        while start < text.len() && !text.is_char_boundary(start) {
+            start += 1;
+        }
+        Self {
+            text: text.into(),
+            offset: start.min(text.len()),
+            heavy: CursorHeavy {
+                ignorecase: false,
+                nameguard: true,
+                source: source.into(),
+                patterns: TokenizingPatterns::default().into(),
+            }
+            .into(),
+        }
+
     }
 
     pub fn with_patterns(text: &str, patterns: TokenizingPatterns) -> Result<Self, Error> {
@@ -53,6 +73,7 @@ impl StrCursor {
             heavy: CursorHeavy {
                 ignorecase: false,
                 nameguard: true,
+                source: "some input".into(),
                 patterns: patterns.into(),
             }
             .into(),
@@ -93,9 +114,16 @@ impl Configurable for StrCursor {
         if let Ok(patterns) = self.tokenizing_from_cfg(&cfg) {
             self.set_tokenizing(&patterns);
         }
+        let source = cfg.iter()
+            .filter_map(|k| {
+                if let CfgKey::Source(s) = k { Some(s) } else { None }
+            })
+            .next()
+            .unwrap_or(&self.heavy.source);
         self.heavy = CursorHeavy {
             ignorecase: cfg.contains(&CfgKey::IgnoreCase),
             nameguard: !cfg.contains(&CfgKey::NoNameGuard),
+            source: source.into(),
             patterns: self.heavy.patterns.clone(),
         }
         .into()
@@ -103,6 +131,10 @@ impl Configurable for StrCursor {
 }
 
 impl Cursor for StrCursor {
+    fn source(&self) -> String {
+        self.heavy.source.clone()
+    }
+
     fn mark(&self) -> usize {
         self.offset
     }
@@ -184,6 +216,7 @@ impl Cursor for StrCursor {
         self.heavy = CursorHeavy {
             ignorecase: self.heavy.ignorecase,
             nameguard: self.heavy.nameguard,
+            source: self.heavy.source.clone(),
             patterns: patterns.clone().into(),
         }
         .into()
