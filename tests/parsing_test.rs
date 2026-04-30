@@ -3,7 +3,8 @@
 
 //! Tests translated from TatSu's parsing_test.py
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::api::compile;
 use tiexiu::{Result, parse};
 
@@ -68,7 +69,7 @@ fn test_start() -> Result<()> {
 
     let tree = parse(grammar, "test", &[])?;
     eprintln!("{:#?}", tree);
-    assert_eq!(tree.to_json(), json!("True"));
+    assert_eq!(tree.to_json(), value!("True"));
     Ok(())
 }
 
@@ -110,7 +111,7 @@ fn test_parseinfo_directive() -> Result<()> {
 
     let model = compile(grammar, &[])?;
     let ast = tiexiu::parse_input(&model, "test", &[])?;
-    assert_eq!(ast.to_json(), json!("test"));
+    assert_eq!(ast.to_json(), value!("test"));
     Ok(())
 }
 
@@ -123,7 +124,7 @@ fn test_parseinfo_false_directive() -> Result<()> {
 
     let model = compile(grammar, &[])?;
     let ast = tiexiu::parse_input(&model, "test", &[])?;
-    assert_eq!(ast.to_json(), json!("test"));
+    assert_eq!(ast.to_json(), value!("test"));
     Ok(())
 }
 
@@ -144,6 +145,6 @@ fn test_cut_scope() -> Result<()> {
 
     let model = compile(grammar, &[])?;
     let ast = tiexiu::parse_input(&model, "something", &[])?;
-    assert_eq!(ast.to_json(), json!("something"));
+    assert_eq!(ast.to_json(), value!("something"));
     Ok(())
 }

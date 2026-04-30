@@ -3,7 +3,8 @@
 
 //! Tests translated from TatSu's grammar/syntax_test.py
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::api::{compile, parse_grammar};
 use tiexiu::engine;
 use tiexiu::input::StrCursor;
@@ -75,7 +76,7 @@ fn test_ast_assignment() -> Result<()> {
     let parser = compile(grammar, &[])?;
     let ast = parse_input(&parser, "a")?;
     // {"a"}* produces ["a"], @: makes rule return it directly
-    assert_eq!(ast.to_json(), json!(["a"]));
+    assert_eq!(ast.to_json(), array!["a"]);
 
     // f uses @+:
     let grammar = r#"
@@ -85,7 +86,7 @@ fn test_ast_assignment() -> Result<()> {
     let parser = compile(grammar, &[])?;
     let ast = parse_input(&parser, "a")?;
     // {"a"}* produces ["a"], @+ wraps in another list
-    assert_eq!(ast.to_json(), json!([["a"]]));
+    assert_eq!(ast.to_json(), array![array!["a"]]);
 
     Ok(())
 }
@@ -102,7 +103,10 @@ fn test_optional_closure() -> Result<()> {
         ast,
         m(&[("foo", s(&[t("x"), l(&[t("y"), t("y")]), t("z"), t("z")]))])
     );
-    assert_eq!(ast.to_json(), json!({"foo":["x", ["y","y"], "z", "z"]}));
+    assert_eq!(
+        ast.to_json(),
+        object! {"foo": array!["x", array!["y", "y"], "z", "z"]}
+    );
     Ok(())
 }
 

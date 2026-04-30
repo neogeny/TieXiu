@@ -1,6 +1,7 @@
 //! Basic Grammar Tests
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::*;
 
 #[test]
@@ -11,7 +12,7 @@ fn simple_grammar() -> Result<()> {
     "#;
     let grammar = compile(grammar, &[])?;
     let tree = parse_input(&grammar, "hello", &[])?;
-    assert_eq!(tree.to_json(), json!("hello"));
+    assert_eq!(tree.to_json(), value!("hello"));
     Ok(())
 }
 
@@ -28,7 +29,7 @@ fn multiple_rules() -> Result<()> {
     "#;
     let grammar = compile(grammar, &[])?;
     let tree = parse_input(&grammar, "a", &[])?;
-    assert_eq!(tree.to_json(), json!("a"));
+    assert_eq!(tree.to_json(), value!("a"));
     Ok(())
 }
 
@@ -41,7 +42,7 @@ fn rule_references() -> Result<()> {
     "#;
     let grammar = compile(grammar, &[])?;
     let tree = parse_input(&grammar, "hello world", &[])?;
-    assert_eq!(tree.to_json(), json!(["hello", "world"]));
+    assert_eq!(tree.to_json(), array!["hello", "world"]);
     Ok(())
 }
 

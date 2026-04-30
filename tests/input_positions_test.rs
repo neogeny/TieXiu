@@ -1,6 +1,7 @@
 //! Input Position Tests
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::engine::{CtxI, new_ctx};
 use tiexiu::input::strcursor::StrCursor;
 use tiexiu::parse_input;
@@ -35,6 +36,6 @@ fn multiline_input() -> Result<()> {
     let grammar = tiexiu::compile(grammar, &[])?;
 
     let tree = parse_input(&grammar, "hello\nworld", &[])?;
-    assert_eq!(tree.to_json(), json!(["hello", "world"]));
+    assert_eq!(tree.to_json(), array!["hello", "world"]);
     Ok(())
 }

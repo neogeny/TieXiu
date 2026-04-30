@@ -39,7 +39,7 @@ fn test_ebnf_parsing() -> tiexiu::Result<()> {
     tree = g.parse_input("3", &[CfgKey::Trace])?;
     eprintln!("{:#?}", tree);
     eprintln!("{:#?}", tree.to_json());
-    eprintln!("{:#}", tree.to_json_string()?);
+    eprintln!("{:#}", tree.to_json_string());
 
     tree = g.parse_input("3 * (2 + 5)", &[CfgKey::Trace])?;
     eprintln!("{:#?}", tree);

@@ -5,13 +5,12 @@
 
 use crate::engine::new_ctx;
 use crate::input::{Cursor, StrCursor};
-use crate::json::ToExpJson;
 use crate::peg::error::Yeap;
 use crate::peg::grammar::PrettyPrint;
 use crate::peg::*;
 pub use crate::trees::Tree;
 use crate::{Error, Result};
-use serde_json::Value;
+use json::JsonValue;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::RwLock;
@@ -80,14 +79,14 @@ impl TieXiu {
         self.parse_grammar_with(StrCursor::new(grammar))
     }
 
-    pub fn parse_grammar_to_json(&mut self, grammar: &str) -> Result<Value> {
+    pub fn parse_grammar_to_json(&mut self, grammar: &str) -> Result<JsonValue> {
         let tree = self.parse_grammar(grammar)?;
         Ok(tree.to_json())
     }
 
     pub fn parse_grammar_to_json_string(&mut self, grammar: &str) -> Result<String> {
         let tree = self.parse_grammar(grammar)?;
-        Ok(tree.to_json_string()?)
+        Ok(tree.to_json_string())
     }
 
     pub fn parse_grammar_with<U>(&mut self, cursor: U) -> Result<Tree>
@@ -102,7 +101,7 @@ impl TieXiu {
         }
     }
 
-    pub fn parse_grammar_to_json_with<U>(&mut self, cursor: U) -> Result<Value>
+    pub fn parse_grammar_to_json_with<U>(&mut self, cursor: U) -> Result<JsonValue>
     where
         U: Cursor + Clone,
     {
@@ -114,7 +113,7 @@ impl TieXiu {
         self.get_or_compile(grammar)
     }
 
-    pub fn compile_to_json(&mut self, grammar: &str) -> Result<Value> {
+    pub fn compile_to_json(&mut self, grammar: &str) -> Result<JsonValue> {
         let grammar = self.compile(grammar)?;
         Ok(grammar.to_json())
     }
@@ -132,7 +131,7 @@ impl TieXiu {
         self.compile(&text)
     }
 
-    pub fn compile_to_json_with<U>(&mut self, cursor: U) -> Result<Value>
+    pub fn compile_to_json_with<U>(&mut self, cursor: U) -> Result<JsonValue>
     where
         U: Cursor + Clone,
     {
@@ -144,7 +143,7 @@ impl TieXiu {
         Ok(Grammar::from_json(json)?)
     }
 
-    pub fn load_to_json(&mut self, json: &str) -> Result<Value> {
+    pub fn load_to_json(&mut self, json: &str) -> Result<JsonValue> {
         let grammar = self.load(json)?;
         Ok(grammar.to_json())
     }
@@ -153,7 +152,7 @@ impl TieXiu {
         Tree::from_json_str(json).map_err(Error::from)
     }
 
-    pub fn load_tree_to_json(&mut self, json: &str) -> Result<Value> {
+    pub fn load_tree_to_json(&mut self, json: &str) -> Result<JsonValue> {
         let tree = self.load_tree(json)?;
         Ok(tree.to_json())
     }
@@ -161,14 +160,6 @@ impl TieXiu {
     pub fn grammar_pretty(&mut self, grammar: &str) -> Result<String> {
         let grammar = self.compile(grammar)?;
         Ok(grammar.pretty_print())
-    }
-
-    pub fn pretty_tree(&mut self, tree: &Tree) -> Result<String> {
-        Ok(tree.to_json_string()?)
-    }
-
-    pub fn pretty_tree_json(&mut self, tree: &Tree) -> Result<String> {
-        tree.to_json_string().map_err(Error::from)
     }
 
     pub fn parse(&mut self, grammar: &str, text: &str) -> Result<Tree> {
@@ -181,14 +172,14 @@ impl TieXiu {
         }
     }
 
-    pub fn parse_to_json(&mut self, grammar: &str, text: &str) -> Result<Value> {
+    pub fn parse_to_json(&mut self, grammar: &str, text: &str) -> Result<JsonValue> {
         let tree = self.parse(grammar, text)?;
         Ok(tree.to_json())
     }
 
     pub fn parse_to_json_string(&mut self, grammar: &str, text: &str) -> Result<String> {
         let tree = self.parse(grammar, text)?;
-        tree.to_json_string().map_err(Error::from)
+        Ok(tree.to_json_string())
     }
 
     pub fn parse_input(&mut self, parser: &Grammar, text: &str) -> Result<Tree> {
@@ -200,14 +191,14 @@ impl TieXiu {
         }
     }
 
-    pub fn parse_input_to_json(&mut self, parser: &Grammar, text: &str) -> Result<Value> {
+    pub fn parse_input_to_json(&mut self, parser: &Grammar, text: &str) -> Result<JsonValue> {
         let tree = self.parse_input(parser, text)?;
         Ok(tree.to_json())
     }
 
     pub fn parse_input_to_json_string(&mut self, parser: &Grammar, text: &str) -> Result<String> {
         let tree = self.parse_input(parser, text)?;
-        tree.to_json_string().map_err(Error::from)
+        Ok(tree.to_json_string())
     }
 
     pub fn boot_grammar(&mut self) -> Result<Grammar> {
@@ -218,7 +209,7 @@ impl TieXiu {
         self.boot_grammar()
     }
 
-    pub fn boot_grammar_to_json(&mut self) -> Result<Value> {
+    pub fn boot_grammar_to_json(&mut self) -> Result<JsonValue> {
         let grammar = self.load_boot()?;
         Ok(grammar.to_json())
     }

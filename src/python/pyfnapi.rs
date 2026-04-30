@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::pythonize;
 use crate::cfg::*;
 use crate::python::GrammarPy;
 use pyo3::prelude::*;
@@ -16,6 +17,10 @@ fn pykwargs_to_cfg(kwargs: &Bound<'_, PyDict>) -> Vec<CfgKey> {
         }
     }
     cfg
+}
+
+fn pythonize_json_value(py: pyo3::Python<'_>, value: json::JsonValue) -> PyResult<Py<PyAny>> {
+    pythonize(py, &value)
 }
 
 #[pyfunction]
@@ -48,9 +53,7 @@ pub(crate) fn parse_grammar_to_json(
     let value = crate::api::parse_grammar_to_json(grammar, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     let py = unsafe { pyo3::Python::assume_attached() };
-    pythonize::pythonize(py, &value)
-        .map(|obj| obj.into())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    pythonize_json_value(py, value)
 }
 
 #[pyfunction]
@@ -67,9 +70,7 @@ pub(crate) fn compile_to_json(
     let value = crate::api::compile_to_json(grammar, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     let py = unsafe { pyo3::Python::assume_attached() };
-    pythonize::pythonize(py, &value)
-        .map(|obj| obj.into())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    pythonize_json_value(py, value)
 }
 
 #[pyfunction]
@@ -109,9 +110,7 @@ pub(crate) fn load_boot_as_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<
     let value = crate::api::boot_grammar_to_json(&cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     let py = unsafe { pyo3::Python::assume_attached() };
-    pythonize::pythonize(py, &value)
-        .map(|obj| obj.into())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    pythonize_json_value(py, value)
 }
 
 #[pyfunction]
@@ -125,9 +124,7 @@ pub(crate) fn boot_grammar_to_json(kwargs: Option<&Bound<'_, PyDict>>) -> PyResu
     let value = crate::api::boot_grammar_to_json(&cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     let py = unsafe { pyo3::Python::assume_attached() };
-    pythonize::pythonize(py, &value)
-        .map(|obj| obj.into())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    pythonize_json_value(py, value)
 }
 
 #[pyfunction]
@@ -175,9 +172,7 @@ pub(crate) fn parse_to_json(
     let value = crate::api::parse_to_json(grammar, text, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     let py = unsafe { pyo3::Python::assume_attached() };
-    pythonize::pythonize(py, &value)
-        .map(|obj| obj.into())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    pythonize_json_value(py, value)
 }
 
 #[pyfunction]
@@ -299,9 +294,7 @@ pub(crate) fn parse_input_to_json(
     let value = crate::api::parse_input_to_json(parser.grammar(), text, &cfg)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
     let py = unsafe { pyo3::Python::assume_attached() };
-    pythonize::pythonize(py, &value)
-        .map(|obj| obj.into())
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+    pythonize_json_value(py, value)
 }
 
 #[pyfunction]

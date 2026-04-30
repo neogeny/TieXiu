@@ -1,8 +1,10 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::pythonize;
 use crate::api::ooapi::TieXiu;
 use crate::cfg::*;
+use json::JsonValue;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -16,6 +18,10 @@ fn pykwargs_to_cfg(kwargs: &Bound<'_, PyDict>) -> Vec<CfgKey> {
         }
     }
     cfg
+}
+
+fn pythonize_json_value(py: pyo3::Python<'_>, value: JsonValue) -> PyResult<Py<PyAny>> {
+    pythonize(py, &value)
 }
 
 fn update_cfg_from_kwargs(tx: &mut TieXiu, kwargs: Option<&Bound<'_, PyDict>>) {
@@ -65,8 +71,7 @@ impl TieXiuPy {
             .parse_grammar_to_json(grammar)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -82,8 +87,7 @@ impl TieXiuPy {
             .parse_grammar_to_json(grammar)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -99,8 +103,7 @@ impl TieXiuPy {
             .compile_to_json(grammar)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -116,8 +119,7 @@ impl TieXiuPy {
             .compile_to_json(grammar)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -128,11 +130,9 @@ impl TieXiuPy {
             .0
             .load(json)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        let value = grammar.to_json_exp();
+        let value = grammar.to_json();
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+        pythonize(py, &value).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
     #[pyo3(signature = (json, **kwargs))]
@@ -152,10 +152,9 @@ impl TieXiuPy {
             .0
             .boot_grammar()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        let value = grammar.to_json_exp();
+        let value = grammar.to_json();
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -175,8 +174,7 @@ impl TieXiuPy {
             .boot_grammar_to_json()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -187,10 +185,9 @@ impl TieXiuPy {
             .0
             .load_boot()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-        let value = grammar.to_json_exp();
+        let value = grammar.to_json();
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -202,8 +199,7 @@ impl TieXiuPy {
             .boot_grammar_to_json()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 
@@ -245,8 +241,7 @@ impl TieXiuPy {
             .parse_to_json(grammar, text)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         let py = unsafe { pyo3::Python::assume_attached() };
-        pythonize::pythonize(py, &value)
-            .map(|obj| obj.into())
+        pythonize_json_value(py, value)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
     }
 }

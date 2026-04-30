@@ -6,7 +6,8 @@
 //! These are skeletal tests - they will not compile until TieXiu
 //! implements the full EBNF parsing bootstrap.
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::Result;
 use tiexiu::api::parse;
 
@@ -22,9 +23,7 @@ fn test_alert_interpolation() -> Result<()> {
     eprintln!("{:#?}", ast);
     assert_eq!(
         ast.to_json(),
-        json!(
-            {"a":"42", "b":"69", "i": "seen: 42, 69"}
-        )
+        object! {"a":"42", "b":"69", "i": "seen: 42, 69"}
     );
     Ok(())
 }

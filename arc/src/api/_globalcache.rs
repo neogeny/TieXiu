@@ -1,10 +1,10 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::util::ensure::Ensure;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
+use tiexiu::util::ensure::Ensure;
 
 /// Error states for the global grammar cache.
 #[derive(Debug, thiserror::Error)]

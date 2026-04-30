@@ -3,7 +3,7 @@
 
 //! Imp - Direct Value to Grammar translator
 //!
-//! This module translates serde_json::Value directly to Grammar,
+//! This module translates json::JsonValue directly to Grammar,
 //! bypassing the TatSuModel deserializer which fails on modified JSON.
 
 use crate::cfg::*;
@@ -12,21 +12,21 @@ use crate::peg::exp::Exp;
 use crate::peg::grammar::{Grammar, GrammarDirectives};
 use crate::peg::rule::Rule;
 use crate::types::Str;
-use serde_json::Value;
+use json::JsonValue;
 
 #[derive(Clone)]
 pub struct JsonSerializationHelper {
-    value: Value,
+    value: JsonValue,
     path: Vec<String>,
 }
 
 impl Grammar {
     pub fn from_json(json: &str) -> Result<Self, JsonError> {
-        let value: Value = serde_json::from_str(json)?;
-        Self::from_serde_json_value(&value)
+        let value = json::parse(json)?;
+        Self::from_json_value(&value)
     }
 
-    pub fn from_serde_json_value(value: &Value) -> Result<Self, JsonError> {
+    pub fn from_json_value(value: &JsonValue) -> Result<Self, JsonError> {
         let path = JsonSerializationHelper::new(value.clone());
         let class = path.get_class()?;
 
@@ -42,20 +42,26 @@ impl Grammar {
             .iter()
             .enumerate()
             .map(|(i, f)| {
-                Rule::from_serde_json_with_path(f.clone())
+                Rule::from_json_with_path(f.clone())
                     .map_err(|e| JsonError::InvalidField(format!("rules[{}]: {}", i, e)))
             })
             .collect();
 
         let directives =
             Self::parse_directives(path.get_obj().ok().and_then(|o| o.get("directives")))?;
-        let keywords: Vec<Str> = path
-            .get_obj()
-            .ok()
-            .and_then(|o| o.get("keywords"))
-            .and_then(|v| v.as_array())
-            .map(|arr| arr.iter().map(|v| v.to_string().into()).collect())
-            .unwrap_or_default();
+        let keywords: Vec<Str> = if let Ok(obj) = path.get_obj() {
+            if let Some(keywords_val) = obj.get("keywords") {
+                if let JsonValue::Array(arr) = keywords_val {
+                    arr.iter().map(|v| v.to_string().into()).collect()
+                } else {
+                    vec![]
+                }
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        };
 
         let mut grammar = Grammar::new(
             &name,
@@ -71,18 +77,18 @@ impl Grammar {
         Ok(grammar)
     }
 
-    fn parse_directives(directives: Option<&Value>) -> Result<GrammarDirectives, JsonError> {
-        if let Some(Value::Object(obj)) = directives {
+    fn parse_directives(directives: Option<&JsonValue>) -> Result<GrammarDirectives, JsonError> {
+        if let Some(JsonValue::Object(obj)) = directives {
             let res: GrammarDirectives = obj
                 .iter()
                 .filter_map(|(k, v)| {
                     let val_str = match v {
-                        Value::String(s) => s.to_string(),
-                        Value::Bool(b) => b.to_string(),
-                        Value::Number(n) => n.to_string(),
+                        JsonValue::String(s) => s.to_string(),
+                        JsonValue::Boolean(b) => b.to_string(),
+                        JsonValue::Number(n) => n.to_string(),
                         _ => v.to_string(),
                     };
-                    Cfg::map(k.as_str(), val_str.as_str())
+                    Cfg::map(k, val_str.as_str())
                 })
                 .collect();
             return Ok(res);
@@ -92,12 +98,12 @@ impl Grammar {
 }
 
 impl Rule {
-    pub fn from_serde_json_value(value: &Value) -> Result<Self, JsonError> {
+    pub fn from_json_value(value: &JsonValue) -> Result<Self, JsonError> {
         let path = JsonSerializationHelper::new(value.clone());
-        Self::from_serde_json_with_path(path)
+        Self::from_json_with_path(path)
     }
 
-    pub fn from_serde_json_with_path(path: JsonSerializationHelper) -> Result<Self, JsonError> {
+    pub fn from_json_with_path(path: JsonSerializationHelper) -> Result<Self, JsonError> {
         let class = path.get_class()?;
 
         if class != "Rule" {
@@ -105,20 +111,24 @@ impl Rule {
         }
 
         let name = path.get_string("name")?;
-        let rhs = Exp::from_serde_json_with_path(path.get_nested("exp")?)?;
+        let rhs = Exp::from_json_with_path(path.get_nested("exp")?)?;
 
-        let params = path
-            .get_obj()
-            .ok()
-            .and_then(|o| o.get("params"))
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str())
-                    .map(String::from)
-                    .collect()
-            })
-            .unwrap_or_default();
+        let params: Vec<String> = if let Ok(obj) = path.get_obj() {
+            if let Some(params_val) = obj.get("params") {
+                if let JsonValue::Array(arr) = params_val {
+                    arr.iter()
+                        .filter_map(|v| v.as_str())
+                        .map(String::from)
+                        .collect()
+                } else {
+                    vec![]
+                }
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        };
 
         let is_name = path.opt_bool("is_name", false);
         let is_tokn = path.opt_bool("is_tokn", false);
@@ -133,12 +143,12 @@ impl Rule {
 }
 
 impl Exp {
-    pub fn from_serde_json_value(value: &Value) -> Result<Self, JsonError> {
+    pub fn from_json_value(value: &JsonValue) -> Result<Self, JsonError> {
         let path = JsonSerializationHelper::new(value.clone());
-        Self::from_serde_json_with_path(path)
+        Self::from_json_with_path(path)
     }
 
-    pub fn from_serde_json_with_path(path: JsonSerializationHelper) -> Result<Self, JsonError> {
+    pub fn from_json_with_path(path: JsonSerializationHelper) -> Result<Self, JsonError> {
         let class = path.get_class()?;
 
         match class.as_str() {
@@ -146,7 +156,7 @@ impl Exp {
                 let items = path.get_array("sequence")?;
                 let exprs: Result<Vec<_>, _> = items
                     .iter()
-                    .map(|f| Exp::from_serde_json_with_path(f.clone()))
+                    .map(|f| Exp::from_json_with_path(f.clone()))
                     .collect();
                 Ok(Exp::sequence(exprs?.as_slice().into()))
             }
@@ -154,20 +164,18 @@ impl Exp {
                 let items = path.get_array("options")?;
                 let exprs: Result<Vec<_>, _> = items
                     .iter()
-                    .map(|f| Exp::from_serde_json_with_path(f.clone()))
+                    .map(|f| Exp::from_json_with_path(f.clone()))
                     .collect();
                 Ok(Exp::choice(exprs?.as_slice().into()))
             }
-            "Option" => Ok(Exp::alt(Exp::from_serde_json_with_path(
-                path.get_nested("exp")?,
-            )?)),
+            "Option" => Ok(Exp::alt(Exp::from_json_with_path(path.get_nested("exp")?)?)),
             "Named" => Ok(Exp::named(
                 &path.get_string("name")?,
-                Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
+                Exp::from_json_with_path(path.get_nested("exp")?)?,
             )),
             "NamedList" => Ok(Exp::named_list(
                 &path.get_string("name")?,
-                Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
+                Exp::from_json_with_path(path.get_nested("exp")?)?,
             )),
             "Call" => Ok(Exp::call(&path.get_string("name")?)),
             "Token" => Ok(Exp::token(&path.get_string("token")?)),
@@ -177,51 +185,51 @@ impl Exp {
                 path.opt_str("literal").unwrap_or(""),
                 path.opt_u64("level").unwrap_or(0) as u8,
             )),
-            "Group" => Ok(Exp::group(Exp::from_serde_json_with_path(
+            "Group" => Ok(Exp::group(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "Optional" => Ok(Exp::optional(Exp::from_serde_json_with_path(
+            "Optional" => Ok(Exp::optional(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "Closure" => Ok(Exp::closure(Exp::from_serde_json_with_path(
+            "Closure" => Ok(Exp::closure(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "PositiveClosure" => Ok(Exp::positive_closure(Exp::from_serde_json_with_path(
+            "PositiveClosure" => Ok(Exp::positive_closure(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "Lookahead" => Ok(Exp::lookahead(Exp::from_serde_json_with_path(
+            "Lookahead" => Ok(Exp::lookahead(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "NegativeLookahead" => Ok(Exp::negative_lookahead(Exp::from_serde_json_with_path(
+            "NegativeLookahead" => Ok(Exp::negative_lookahead(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "SkipGroup" => Ok(Exp::skip_group(Exp::from_serde_json_with_path(
+            "SkipGroup" => Ok(Exp::skip_group(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "SkipTo" => Ok(Exp::skip_to(Exp::from_serde_json_with_path(
+            "SkipTo" => Ok(Exp::skip_to(Exp::from_json_with_path(
                 path.get_nested("exp")?,
             )?)),
-            "Override" => Ok(Exp::override_node(Exp::from_serde_json_value(
+            "Override" => Ok(Exp::override_node(Exp::from_json_value(
                 &path.get_nested("exp")?.value,
             )?)),
-            "OverrideList" => Ok(Exp::override_list(Exp::from_serde_json_value(
+            "OverrideList" => Ok(Exp::override_list(Exp::from_json_value(
                 &path.get_nested("exp")?.value,
             )?)),
             "Join" => Ok(Exp::join(
-                Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
-                Exp::from_serde_json_with_path(path.get_nested("sep")?)?,
+                Exp::from_json_with_path(path.get_nested("exp")?)?,
+                Exp::from_json_with_path(path.get_nested("sep")?)?,
             )),
             "PositiveJoin" => Ok(Exp::positive_join(
-                Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
-                Exp::from_serde_json_with_path(path.get_nested("sep")?)?,
+                Exp::from_json_with_path(path.get_nested("exp")?)?,
+                Exp::from_json_with_path(path.get_nested("sep")?)?,
             )),
             "Gather" => Ok(Exp::gather(
-                Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
-                Exp::from_serde_json_with_path(path.get_nested("sep")?)?,
+                Exp::from_json_with_path(path.get_nested("exp")?)?,
+                Exp::from_json_with_path(path.get_nested("sep")?)?,
             )),
             "PositiveGather" => Ok(Exp::positive_gather(
-                Exp::from_serde_json_with_path(path.get_nested("exp")?)?,
-                Exp::from_serde_json_with_path(path.get_nested("sep")?)?,
+                Exp::from_json_with_path(path.get_nested("exp")?)?,
+                Exp::from_json_with_path(path.get_nested("sep")?)?,
             )),
             "RuleInclude" => {
                 let name = path.get_string("name")?;
@@ -238,7 +246,7 @@ impl Exp {
 }
 
 impl JsonSerializationHelper {
-    fn new(value: Value) -> Self {
+    fn new(value: JsonValue) -> Self {
         Self {
             value,
             path: Vec::new(),
@@ -254,10 +262,11 @@ impl JsonSerializationHelper {
         }
     }
 
-    fn get_obj(&self) -> Result<&serde_json::Map<String, Value>, JsonError> {
-        self.value
-            .as_object()
-            .ok_or_else(|| self.error("Expected object"))
+    fn get_obj(&self) -> Result<&json::object::Object, JsonError> {
+        match &self.value {
+            JsonValue::Object(obj) => Ok(obj),
+            _ => Err(self.error("Expected object")),
+        }
     }
 
     fn error(&self, msg: &str) -> JsonError {
@@ -271,10 +280,14 @@ impl JsonSerializationHelper {
 
     fn get_class(&self) -> Result<String, JsonError> {
         if let Ok(obj) = self.get_obj() {
-            obj.get("__class__")
-                .and_then(|v| v.as_str())
-                .map(String::from)
-                .ok_or_else(|| self.error("Missing __class__"))
+            if let Some(class_val) = obj.get("__class__") {
+                match class_val {
+                    JsonValue::String(s) => return Ok(s.clone()),
+                    JsonValue::Short(s) => return Ok(s.to_string()),
+                    _ => {}
+                }
+            }
+            Err(self.error("Missing __class__"))
         } else {
             Err(self.error("Missing __class__"))
         }
@@ -282,10 +295,14 @@ impl JsonSerializationHelper {
 
     fn get_string(&self, field: &str) -> Result<String, JsonError> {
         if let Ok(obj) = self.get_obj() {
-            obj.get(field)
-                .and_then(|v| v.as_str())
-                .map(String::from)
-                .ok_or_else(|| self.error(&format!("Missing field: {}", field)))
+            if let Some(val) = obj.get(field) {
+                return match val {
+                    JsonValue::String(s) => Ok(s.clone()),
+                    JsonValue::Short(s) => Ok(s.to_string()),
+                    _ => Err(self.error(&format!("Missing field: {}", field))),
+                };
+            }
+            Err(self.error(&format!("Missing field: {}", field)))
         } else {
             Err(self.error(&format!("Missing field: {}", field)))
         }
@@ -295,12 +312,16 @@ impl JsonSerializationHelper {
         let obj = self.get_obj()?;
         let value = obj
             .get(field)
-            .ok_or_else(|| self.error(&format!("Missing field: {}", field)))?;
+            .ok_or_else(|| self.error(&format!("Missing field: {}", field)))?
+            .clone();
 
-        // Push field name and __class__ for better error reporting
-        let nested_path = if let Some(child_obj) = value.as_object() {
-            if let Some(class) = child_obj.get("__class__").and_then(|v: &Value| v.as_str()) {
-                format!("{}:{}", field, class)
+        let nested_path = if let JsonValue::Object(child_obj) = &value {
+            if let Some(class_val) = child_obj.get("__class__") {
+                match class_val {
+                    JsonValue::String(s) => format!("{}:{}", field, s),
+                    JsonValue::Short(s) => format!("{}:{}", field, s),
+                    _ => field.to_string(),
+                }
             } else {
                 field.to_string()
             }
@@ -308,10 +329,10 @@ impl JsonSerializationHelper {
             field.to_string()
         };
 
-        Ok(self.push(&nested_path).with_value(value.clone()))
+        Ok(self.push(&nested_path).with_value(value))
     }
 
-    fn with_value(&self, value: Value) -> Self {
+    fn with_value(&self, value: JsonValue) -> Self {
         Self {
             value,
             path: self.path.clone(),
@@ -320,25 +341,29 @@ impl JsonSerializationHelper {
 
     fn get_array(&self, field: &str) -> Result<Vec<JsonSerializationHelper>, JsonError> {
         if let Ok(obj) = self.get_obj() {
-            if let Some(arr) = obj.get(field).and_then(|v: &Value| v.as_array()) {
-                return Ok(arr
-                    .iter()
-                    .enumerate()
-                    .map(|(i, v)| {
-                        let label = if let Some(child_obj) = v.as_object() {
-                            if let Some(class) =
-                                child_obj.get("__class__").and_then(|v: &Value| v.as_str())
-                            {
-                                format!("{}[{}]:{}", field, i, class)
+            if let Some(arr_val) = obj.get(field) {
+                if let JsonValue::Array(arr) = arr_val {
+                    return Ok(arr
+                        .iter()
+                        .enumerate()
+                        .map(|(i, v)| {
+                            let label = if let JsonValue::Object(child_obj) = v {
+                                if let Some(class_val) = child_obj.get("__class__") {
+                                    if let JsonValue::String(class) = class_val {
+                                        format!("{}[{}]:{}", field, i, class)
+                                    } else {
+                                        format!("{}[{}]", field, i)
+                                    }
+                                } else {
+                                    format!("{}[{}]", field, i)
+                                }
                             } else {
                                 format!("{}[{}]", field, i)
-                            }
-                        } else {
-                            format!("{}[{}]", field, i)
-                        };
-                        self.push(&label).with_value(v.clone())
-                    })
-                    .collect());
+                            };
+                            self.push(&label).with_value(v.clone())
+                        })
+                        .collect());
+                }
             }
         }
         Err(self.error(&format!("Missing or not array: {}", field)))
@@ -346,7 +371,12 @@ impl JsonSerializationHelper {
 
     fn opt_str(&self, field: &str) -> Option<&str> {
         if let Ok(obj) = self.get_obj() {
-            obj.get(field).and_then(|v| v.as_str())
+            if let Some(val) = obj.get(field) {
+                if let JsonValue::String(s) = val {
+                    return Some(s);
+                }
+            }
+            None
         } else {
             None
         }
@@ -354,7 +384,12 @@ impl JsonSerializationHelper {
 
     fn opt_bool(&self, field: &str, default: bool) -> bool {
         if let Ok(obj) = self.get_obj() {
-            obj.get(field).and_then(|v| v.as_bool()).unwrap_or(default)
+            if let Some(val) = obj.get(field) {
+                if let JsonValue::Boolean(b) = val {
+                    return *b;
+                }
+            }
+            default
         } else {
             default
         }
@@ -362,7 +397,12 @@ impl JsonSerializationHelper {
 
     fn opt_u64(&self, field: &str) -> Option<u64> {
         if let Ok(obj) = self.get_obj() {
-            obj.get(field).and_then(|v| v.as_u64())
+            if let Some(val) = obj.get(field) {
+                if let JsonValue::Number(n) = val {
+                    return u64::try_from(*n).ok();
+                }
+            }
+            None
         } else {
             None
         }
@@ -374,20 +414,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_grammar_from_serde_value_tatsu() {
+    fn test_grammar_from_json_value_tatsu() {
         let json_str = std::fs::read_to_string("grammar/tatsu.json").expect("tatsu.json missing");
-        let value: Value = serde_json::from_str(&json_str).expect("Failed to parse JSON");
-        let grammar = Grammar::from_serde_json_value(&value).expect("Failed to convert");
+        let value = json::parse(&json_str).expect("Failed to parse JSON");
+        let grammar = Grammar::from_json_value(&value).expect("Failed to convert");
         assert_eq!(grammar.name, "TatSu".into());
         let rule_count = grammar.rules().count();
         assert!(rule_count > 0, "Expected rules, got {}", rule_count);
     }
 
     #[test]
-    fn test_grammar_from_serde_value_calc() {
+    fn test_grammar_from_json_value_calc() {
         let json_str = std::fs::read_to_string("grammar/calc.json").expect("calc.json missing");
-        let value: Value = serde_json::from_str(&json_str).expect("Failed to parse JSON");
-        let grammar = Grammar::from_serde_json_value(&value).expect("Failed to convert");
+        let value = json::parse(&json_str).expect("Failed to parse JSON");
+        let grammar = Grammar::from_json_value(&value).expect("Failed to convert");
         assert_eq!(grammar.name, "CALC".into());
     }
 }

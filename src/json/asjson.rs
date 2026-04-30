@@ -2,135 +2,126 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::trees::{KeyValue, Tree, TreeMap};
-use serde_json::{Map, Value};
+use json::JsonValue;
 
 use crate::json::error::JsonError;
-use serde::{Serialize, Serializer};
 
+#[cfg(feature = "serde_json")]
+use serde::Serialize;
+
+#[cfg(feature = "serde_json")]
 impl Serialize for Tree {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer,
+        S: serde::Serializer,
     {
-        self.to_json().serialize(serializer)
+        let json_value = self.to_json();
+        let json_str = json_value.dump();
+        let serde_value: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        serde_value.serialize(serializer)
     }
 }
 
 impl Tree {
     pub fn from_json_str(json: &str) -> Result<Self, JsonError> {
-        let mut deserializer = serde_json::Deserializer::from_str(json);
-        let value: Value = serde_path_to_error::deserialize(&mut deserializer)
-            .map_err(|err| JsonError::JsonPath(err.path().to_string(), err.into_inner()))?;
+        let value = json::parse(json)?;
         let tree = Self::from_json(&value);
         Ok(tree)
     }
 
-    pub fn to_json_str(&self) -> serde_json::Result<Box<str>> {
-        self.to_json_string_pretty().map(|s| s.into_boxed_str())
+    pub fn to_json_str(&self) -> Box<str> {
+        self.to_json_string_pretty().into()
     }
 
-    pub fn to_json_string(&self) -> serde_json::Result<String> {
-        self.to_json_string_pretty()
+    pub fn to_json_string(&self) -> String {
+        self.to_json().dump()
     }
 
-    pub fn to_json_string_pretty(&self) -> serde_json::Result<String> {
-        serde_json::to_string_pretty(&self.to_json())
+    pub fn to_json_string_pretty(&self) -> String {
+        self.to_json().pretty(2)
     }
 
-    pub fn to_value(&self) -> Value {
+    pub fn to_value(&self) -> JsonValue {
         self.to_json()
     }
 
-    pub fn to_json(&self) -> Value {
+    pub fn to_json(&self) -> JsonValue {
         match self {
-            Tree::Bottom | Tree::Nil => Value::Null,
-            Tree::Text(t) => Value::String(t.to_string()),
+            Tree::Bottom | Tree::Nil => JsonValue::Null,
+            Tree::Text(t) => JsonValue::String(t.to_string()),
             Tree::Seq(items) | Tree::List(items) => {
-                Value::Array(items.iter().map(Tree::to_json).collect())
+                JsonValue::Array(items.iter().map(Tree::to_json).collect())
             }
             Tree::Map(m) => {
-                let mut obj = Map::new();
+                let mut obj = JsonValue::new_object();
                 for (k, v) in m.iter() {
-                    obj.insert(k.to_string(), v.to_json());
+                    obj[&**k] = v.to_json();
                 }
-                Value::Object(obj)
+                obj
             }
             Tree::Node { typename, tree } => {
                 let json_tree = tree.to_json();
-                if typename.as_ref() == "Constant" || typename.as_ref() == "Alert" {
-                    // NOTE TatSu does this on-the-fly during parsing
-                    //          tatus.contexts._engine.ParseEngine.constant()
-                    //      Do it here because TieXiu does no runtime semantics
-                    //      over the Tree built by parsing
-                    return json_tree;
+                if let JsonValue::Object(child_map) = json_tree {
+                    let has_class = child_map.iter().any(|(k, _)| k == "__class__");
+                    if !has_class {
+                        let mut new_map = JsonValue::new_object();
+                        new_map["__class__"] = JsonValue::String(typename.to_string());
+                        for (k, v) in child_map.iter() {
+                            new_map[k] = v.clone();
+                        }
+                        new_map["__class__"] = JsonValue::String(typename.to_string());
+                        return new_map;
+                    }
                 }
-                if let Value::Object(child_map) = json_tree
-                    && !child_map.contains_key("__class__")
-                {
-                    // NOTE TatSu hijacks the child map this way
-                    //          tatsu.util.asjson.AsJSONMixin.__json__()
-                    let mut new_map = Map::new();
-                    new_map.insert("__class__".to_string(), Value::String(typename.to_string()));
-                    new_map.extend(child_map);
-                    // NOTE double insert to truly hijack the entry
-                    new_map.insert("__class__".to_string(), Value::String(typename.to_string()));
-                    Value::Object(new_map)
-                } else {
-                    let mut obj = Map::new();
-                    obj.insert("__class__".into(), Value::String(typename.to_string()));
-                    // NOTE In TatSu, 'ast' will be used for the content
-                    //          tatsu.objectmodel.basenode.BaseNode.__pub__()
-                    obj.insert("ast".into(), tree.to_json());
-                    Value::Object(obj)
-                }
+                let mut obj = JsonValue::new_object();
+                obj["__class__"] = JsonValue::String(typename.to_string());
+                obj["ast"] = tree.to_json();
+                obj
             }
 
-            // NOTE These bellow should never
             Tree::Named(KeyValue(name, tree)) => {
-                let mut obj = Map::new();
-                obj.insert(name.to_string(), tree.to_json());
-                Value::Object(obj)
+                let mut obj = JsonValue::new_object();
+                obj[name.to_string()] = tree.to_json();
+                obj
             }
             Tree::NamedAsList(KeyValue(name, tree)) => {
-                let mut obj = Map::new();
-                obj.insert(name.to_string(), tree.to_json());
-                Value::Object(obj)
+                let mut obj = JsonValue::new_object();
+                obj[name.to_string()] = tree.to_json();
+                obj
             }
             Tree::Override(tree) | Tree::OverrideAsList(tree) => tree.to_json(),
         }
     }
 
-    pub fn from_json(value: &Value) -> Self {
+    pub fn from_json(value: &JsonValue) -> Self {
         match value {
-            Value::Null => Tree::Nil,
-            Value::String(s) => Tree::Text(s.clone().into()),
-            Value::Array(arr) => {
+            JsonValue::Null => Tree::Nil,
+            JsonValue::String(s) => Tree::Text(s.clone().into()),
+            JsonValue::Short(s) => Tree::Text(s.to_string().into()),
+            JsonValue::Array(arr) => {
                 let items: Vec<Tree> = arr.iter().map(Tree::from_json).collect();
                 Tree::Seq(items.into())
             }
-            Value::Object(obj) => {
+            JsonValue::Object(obj) => {
                 if obj.len() == 1
                     && let Some((key, value)) = obj.iter().next()
                     && key == "typename"
                 {
                     let tree = Tree::from_json(value);
                     return Tree::Node {
-                        typename: key.clone().into(),
+                        typename: key.into(),
                         tree: tree.into(),
                     };
                 }
                 let mut m = TreeMap::new();
-                for (key, value) in obj {
+                for (key, value) in obj.iter() {
                     let tree = Tree::from_json(value);
                     m.insert(key, tree);
                 }
                 Tree::Map(m.into())
             }
-            Value::Bool(yesno) => {
-                // FIXME!
-                Tree::text(yesno.to_string().as_str())
-            }
-            Value::Number(n) => Tree::text(n.to_string().as_str()),
+            JsonValue::Boolean(yesno) => Tree::text(yesno.to_string().as_str()),
+            JsonValue::Number(n) => Tree::text(n.to_string().as_str()),
         }
     }
 }

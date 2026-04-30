@@ -3,7 +3,7 @@
 
 [package]
 name = "TieXiu"
-version = "0.1.1-alpha.13"
+version = "0.1.1-alpha.14"
 edition = "2024"
 authors = ["Juancarlo Añez <apalala@gmail.com>"]
 description = "A port of the TatSu PEG parser generator to Rust"
@@ -20,12 +20,7 @@ panic = 'abort'      # Reduces binary size if you don't need stack unwinding
     
 [package.metadata.docs.rs]
 all-features = true
-
-# The default target for the documentation
 default-target = "x86_64-unknown-linux-gnu"
-
-# Crucial for PyO3: This allows the doc build to succeed without a
-# real Python interpreter or headers present on the docs.rs builder.
 rustdoc-args = ["--cfg", "docsrs"]
 
 #[lints.clippy]
@@ -40,12 +35,10 @@ name = "tiexiu"
 path = "src/main.rs"
 required-features = ["cli"]
 
-# --- Features ---
 [features]
-default = ["serde_json", "cli"]
+default = ["pyo3", "cli"]
 bootstrap = ["default"]
 
-# Specific feature groupings
 serde = ["dep:serde"]
 serde_json = [
     "dep:serde",
@@ -56,45 +49,35 @@ cli = [
     "dep:clap",
     "dep:syntect",
 ]
-pyo3 = ["dep:pyo3", "dep:pythonize"]
+pyo3 = ["dep:pyo3", "serde"]
 
 #interpolation = ["dep:strfmt", "dep:evalexpr"]
 
-# --- Core Library Dependencies ---
 [dependencies]
 indexmap = "2.13"
 thiserror = "2.0.18"
 fancy-regex = "0.18"
 console = "0.16.3"
+json = "0.12.4"
 
-# --- PyO3 Dependencies ---
 pyo3 = {
     version = "0.28",
     features = ["extension-module", "abi3-py312", "generate-import-lib"],
     optional = true
 }
 
-# --- CLI Dependencies (Optional) ---
 clap = { version = "4.6", features = ["derive"], optional = true }
 syntect = { version = "5.3.0", optional = true }
 
-# --- Serialization (Optional) ---
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0.149", features = ["preserve_order"], optional = true }
 serde_path_to_error = { version = "0.1", optional = true }
 unicode-width = "0.2.2"
 derivative = "2.2.0"
-pythonize = {
-    version = "0.28.0",
-    features = ["arbitrary_precision", "serde_json"],
-    optional = true
-}
-json = "0.12.4"
 
 #evalexpr = { version = "13.1.0", optional = true }
 #strfmt = { version = "0.2.5", optional = true }
 
-# --- Debug & Benchmarking ---
 [dev-dependencies]
 criterion = { version = "4.4.1", package = "codspeed-criterion-compat" }
 

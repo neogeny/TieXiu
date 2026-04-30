@@ -3,7 +3,8 @@
 
 //! Tests for left recursion - translated from TatSu's grammar/left_recursion_test.py
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::Result;
 use tiexiu::api::compile;
 
@@ -19,7 +20,7 @@ fn test_direct_left_recursion() -> Result<()> {
     let model = compile(grammar, &[])?;
 
     let ast = tiexiu::parse_input(&model, "10 - 20", &[])?;
-    assert_eq!(ast.to_json(), json!(["10", "-", "20"]));
+    assert_eq!(ast.to_json(), array!["10", "-", "20"]);
 
     Ok(())
 }

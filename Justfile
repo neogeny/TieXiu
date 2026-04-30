@@ -19,14 +19,14 @@ clippy:
     cargo clippy --all-targets --all-features -- -D warnings
 
 fix:
-    cargo fix --allow-dirty --allow-staged
+    cargo fix --allow-dirty --allow-staged --all-features
 
 fmt:
     cargo fmt --all
     cargo fmt --all --check
 
 test: fix fmt clippy
-    cargo nextest run --lib --no-fail-fast
+    cargo nextest run --lib --no-fail-fast --all-features
 
 build: fix fmt clippy
     cargo build

@@ -1,6 +1,7 @@
 //! Constraints Tests (Lookahead and Cut)
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::parse_input;
 use tiexiu::*;
 
@@ -11,7 +12,7 @@ fn positive_lookahead() -> Result<()> {
     "#;
     let grammar = tiexiu::compile(grammar, &[])?;
     let tree = parse_input(&grammar, "a", &[])?;
-    assert_eq!(tree.to_json(), json!("a"));
+    assert_eq!(tree.to_json(), value!("a"));
     Ok(())
 }
 
@@ -22,7 +23,7 @@ fn negative_lookahead() -> Result<()> {
     "#;
     let grammar = tiexiu::compile(grammar, &[])?;
     let tree = parse_input(&grammar, "a", &[])?;
-    assert_eq!(tree.to_json(), json!("a"));
+    assert_eq!(tree.to_json(), value!("a"));
     Ok(())
 }
 

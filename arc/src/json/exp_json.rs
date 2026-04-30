@@ -6,13 +6,13 @@
 //! This module serializes Grammar to serde_json::Value,
 //! allowing easy tweaking of the output before final serialization.
 
-use super::error::{JsonError, Result};
-use crate::cfg::constants::*;
-use crate::cfg::*;
-use crate::peg::exp::{Exp, ExpKind};
-use crate::peg::grammar::Grammar;
-use crate::peg::rule::Rule;
 use serde_json::{Map, Value};
+use tiexiu::cfg::constants::*;
+use tiexiu::cfg::*;
+use tiexiu::json::error::{JsonError, Result};
+use tiexiu::peg::exp::{Exp, ExpKind};
+use tiexiu::peg::grammar::Grammar;
+use tiexiu::peg::rule::Rule;
 
 pub trait ToExpJson {
     fn to_json(&self) -> Value;
@@ -281,13 +281,11 @@ impl ExpKind {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
-    fn test_grammar_to_serde_value() {
-        let json_str = std::fs::read_to_string("grammar/tatsu.json").expect("tatsu.json missing");
-        let value: Value = serde_json::from_str(&json_str).expect("Failed to parse JSON");
-        let grammar = Grammar::from_serde_json_value(&value).expect("Failed to convert");
+    fn test_grammar_to_json_value() {
+        let json_str = std::fs::read_to_string("../../../grammar/tatsu.json").expect("tatsu.json missing");
+        let value = json::parse(&json_str).expect("Failed to parse JSON");
+        let grammar = Grammar::from_json_value(&value).expect("Failed to convert");
         let output = grammar.to_json_exp();
 
         assert!(output.is_object());

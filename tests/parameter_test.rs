@@ -20,7 +20,7 @@ fn test_numbers_and_unicode() -> Result<()> {
 
     let tree = parse_grammar(grammar.as_ref(), &[])?;
     eprintln!("{:#?}", tree);
-    eprintln!("{}", tree.to_json_string_pretty()?);
+    eprintln!("{}", tree.to_json_string_pretty());
 
     let model = compile(grammar.as_ref(), &[])?;
     eprintln!("{:#?}", model);

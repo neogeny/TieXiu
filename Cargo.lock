@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "TieXiu"
-version = "0.1.1-alpha.13"
+version = "0.1.1-alpha.14"
 dependencies = [
  "clap",
  "codspeed-criterion-compat",
@@ -14,7 +14,6 @@ dependencies = [
  "indexmap",
  "json",
  "pyo3",
- "pythonize",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -798,17 +797,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d381ef313ae70b4da5f95f8a4de773c6aa5cd28f73adec4b4a31df70b66780d8"
 dependencies = [
  "cc",
-]
-
-[[package]]
-name = "pythonize"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b79f670c9626c8b651c0581011b57b6ba6970bb69faf01a7c4c0cfc81c43f95"
-dependencies = [
- "pyo3",
- "serde",
- "serde_json",
 ]
 
 [[package]]

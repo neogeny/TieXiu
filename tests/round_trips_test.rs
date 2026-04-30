@@ -21,7 +21,7 @@ fn grammar_to_json_round_trip() -> Result<()> {
     }
 
     let tree1 = parse_input(&grammar, "x y", &[])?;
-    let j1 = tree1.to_json_string()?;
+    let j1 = tree1.to_json_string();
     assert!(j1.contains("x") && j1.contains("y"));
     Ok(())
 }

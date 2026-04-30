@@ -3,7 +3,8 @@
 
 //! Tests translated from TatSu's model_test.py
 
-use serde_json::json;
+#[macro_use]
+extern crate json;
 use tiexiu::Result;
 use tiexiu::api::compile;
 
@@ -20,7 +21,7 @@ fn test_children() -> Result<()> {
 
     let model = compile(grammar, &[])?;
     let ast = tiexiu::parse_input(&model, "x", &[])?;
-    assert_eq!(ast.to_json(), json!("x"));
+    assert_eq!(ast.to_json(), value!("x"));
     Ok(())
 }
 
@@ -32,6 +33,6 @@ fn test_node_kwargs() -> Result<()> {
 
     let model = compile(grammar, &[])?;
     let ast = tiexiu::parse_input(&model, "value", &[])?;
-    assert_eq!(ast.to_json(), json!("value"));
+    assert_eq!(ast.to_json(), value!("value"));
     Ok(())
 }

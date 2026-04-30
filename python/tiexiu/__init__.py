@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-from tiexiu.fnapi import (
+from tiexiu.pyfnapi import (
     boot_grammar,
     boot_grammar_to_json,
     boot_grammar_pretty,
