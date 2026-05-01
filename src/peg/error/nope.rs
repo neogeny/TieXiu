@@ -4,7 +4,6 @@
 use super::failure::ParseFailure;
 use crate::Tree;
 use crate::cfg::types::{Ref, Str};
-use crate::engine::state::CallStack;
 use crate::engine::{Ctx, CtxI};
 use crate::input::memento::Memento;
 use std::fmt::Debug;
@@ -14,7 +13,6 @@ use std::panic::Location;
 pub struct DisasterReport {
     pub pos: (usize, usize),
     pub la: Str,
-    pub callstack: CallStack,
     pub location: &'static Location<'static>,
     pub memento: Memento,
 }
@@ -53,7 +51,6 @@ impl Nope {
         let context = DisasterReport {
             pos: ctx.cursor().pos(),
             la: ctx.cursor().lookahead(start).into(),
-            callstack: ctx.callstack(),
             location: Location::caller(),
             memento: Memento::new(
                 ctx.cursor().source().as_str(),
@@ -61,6 +58,7 @@ impl Nope {
                 start,
                 ctx.mark(),
                 error.to_string().as_str(),
+                &ctx.callstack(),
             ),
         };
         Self {

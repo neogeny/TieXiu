@@ -1,3 +1,4 @@
+use crate::engine::state::CallStack;
 use crate::types::{Ref, Str};
 use console::style;
 use std::fmt;
@@ -16,10 +17,19 @@ pub struct Memento {
     /// Indices within the `window` slice for annotation
     pub rel_start_idx: usize,
     pub rel_mark_idx: usize,
+    /// Rule invocations leading to this moment
+    pub callstack: CallStack,
 }
 
 impl Memento {
-    pub fn new(source: &str, text: &str, start: usize, mark: usize, msg: &str) -> Self {
+    pub fn new(
+        source: &str,
+        text: &str,
+        start: usize,
+        mark: usize,
+        msg: &str,
+        callstack: &CallStack,
+    ) -> Self {
         // 1. Get absolute positions (1-indexed)
         let abs_start = Self::pos_at(text, start);
         let abs_mark = Self::pos_at(text, mark);
@@ -49,6 +59,7 @@ impl Memento {
             abs_mark,
             rel_start_idx,
             rel_mark_idx,
+            callstack: callstack.clone(),
         }
     }
 
@@ -103,6 +114,11 @@ impl Memento {
                     style(&self.msg).red()
                 )?;
             }
+        }
+
+        writeln!(f)?;
+        for call in self.callstack.iter() {
+            writeln!(f, "{}", style(call).white().bold())?;
         }
 
         Ok(())
