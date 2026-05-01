@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::CtxI;
-use crate::peg::ParseFailure;
 use console::style;
 use std::fmt::Debug;
 use std::io::Write;
@@ -62,7 +61,9 @@ pub trait Tracer: Debug {
             _ => style("←").yellow(),
         }
         .to_string();
-        let lookahead = ctx.cursor().lookahead(ctx.mark()).replace(" ", "·");
+        let lookahead = style(
+            ctx.cursor().lookahead(ctx.mark()).replace(" ", "·")
+        ).black().bright();
         let mut callstack = String::new();
         // let term = Term::stderr();
         // let (_rows, cols) = term.size();
@@ -80,7 +81,7 @@ pub trait Tracer: Debug {
 
         let pos = style(format!("[{line}:{col}]→")).black().bright();
 
-        let msg = format!("{event_symbol}{msg} {callstack}<|•\n{pos}{lookahead}");
+        let msg = format!("{event_symbol}{msg} {callstack} •\n{pos}{lookahead}");
         self.trace(msg.as_str());
     }
 
@@ -92,7 +93,7 @@ pub trait Tracer: Debug {
         self.trace_event(ctx, Event::Success, "");
     }
 
-    fn trace_failure(&self, ctx: &dyn CtxI, error: &ParseFailure) {
+    fn trace_failure(&self, ctx: &dyn CtxI, error: &str) {
         let errstr = format!(" {}", style(error).red());
         self.trace_event(ctx, Event::Failure, &errstr);
     }

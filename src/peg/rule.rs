@@ -11,9 +11,10 @@ use crate::types::{Ref, Str};
 use indexmap::IndexMap;
 use std::sync::Arc;
 
+pub const FLAG_NO_MEMO: &str = "no_memo";
+pub const FLAG_NO_STAK: &str = "no_stak";
 pub const FLAG_IS_NAME: &str = "is_name";
 pub const FLAG_IS_TOKN: &str = "is_tokn";
-pub const FLAG_NO_MEMO: &str = "no_memo";
 pub const FLAG_IS_MEMO: &str = "is_memo";
 pub const FLAG_IS_LREC: &str = "is_lrec";
 
@@ -46,15 +47,17 @@ impl Rule {
         is_name: bool,
         is_tokn: bool,
         no_memo: bool,
+        no_stak: bool,
         is_memo: bool,
         is_lrec: bool,
     ) -> FlagMap {
         let mut flags = FlagMap::new();
         flags.insert(FLAG_IS_NAME.into(), is_name);
         flags.insert(FLAG_IS_TOKN.into(), is_tokn);
-        flags.insert(FLAG_NO_MEMO.into(), no_memo);
         flags.insert(FLAG_IS_MEMO.into(), is_memo && !no_memo);
         flags.insert(FLAG_IS_LREC.into(), is_lrec);
+        flags.insert(FLAG_NO_MEMO.into(), no_memo);
+        flags.insert(FLAG_NO_STAK.into(), no_stak);
         flags
     }
 
@@ -71,7 +74,7 @@ impl Rule {
         Self {
             name: name.into(),
             params: params.into(),
-            flags: Self::make_flags(false, false, false, true, false),
+            flags: Self::make_flags(false, false, false, false, true, false),
             exp,
         }
     }
@@ -83,15 +86,16 @@ impl Rule {
         mut exp: Exp,
         is_name: bool,
         is_tokn: bool,
-        no_memo: bool,
         is_memo: bool,
         is_lrec: bool,
+        no_memo: bool,
+        no_stak: bool,
     ) -> Self {
         exp.cache_lookahead();
         Self {
             name: name.into(),
             params: params.into_iter().map(|p| p.into()).collect(),
-            flags: Self::make_flags(is_name, is_tokn, no_memo, is_memo, is_lrec),
+            flags: Self::make_flags(is_name, is_tokn, no_memo, no_stak, is_memo, is_lrec),
             exp,
         }
     }
@@ -147,6 +151,10 @@ impl Rule {
                 .is_some_and(|c| c.is_uppercase())
     }
 
+    pub fn should_trace(&self) -> bool {
+        !self.has_no_stack_flat() && !self.is_token()
+    }
+
     pub fn has_is_name_flag(&self) -> bool {
         self.flag(FLAG_IS_NAME)
     }
@@ -165,6 +173,10 @@ impl Rule {
 
     pub fn has_is_lrec_flag(&self) -> bool {
         self.flag(FLAG_IS_LREC)
+    }
+
+    pub fn has_no_stack_flat(&self) -> bool {
+        self.flag(FLAG_NO_STAK)
     }
 
     pub fn reset_left_recursion(&mut self) {

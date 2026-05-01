@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::memo::{Memo, MemoCache, MemoKey};
-use crate::SYM_ETX;
 use crate::cfg::Configurable;
 use crate::engine::state::CallStack;
 use crate::engine::trace::Tracer;
 use crate::input::Cursor;
-use crate::peg::Rule;
 use crate::peg::error::ParseFailure;
 use crate::peg::error::{Nope, ParseResult, Yeap};
+use crate::peg::Rule;
 use crate::trees::tree::Tree;
 use crate::types::Str;
-use crate::util::pyre::{Pattern, escape};
+use crate::util::pyre::{escape, Pattern};
+use crate::SYM_ETX;
 use std::fmt::Debug;
 
 pub trait CtxI: Configurable {
@@ -63,7 +63,7 @@ pub trait Ctx: CtxI + Clone + Debug {
             self.tracer().trace_success(self);
         } else {
             self.tracer()
-                .trace_failure(self, &ParseFailure::ExpectingEof);
+                .trace_failure(self, SYM_ETX);
         }
         self.leave();
         result
@@ -189,22 +189,26 @@ pub trait Ctx: CtxI + Clone + Debug {
         let start = self.mark();
         let key = self.key(name, rule.is_memoizable());
 
-        self.enter(name);
         if !rule.is_token() {
             self.next_token();
         }
-        self.tracer().trace_entry(&self);
+        if rule.should_trace() {
+            self.enter(name);
+            self.tracer().trace_entry(&self);
+        }
 
         match self.push().do_call(name, rule) {
             Ok(Yeap(mut ctx, tree)) => {
-                ctx.leave();
+                if rule.should_trace() {
+                    ctx.leave();
+                }
                 if rule.is_name()
                     && let Tree::Text(name) = &tree
                     && ctx.is_keyword(name)
                 {
                     ctx.memoize(&key, &Tree::Bottom, ctx.mark());
                     let error = ParseFailure::ReservedWord(name.clone());
-                    ctx.tracer().trace_failure(&ctx, &error);
+                    ctx.tracer().trace_failure(&ctx, name);
                     return Err(self.failure(start, error));
                 }
                 ctx.tracer().trace_success(&ctx);
@@ -212,8 +216,10 @@ pub trait Ctx: CtxI + Clone + Debug {
                 Ok(Yeap(ctx, tree))
             }
             Err(nope) => {
-                self.leave();
-                self.tracer().trace_failure(&self, &nope.source);
+                if rule.should_trace() {
+                    self.leave();
+                }
+                self.tracer().trace_failure(&self, name);
                 self.memoize(&key, &Tree::Bottom, self.mark());
                 Err(nope)
             }

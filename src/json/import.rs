@@ -130,14 +130,15 @@ impl Rule {
             vec![]
         };
 
+        let no_memo = path.opt_bool("no_memo", false);
+        let no_stak = path.opt_bool("no_stak", false);
         let is_name = path.opt_bool("is_name", false);
         let is_tokn = path.opt_bool("is_tokn", false);
-        let no_memo = path.opt_bool("no_memo", false);
         let is_memo = path.opt_bool("is_memo", true);
         let is_lrec = path.opt_bool("is_lrec", false);
 
         Ok(Rule::from_parts(
-            name, params, rhs, is_name, is_tokn, no_memo, is_memo, is_lrec,
+            name, params, rhs, is_name, is_tokn, is_memo, is_lrec, no_memo, no_stak,
         ))
     }
 }
