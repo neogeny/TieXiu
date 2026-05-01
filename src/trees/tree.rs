@@ -76,7 +76,7 @@ impl TreeMerge {
 impl Tree {
     pub fn fold(self) -> Tree {
         let mut gather = TreeMerge::new();
-        let tree = self.clean_and_merge(&mut gather);
+        let tree = self.clean_and_fold(&mut gather);
 
         if gather.root != Tree::Nil {
             gather.root.closed()
@@ -151,48 +151,45 @@ impl Tree {
         }
     }
 
-    fn clean_and_merge(&self, gather: &mut TreeMerge) -> Tree {
+    fn clean_and_fold(&self, gather: &mut TreeMerge) -> Tree {
         match self {
             Tree::Seq(elements) => {
                 // NOTE:
-                //  Tree::List is the product of Exp::Sequence and the
-                //  right semantics are to merge the values one by one
-                //  Later, Tree::List should be renamed to Tree::Sequence
-                //  to make it clear
-
+                //  Tree::Seq is the product of Exp::Sequence and the
+                //  right semantics are to merge the values one by one.
                 let mut out = Tree::Nil;
                 elements
                     .iter()
-                    .for_each(|s| out = out.clone().append(s.clean_and_merge(gather)));
+                    .for_each(|s| out = out.clone().append(s.clean_and_fold(gather)));
                 out
             }
             Tree::List(elements) => {
                 // NOTE:
-                //  Tree::Closed is the product of the Exp closure node kinds.
+                //  Tree::List is the product of the Exp closure node kinds.
                 //  The current semantics inherited from TatSu are to keep them
                 //  intact, with no merging
-                let clean: Vec<Tree> = elements.iter().map(|s| s.clean_and_merge(gather)).collect();
+                let clean: Vec<Tree> = elements.iter().map(|s| s.clean_and_fold(gather)).collect();
                 Tree::List(clean.into())
             }
             Tree::Named(keyval) => {
                 let KeyValue(name, val) = keyval;
-                let clean = val.clone().clean_and_merge(gather);
+                let clean = val.clone().clean_and_fold(gather);
                 gather.map.insert(name, clean.clone());
                 clean
             }
             Tree::NamedAsList(keyval) => {
                 let KeyValue(name, val) = keyval;
-                let clean = val.clean_and_merge(gather);
+                let clean = val.clean_and_fold(gather);
                 gather.map.insert_as_list(name, clean.clone());
                 clean
             }
             Tree::Override(val) => {
-                let clean = val.clean_and_merge(gather);
+                let clean = val.clean_and_fold(gather);
                 gather.root = gather.root.clone().append(clean.clone());
                 clean
             }
             Tree::OverrideAsList(val) => {
-                let clean = val.clean_and_merge(gather);
+                let clean = val.clean_and_fold(gather);
                 gather.root = gather.root.clone().append_as_list(clean.clone());
                 clean
             }
