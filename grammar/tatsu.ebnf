@@ -83,7 +83,7 @@ BLANK: EOL EOL
 
 EOL: /(?m)[ \t]*$/ /(?m)(?:\r?\n|\r)?/
 
-decorator: '@' !'@' ~ =('override' | 'name' | 'isname' | 'nomemo')
+decorator: '@' !'@' ~ =/(override|name|isname|nomemo|nostak)\b/
 
 pair: +=word '=' ~ +=literal
 
@@ -259,7 +259,7 @@ REGEX: &'/' ?"(?ms)/((?:[^/\\]|\\/|\\.)*)/" ~
 
 deprecated_regex: '?/' ~ =?"(?ms)((?:[^/\\]|\\/|\\.)*)" ~ '/?'
 
-boolean[bool]: 'True' | 'False'
+boolean: 'True' | 'False'
 
 null: 'None'
 
