@@ -25,30 +25,23 @@ impl Grammar {
         let rules: Vec<JsonValue> = self.rules().map(|r| r.to_json()).collect();
         obj["rules"] = JsonValue::Array(rules);
 
-        let directives: Vec<JsonValue> = self
-            .get_directives()
-            .iter()
-            .filter_map(|opt| {
-                let (name, value) = match opt {
-                    CfgKey::Grammar(name) => (STR_GRAMMAR_NAME, name.as_str()),
-                    CfgKey::Wsp(p) => (STR_WHITESPACE, p.as_str()),
-                    CfgKey::Cmt(p) => (STR_COMMENTS, p.as_str()),
-                    CfgKey::Eol(p) => (STR_EOL_COMMENTS, p.as_str()),
-                    CfgKey::NameChars(p) => (STR_NAMECHARS, p.as_str()),
-                    CfgKey::IgnoreCase => (STR_IGNORECASE, "True"),
-                    CfgKey::NoNameGuard => (STR_NAMEGUARD, "False"),
-                    CfgKey::NoLeftRecursion => (STR_LEFTREC, "False"),
-                    CfgKey::NoParseInfo => (STR_PARSEINFO, "False"),
-                    CfgKey::NoMemoization => (STR_MEMOIZATION, "False"),
-                    _ => return None,
-                };
-                let mut d_obj = JsonValue::new_object();
-                d_obj["name"] = JsonValue::String(name.into());
-                d_obj["value"] = JsonValue::String(value.into());
-                Some(d_obj)
-            })
-            .collect();
-        obj["directives"] = JsonValue::Array(directives);
+        let mut directives = JsonValue::new_object();
+        for opt in self.get_directives().iter() {
+            match opt {
+                CfgKey::Grammar(name) => directives[STR_GRAMMAR_NAME] = name.to_string().into(),
+                CfgKey::Wsp(p) => directives[STR_WHITESPACE] = p.to_string().into(),
+                CfgKey::Cmt(p) => directives[STR_COMMENTS] = p.to_string().into(),
+                CfgKey::Eol(p) => directives[STR_EOL_COMMENTS] = p.to_string().into(),
+                CfgKey::NameChars(p) => directives[STR_NAMECHARS] = p.to_string().into(),
+                CfgKey::IgnoreCase => directives[STR_IGNORECASE] = true.into(),
+                CfgKey::NoNameGuard => directives[STR_NAMEGUARD] = false.into(),
+                CfgKey::NoLeftRecursion => directives[STR_LEFTREC] = false.into(),
+                CfgKey::NoParseInfo => directives[STR_PARSEINFO] = false.into(),
+                CfgKey::NoMemoization => directives[STR_MEMOIZATION] = false.into(),
+                _ => continue, // Skip unsupported keys
+            };
+        }
+        obj["directives"] = directives;
 
         let keywords: Vec<JsonValue> = self
             .keywords
