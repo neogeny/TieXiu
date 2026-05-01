@@ -98,7 +98,7 @@ pub trait Ctx: CtxI + Clone + Debug {
         if result {
             self.tracer().trace_match(self, token, "");
         } else {
-            self.tracer().trace_no_match(self, token);
+            self.tracer().trace_no_match(self, token, "");
         }
         result
     }
@@ -110,7 +110,7 @@ pub trait Ctx: CtxI + Clone + Debug {
             self.tracer().trace_match(self, matched.as_str(), pattern);
             Some(self.intern(matched.as_str()))
         } else {
-            self.tracer().trace_no_match(self, pattern);
+            self.tracer().trace_no_match(self, "", pattern);
             None
         }
     }

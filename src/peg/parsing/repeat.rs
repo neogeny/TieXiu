@@ -58,7 +58,8 @@ impl Exp {
                     // OK to match nothing
                     return Ok(Yeap(ctx, Tree::Nil));
                 }
-                Ok(Yeap(new_ctx, pre_cst)) => {
+                Ok(Yeap(mut new_ctx, pre_cst)) => {
+                    new_ctx.cut();
                     match exp.parse(new_ctx) {
                         // NOTE: pre.parse().is_ok() so exp.parse().is_ok_or(fail)
                         Ok(Yeap(repeat_ctx, exp_cst)) => {

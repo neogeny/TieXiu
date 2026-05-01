@@ -151,8 +151,9 @@ pub fn cli() -> Result<()> {
             let parser = load_grammar_from_path(&grammar, cfga)?;
             let mut output = String::new();
             for input in inputs {
+                cfg = cfg.add(CfgKey::Source(input.as_path().to_string_lossy().into()));
                 let text = std::fs::read_to_string(&input)?;
-                let tree = parse_input(&parser, &text, cfga)?;
+                let tree = parse_input(&parser, &text, &cfg)?;
                 output.push_str(format!("{}", tree.fold()).as_str());
                 output.push('\n');
             }

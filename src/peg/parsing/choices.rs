@@ -24,10 +24,7 @@ impl Exp {
                         return Err(nope);
                     }
 
-                    if furthest
-                        .as_ref()
-                        .is_none_or(|prev| nope.start >= prev.start)
-                    {
+                    if furthest.as_ref().is_none_or(|prev| nope.mark >= prev.mark) {
                         furthest = Some(nope);
                     }
                 }

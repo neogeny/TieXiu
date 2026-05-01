@@ -3,7 +3,7 @@
 
 use super::CtxI;
 use crate::peg::ParseFailure;
-use console::{Term, style};
+use console::style;
 use std::fmt::Debug;
 use std::io::Write;
 
@@ -44,12 +44,6 @@ pub trait Tracer: Debug {
     fn trace_event(&self, ctx: &dyn CtxI, event: Event, msg: &str) {
         console::set_colors_enabled(true);
 
-        let term = Term::stdout();
-        let (_rows, cols) = if let Some((r, c)) = term.size_checked() {
-            (r.into(), c.into())
-        } else {
-            (24usize, 80usize)
-        };
         let event_symbol: String = match event {
             Event::Entry => style("↙").yellow(),
             Event::Success => style("≡").green(),
@@ -69,21 +63,24 @@ pub trait Tracer: Debug {
         }
         .to_string();
         let lookahead = ctx.cursor().lookahead(ctx.mark()).replace(" ", "·");
-        let mut callstack = ctx.callstack().to_vec().join(stack_symbol.as_str());
-        if callstack.chars().count() > cols {
-            let safe_index = callstack.floor_char_boundary(cols - 4);
-            callstack.truncate(safe_index);
-            callstack.push_str("...");
+        let mut callstack = String::new();
+        // let term = Term::stderr();
+        // let (_rows, cols) = term.size();
+        for call in ctx.callstack().iter() {
+            callstack.push_str(&style(call).white().bold().to_string());
+            callstack.push_str(&stack_symbol);
+            // if callstack.chars().count() > (cols - 5).into() {
+            //     callstack.push_str(" ... ");
+            //     break;
+            // }
         }
-        let scallstack = style(callstack).white().bold();
-
         let location = ctx.cursor().location();
-        let source = location.source.to_string();
+        let _source = location.source.to_string();
         let (line, col) = location.pos;
 
         let pos = style(format!("[{line}:{col}]→")).black().bright();
 
-        let msg = format!("{event_symbol}{msg} {scallstack}<|•\"{source}\"\n{pos}{lookahead}");
+        let msg = format!("{event_symbol}{msg} {callstack}<|•\n{pos}{lookahead}");
         self.trace(msg.as_str());
     }
 
@@ -118,8 +115,12 @@ pub trait Tracer: Debug {
         true
     }
 
-    fn trace_no_match(&self, ctx: &dyn CtxI, name: &str) -> bool {
-        let msg = style(format!("/{name}/")).red().to_string();
+    fn trace_no_match(&self, ctx: &dyn CtxI, token: &str, name: &str) -> bool {
+        let msg = if !token.is_empty() {
+            style(format!(" '{token}'")).red().to_string()
+        } else {
+            style(format!(" /{name}/")).red().to_string()
+        };
         self.trace_event(ctx, Event::NoMatch, &msg);
         false
     }
