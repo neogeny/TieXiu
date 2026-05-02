@@ -44,7 +44,19 @@ impl Exp {
 
     fn do_parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
         let start = ctx.mark();
-        match &self.kind {
+        let mut exp = self;
+        while let ExpKind::RuleInclude { .. } | ExpKind::Group(_) | ExpKind::Alt(_) = &exp.kind {
+            match &exp.kind {
+                ExpKind::Group(next) | ExpKind::Alt(next) => exp = next,
+                ExpKind::RuleInclude { name, exp: opt_exp } => match opt_exp {
+                    None => return Err(ctx.failure(start, RuleNotLinked(name.clone()))),
+                    Some(next) => exp = next,
+                },
+                _ => break,
+            }
+        }
+
+        match &exp.kind {
             ExpKind::EmptyClosure => Ok(Yeap(ctx, Tree::from(vec![]).closed())),
             ExpKind::Nil => Ok(Yeap(ctx, Tree::Nil)),
             ExpKind::RuleInclude { name, exp } => match exp {
