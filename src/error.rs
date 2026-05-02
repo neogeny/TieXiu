@@ -52,6 +52,9 @@ pub enum Error {
 
     #[error("I/O failed: {0}")]
     Io(#[from] std::io::Error),
+    
+    #[error("Fmt failed: {0}")]
+    Fmt(#[from] std::fmt::Error),
 
     // #[error("I/O failed: {0}")]
     // Cache(#[from] CacheError),

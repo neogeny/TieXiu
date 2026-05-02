@@ -4,6 +4,7 @@
 use clap;
 use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
+use std::fmt::Write;
 use std::path::PathBuf;
 use tiexiu::api::{
     boot_grammar_pretty, boot_grammar_to_json_string, compile, load_grammar_from_json, parse_input,
@@ -11,7 +12,7 @@ use tiexiu::api::{
 use tiexiu::cfg::CfgA;
 use tiexiu::peg::pretty::*;
 use tiexiu::tools::rails::*;
-use tiexiu::{CfgKey, Grammar, Result, boot_grammar, config};
+use tiexiu::{boot_grammar, config, CfgKey, Result, Grammar};
 
 fn cli_styles() -> Styles {
     Styles::styled()
@@ -117,7 +118,8 @@ pub enum Commands {
     },
 }
 
-pub fn cli() -> Result<()> {
+pub fn cli(out: &mut std::io::StdoutLock) -> Result<()> {
+    use std::io::Write;
     let cli = Cli::parse();
     let use_color = configure_color(cli.color);
 
@@ -183,7 +185,9 @@ pub fn cli() -> Result<()> {
     if let Some(path) = cli.output {
         std::fs::write(path, content)?;
     } else {
-        pygmentize(&content, lang, use_color);
+        let result = pygmentize(&content, lang, use_color)?;
+        write!(out, "{}", result)?;
+        out.write_all(&[])?;
     }
 
     Ok(())
@@ -220,16 +224,22 @@ fn configure_color(color: clap::ColorChoice) -> bool {
     }
 }
 
-pub fn pygmentize(content: &str, extension: &str, use_color: bool) {
+pub fn pygmentize(
+    content: &str,
+    extension: &str,
+    use_color: bool,
+) -> Result<String> {
+    let mut out = String::new();
+
     if !use_color {
-        println!("{}", content);
-        return;
+        writeln!(out, "{}", content)?;
+        return Ok(out);
     }
 
     use syntect::easy::HighlightLines;
     use syntect::highlighting::ThemeSet;
     use syntect::parsing::SyntaxSet;
-    use syntect::util::{LinesWithEndings, as_24_bit_terminal_escaped};
+    use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
@@ -243,10 +253,11 @@ pub fn pygmentize(content: &str, extension: &str, use_color: bool) {
     for line in LinesWithEndings::from(content) {
         let ranges = h.highlight_line(line, &ps).unwrap();
         let escaped = as_24_bit_terminal_escaped(&ranges[..], false);
-        print!("{}", escaped);
+        write!(out, "{}", escaped)?;
     }
-    print!("\x1b[0m");
+    write!(out, "\x1b[0m")?;
     if !content.ends_with('\n') {
-        println!();
-    }
+        writeln!(out)?;
+    };
+    Ok(out)
 }

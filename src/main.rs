@@ -2,45 +2,34 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 mod ui;
-use tiexiu::api::error::Yeap;
-use tiexiu::engine::StrCtx;
+
 use tiexiu::error::Result;
-use tiexiu::input::StrCursor;
-use tiexiu::peg::{Exp, Grammar};
-use ui::cli;
-
-#[allow(dead_code)]
-fn scope() -> (Exp, Exp) {
-    let a = Exp::token("a");
-    let b = Exp::token("b");
-    (a, b)
-}
-
-#[allow(dead_code)]
-fn test_build() {
-    let (a, b) = scope();
-    let c = Exp::token("c");
-    let v = Exp::void();
-    let r = Exp::closure(c);
-    let n = Exp::named("test", b);
-    let seq = Exp::sequence([a, n, r, v].into());
-
-    let cur: StrCursor = StrCursor::new("a b c c c");
-    let _grammar = Grammar::new("test", &[]);
-    let ctx = StrCtx::new(cur, &[]);
-
-    if let Ok(Yeap(_, tree)) = seq.parse(ctx) {
-        println!("{}", tree);
-        println!("{}", tree.fold());
-    }
-}
+use tiexiu::Error;
 
 fn main() -> Result<()> {
-    match cli::cli() {
-        Err(err) => {
-            eprintln!("{}", err);
-            Ok(())
+    use std::io::{self, Write};
+    let mut out_handle = io::stdout().lock();
+    let mut err_handle = io::stderr().lock();
+
+    match ui::cli::cli(&mut out_handle) {
+        Ok(_) => {
+            let _ = out_handle.flush();
+            std::process::exit(0);
         }
-        ok => ok,
+        Err(err) => {
+            match &err {
+                Error::Io(e) if e.kind() == io::ErrorKind::BrokenPipe => {
+                    std::process::exit(0);
+                }
+                _ => {
+                    #[cfg(debug_assertions)]
+                    writeln!(err_handle, "{:#?}", err).ok();
+                    #[cfg(not(debug_assertions))]
+                    writeln!(err_handle, "{}", err).ok();
+                    let _ = err_handle.flush();
+                    std::process::exit(1);
+                }
+            }
+        }
     }
 }
