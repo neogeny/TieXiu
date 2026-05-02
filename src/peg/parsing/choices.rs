@@ -36,7 +36,7 @@ impl Exp {
         }
         Err(furthest.unwrap_or(ctx.failure(start, NoViableOption(self.la_boxed()))))
     }
-    
+
     pub fn parse_optional<C: Ctx>(&self, mut ctx: C, exp: &Exp) -> ParseResult<C> {
         match exp.parse(ctx.push()) {
             Ok(Yeap(new_ctx, tree)) => Ok(Yeap(ctx.merge(new_ctx), tree)),

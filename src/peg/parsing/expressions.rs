@@ -300,7 +300,10 @@ mod tests {
         println!("exp1 on 'a c x': {:?}", result1_err);
         let err1 = result1_err.unwrap_err();
         assert_eq!(err1.mark, 2);
-        assert_eq!(err1.source, ParseFailure::ExpectedToken("b".into()).into());
+        assert_eq!(
+            err1.report.error,
+            ParseFailure::ExpectedToken("b".into()).into()
+        );
 
         let exp2 = Exp::sequence(vec![Exp::token("a"), Exp::token("c"), Exp::token("d")]);
         let result2_ok = exp2.parse(StrCtx::new(StrCursor::new("a c d"), &[]));
@@ -311,7 +314,10 @@ mod tests {
         println!("exp2 on 'a c x': {:?}", result2_err);
         let err2 = result2_err.unwrap_err();
         assert_eq!(err2.mark, 4);
-        assert_eq!(err2.source, ParseFailure::ExpectedToken("d".into()).into());
+        assert_eq!(
+            err2.report.error,
+            ParseFailure::ExpectedToken("d".into()).into()
+        );
 
         let exp = Exp::choice(vec![exp1, exp2]);
         let ctx = StrCtx::new(StrCursor::new("a c x"), &[]);
@@ -321,7 +327,10 @@ mod tests {
         let err = result.unwrap_err();
 
         assert_eq!(err.mark, 4);
-        assert_eq!(err.source, ParseFailure::ExpectedToken("d".into()).into());
+        assert_eq!(
+            err.report.error,
+            ParseFailure::ExpectedToken("d".into()).into()
+        );
     }
 
     #[test]

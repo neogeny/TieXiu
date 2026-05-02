@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::engine::state::CallStack;
-use crate::types::{Ref, Str};
+use crate::types::Str;
 use console::style;
 use std::fmt;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Memento {
     /// The name of the source (e.g., file path)
     pub source: Str,
-    /// The specific error message (e.g., "expected semicolon")
+    /// The specific error (e.g., "expected semicolon")
     pub msg: Str,
     /// The full input text. Stored as a reference/Arc to avoid copying.
     pub text: Str,
@@ -23,24 +23,6 @@ pub struct Memento {
 }
 
 impl Memento {
-    pub fn new(
-        source: &str,
-        text: &str,
-        start: usize,
-        mark: usize,
-        msg: &str,
-        callstack: &CallStack,
-    ) -> Self {
-        Self {
-            source: source.into(),
-            msg: Ref::from(msg),
-            text: Ref::from(text),
-            mark,
-            start,
-            callstack: callstack.clone(),
-        }
-    }
-
     fn render(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (line_num, col_num) = Self::pos_at(&self.text, self.mark);
 
@@ -48,8 +30,10 @@ impl Memento {
         let blue_pipe = style("|").blue().bold();
         let arrow = style("-->").blue().bold();
 
+        let msg = self.msg.to_string();
+
         writeln!(f)?;
-        writeln!(f, "{}: {}", err_label, style(&self.msg).bold())?;
+        writeln!(f, "{}: {}", err_label, style(&msg).bold())?;
         writeln!(f, "  {} {}:{}:{}", arrow, self.source, line_num, col_num)?;
         writeln!(f, "   {}", blue_pipe)?;
 
@@ -77,17 +61,19 @@ impl Memento {
                         blue_pipe,
                         padding,
                         style("^").red().bold(),
-                        style(&self.msg).red()
+                        style(&msg).red()
                     )?;
                 }
             }
         }
 
-        writeln!(f)?;
-        for call in self.callstack.iter() {
-            writeln!(f, "{}", style(call).white().bold())?;
+        #[cfg(debug_assertions)]
+        {
+            writeln!(f)?;
+            for call in self.callstack.iter() {
+                writeln!(f, " {} {}", style("→").red(), style(call).black().bright(),)?;
+            }
         }
-
         Ok(())
     }
 
@@ -102,12 +88,6 @@ impl Memento {
 }
 
 impl fmt::Display for Memento {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.render(f)
-    }
-}
-
-impl fmt::Debug for Memento {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.render(f)
     }

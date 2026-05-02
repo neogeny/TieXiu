@@ -29,11 +29,11 @@ pub use trees::Tree;
 pub use trees::TreeMap;
 
 #[cfg(feature = "pyo3")]
-pub(crate) mod python;
-
-#[cfg(feature = "pyo3")]
 #[allow(dead_code)]
 use pyo3::prelude::*;
+
+#[cfg(feature = "pyo3")]
+pub(crate) mod python;
 
 #[cfg(feature = "pyo3")]
 #[pymodule]

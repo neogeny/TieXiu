@@ -9,32 +9,28 @@ use crate::input::memento::Memento;
 use std::fmt::Debug;
 use std::panic::Location;
 
+pub type ParseResult<C> = Result<Yeap<C>, Nope>;
+
 #[derive(Clone, Debug)]
 pub struct DisasterReport {
     pub pos: (usize, usize),
     pub la: Str,
+    pub error: Ref<ParseFailure>,
     pub location: &'static Location<'static>,
     pub memento: Memento,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Nope {
     pub start: usize,
     pub mark: usize, // The position where the disaster occurred
     pub cutseen: bool,
-    pub source: Ref<ParseFailure>,
     pub report: Ref<DisasterReport>,
-}
-
-impl std::fmt::Debug for Nope {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self, f)
-    }
 }
 
 impl std::fmt::Display for Nope {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Debug::fmt(&self.report.memento, f)
+        std::fmt::Display::fmt(&self.report.memento, f)
     }
 }
 
@@ -42,31 +38,32 @@ impl std::error::Error for Nope {
     // source() is optional since ParseError is the cause,
     // but this is the "Rust Way" for chained errors.
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.source)
+        Some(&self.report.error)
     }
 }
 
 impl Nope {
     #[track_caller]
     pub fn new(start: usize, ctx: &dyn CtxI, error: ParseFailure) -> Self {
+        let mark = ctx.mark();
         let context = DisasterReport {
+            memento: Memento {
+                source: ctx.cursor().source().as_str().into(),
+                start,
+                mark,
+                msg: error.to_string().into(),
+                text: ctx.cursor().textstr().into(),
+                callstack: ctx.callstack(),
+            },
             pos: ctx.cursor().pos(),
             la: ctx.cursor().lookahead(start).into(),
             location: Location::caller(),
-            memento: Memento::new(
-                ctx.cursor().source().as_str(),
-                ctx.cursor().textstr(),
-                start,
-                ctx.mark(),
-                error.to_string().as_str(),
-                &ctx.callstack(),
-            ),
+            error: error.into(),
         };
         Self {
             start,
-            mark: ctx.mark(),
+            mark,
             cutseen: ctx.cut_seen(),
-            source: error.into(),
             report: context.into(),
         }
     }
@@ -112,8 +109,6 @@ impl<C: Ctx> Yeap<C> {
         &self.1
     }
 }
-
-pub type ParseResult<C> = Result<Yeap<C>, Nope>;
 
 #[cfg(test)]
 mod tests {
