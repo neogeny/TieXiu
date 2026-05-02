@@ -1,10 +1,10 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use crate::Exp;
 use crate::engine::Ctx;
 use crate::peg::error::*;
 use crate::trees::Tree;
-use crate::Exp;
 
 impl Exp {
     pub fn skip_exp<C: Ctx>(ctx: C, exp: &Exp) -> C {
@@ -27,8 +27,12 @@ impl Exp {
 
     pub fn repeat<C: Ctx>(mut ctx: C, exp: &Exp, res: &mut Vec<Tree>) -> ParseResult<C> {
         loop {
+            let mark = ctx.mark();
             match exp.parse(ctx.push()) {
                 Ok(Yeap(new_ctx, tree)) => {
+                    if new_ctx.mark() == mark {
+                        return Err(ctx.failure(mark, ParseFailure::ClosureMatchedVoid()));
+                    }
                     res.push(tree);
                     ctx = ctx.merge(new_ctx);
                 }
@@ -50,6 +54,7 @@ impl Exp {
         keep_pre: bool,
     ) -> ParseResult<C> {
         loop {
+            let mark = ctx.mark();
             match pre.parse(ctx.push()) {
                 Err(mut nope) => {
                     if nope.take_cut() {
@@ -59,6 +64,9 @@ impl Exp {
                     return Ok(Yeap(ctx, Tree::Nil));
                 }
                 Ok(Yeap(mut new_ctx, pre_cst)) => {
+                    if new_ctx.mark() == mark {
+                        return Err(ctx.failure(mark, ParseFailure::ClosureMatchedVoid()));
+                    }
                     new_ctx.cut();
                     match exp.parse(new_ctx) {
                         // NOTE: pre.parse().is_ok() so exp.parse().is_ok_or(fail)
@@ -83,8 +91,8 @@ impl Exp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engine::new_ctx;
     use crate::engine::CtxI;
+    use crate::engine::new_ctx;
     use crate::input::strcursor::StrCursor;
 
     fn setup(input: &str) -> impl Ctx {
