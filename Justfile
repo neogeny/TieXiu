@@ -55,10 +55,10 @@ run:
 
 
 pyo3: build
-    uv run maturin build
+    uv run maturin build --features pyo3
 
 pyo3_release: build_release
-    uv run maturin build --release
+    uv run maturin build --release --features pyo3
 
 pytest: pyo3
     uv run pytest -vv
