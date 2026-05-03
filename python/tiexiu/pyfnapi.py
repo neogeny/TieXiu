@@ -3,7 +3,7 @@
 
 from typing import Any
 
-import tiexiu.tiexiu as rust
+import tiexiu._tiexiu as rust
 
 
 def pegapi() -> Any:

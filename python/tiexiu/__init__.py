@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-from tiexiu.tiexiu import __version__, TieXiuPy, GrammarPy
+from tiexiu._tiexiu import __version__, TieXiuPy, GrammarPy
 
 from tiexiu.pyfnapi import (
     boot_grammar,

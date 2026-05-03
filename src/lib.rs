@@ -36,8 +36,8 @@ use pyo3::prelude::*;
 pub(crate) mod python;
 
 #[cfg(feature = "pyo3")]
-#[pymodule]
-mod tiexiu {
+#[pymodule(name = "_tiexiu")]
+mod tiexiu_any_name {
     use super::python::grammar::GrammarPy;
     use super::python::pyfnapi;
     use super::python::pyooapi::TieXiuPy;

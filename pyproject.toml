@@ -35,7 +35,7 @@ Issues = "https://github.com/neogeny/tiexiu/issues"
 
 [tool.maturin]
 features = ["pyo3", "pyo3/abi3-py312", "pyo3/generate-import-lib"]
-module-name = "tiexiu.tiexiu"
+module-name = "tiexiu._tiexiu"
 python-source = "python"
 
 bindings = "pyo3"
@@ -53,6 +53,7 @@ cache-keys = [
     { file = "pyproject.toml" },
     { file = "Cargo.toml" },
     { file = "src/**/*.rs" },
+    { file = "python/**/*.py" },
     { file = "grammar/tatsu.json" }
 ]
 

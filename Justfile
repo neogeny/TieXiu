@@ -30,6 +30,7 @@ test: fix fmt clippy
 
 build: fix fmt clippy
     cargo build
+    maturin build
 
 build_release:
     cargo build --release
@@ -55,13 +56,16 @@ run:
 
 
 pyo3: build
-    uv run maturin build --features pyo3
+    maturin build --features pyo3
 
-pyo3_release: build_release
-    uv run maturin build --release --features pyo3
+pyo3_develop:
+    maturin develop --features pyo3
 
-pytest: pyo3
+pytest: pyo3_develop
     uv run pytest -vv
+
+pyo3_release:
+    uv run maturin build --release --features pyo3
 
 release: pyo3_release
     gh workflow run release.yml -f publish=false
