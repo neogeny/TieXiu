@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-from tiexiu.tiexiu import __version__
+from tiexiu.tiexiu import __version__, TieXiuPy, GrammarPy
 
 from tiexiu.pyfnapi import (
     boot_grammar,
@@ -31,6 +31,7 @@ __all__ = [
     "boot_grammar_pretty",
     "compile",
     "compile_to_json",
+    "GrammarPy",
     "load_from_json",
     "load_boot",
     "load_boot_as_json",
@@ -44,4 +45,5 @@ __all__ = [
     "parse_to_json",
     "pegapi",
     "pretty",
+    "TieXiuPy",
 ]

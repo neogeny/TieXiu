@@ -7,7 +7,7 @@ use crate::peg::pretty::PrettyPrint;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-#[pyclass]
+#[pyclass(module = "tiexiu")]
 pub struct GrammarPy(crate::peg::Grammar);
 
 impl GrammarPy {

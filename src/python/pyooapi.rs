@@ -31,7 +31,7 @@ fn update_cfg_from_kwargs(tx: &mut TieXiu, kwargs: Option<&Bound<'_, PyDict>>) {
     }
 }
 
-#[pyclass]
+#[pyclass(module = "tiexiu")]
 pub struct TieXiuPy(pub TieXiu);
 
 #[pymethods]
