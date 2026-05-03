@@ -130,18 +130,18 @@ mod tests {
     use crate::peg::error::nope::{Nope, Yeap};
     use std::rc::Rc;
 
-    const TARGET: usize = 64;
+    const TARGET: usize = 16;
 
     #[test]
-    fn test_succ_size() {
+    fn test_yeap_size() {
         let size = size_of::<Yeap<StrCtx>>();
-        assert!(size <= TARGET, "Succ size is {} > {} bytes", size, TARGET);
+        assert!(size <= TARGET, "Yeap size is {} > {} bytes", size, TARGET);
     }
 
     #[test]
-    fn test_fail_size() {
+    fn test_nope_size() {
         let size = size_of::<Nope>();
-        assert!(size <= TARGET, "Fail size is {} > {} bytes", size, TARGET);
+        assert!(size <= TARGET, "Nope size is {} > {} bytes", size, TARGET);
     }
 
     #[test]
