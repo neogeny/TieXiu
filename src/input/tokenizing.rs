@@ -12,13 +12,12 @@ pub struct TokenizingPatterns {
     pub wsp: Pattern,
     pub cmt: Pattern,
     pub eol: Pattern,
+    pub has_wsp: bool,
+    pub has_cmt: bool,
+    pub has_eol: bool,
 }
 
 impl TokenizingPatterns {
-    pub const DEFAULT_WSP: &'static str = r"\s+";
-    pub const DEFAULT_EOL: &'static str = r"//.*$";
-    pub const DEFAULT_CMT: &'static str = r"(?ms)/\*.*\*/";
-
     pub fn compile(kind: &'static str, mut pattern: &str) -> Result<Pattern, Error> {
         if pattern.is_empty() {
             pattern = "(?!)";
@@ -33,10 +32,9 @@ impl TokenizingPatterns {
     }
 
     pub fn from_cfg(cfg: &Cfg) -> Result<Self, Error> {
-        type P = TokenizingPatterns;
-        let mut wsp = P::DEFAULT_WSP;
-        let mut cmt = P::DEFAULT_CMT;
-        let mut eol = P::DEFAULT_EOL;
+        let mut wsp = "";
+        let mut cmt = "";
+        let mut eol = "";
 
         for opt in cfg.iter() {
             match opt {
@@ -74,13 +72,20 @@ impl TokenizingPatterns {
         if !eol.is_empty() {
             parts.push(format!("(?:{})", eol.pattern()));
         }
-        Ok(Self { wsp, cmt, eol })
+        Ok(Self {
+            wsp,
+            cmt,
+            eol,
+            has_wsp: !ws.is_empty(),
+            has_cmt: !cm.is_empty(),
+            has_eol: !eo.is_empty(),
+        })
     }
 }
 
 impl Default for TokenizingPatterns {
     fn default() -> Self {
-        Self::try_new(Self::DEFAULT_WSP, Self::DEFAULT_CMT, Self::DEFAULT_EOL)
-            .expect("default StrCursor regex patterns must be valid")
+        Self::try_new("", "", "")
+            .expect("empty patterns must compile to never-match")
     }
 }

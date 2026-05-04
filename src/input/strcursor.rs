@@ -39,7 +39,7 @@ impl StrCursor {
             offset: 0,
             heavy: CursorHeavy {
                 ignorecase: false,
-                nameguard: true,
+                nameguard: false,
                 source: "some input".into(),
                 patterns: TokenizingPatterns::default().into(),
             }
@@ -56,7 +56,7 @@ impl StrCursor {
             offset: start.min(text.len()),
             heavy: CursorHeavy {
                 ignorecase: false,
-                nameguard: true,
+                nameguard: false,
                 source: source.into(),
                 patterns: TokenizingPatterns::default().into(),
             }
@@ -70,7 +70,7 @@ impl StrCursor {
             offset: 0,
             heavy: CursorHeavy {
                 ignorecase: false,
-                nameguard: true,
+                nameguard: false,
                 source: "some input".into(),
                 patterns: patterns.into(),
             }
@@ -113,9 +113,9 @@ impl StrCursor {
 impl Configurable for StrCursor {
     fn configure(&mut self, cfg: &Cfg) {
         let cfg = config(cfg);
-        if let Ok(patterns) = TokenizingPatterns::from_cfg(&cfg) {
-            self.set_patterns(&patterns);
-        }
+        let patterns = TokenizingPatterns::from_cfg(&cfg)
+            .unwrap_or_else(|_| TokenizingPatterns::default());
+
         let source = cfg
             .iter()
             .filter_map(|k| {
@@ -127,11 +127,20 @@ impl Configurable for StrCursor {
             })
             .next()
             .unwrap_or(&self.heavy.source);
+
+        let has_namechars = cfg.iter().any(|k| matches!(k, CfgKey::NameChars(_)));
+
+        let nameguard = if cfg.contains(&CfgKey::NameGuard) {
+            true
+        } else {
+            patterns.has_wsp || has_namechars
+        };
+
         self.heavy = CursorHeavy {
             ignorecase: cfg.contains(&CfgKey::IgnoreCase),
-            nameguard: !cfg.contains(&CfgKey::NoNameGuard),
+            nameguard,
             source: source.into(),
-            patterns: self.heavy.patterns.clone(),
+            patterns: patterns.into(),
         }
         .into()
     }
