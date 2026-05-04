@@ -59,10 +59,10 @@ run:
 
 
 pyo3: build
-    maturin build --features pyo3
+    uv run maturin build --features pyo3
 
 pyo3-develop:
-    maturin develop --features pyo3
+    uv run maturin develop --features pyo3
 
 pytest: pyo3-develop
     uv run pytest -vv
