@@ -113,8 +113,8 @@ impl StrCursor {
 impl Configurable for StrCursor {
     fn configure(&mut self, cfg: &Cfg) {
         let cfg = config(cfg);
-        let patterns = TokenizingPatterns::from_cfg(&cfg)
-            .unwrap_or_else(|_| TokenizingPatterns::default());
+        let patterns =
+            TokenizingPatterns::from_cfg(&cfg).unwrap_or_else(|_| TokenizingPatterns::default());
 
         let source = cfg
             .iter()
@@ -171,7 +171,7 @@ impl Cursor for StrCursor {
     }
 
     fn name_guard(&self) -> bool {
-        self.heavy.nameguard
+        self.heavy.nameguard || self.heavy.patterns.has_wsp
     }
 
     fn at_end(&self) -> bool {
