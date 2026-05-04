@@ -7,7 +7,7 @@ use crate::cfg::types::FlagMap;
 use crate::engine::Ctx;
 use crate::peg::error::{ParseResult, Yeap};
 use crate::trees::Tree;
-use crate::types::{Ref, Str};
+use crate::types::Str;
 use indexmap::IndexMap;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -22,13 +22,13 @@ pub const FLAG_IS_LREC: &str = "is_lrec";
 pub type RuleName = Str;
 pub type RuleRef = Arc<Rule>;
 pub type RuleIndex = IndexMap<Str, usize>;
-pub type Rules = Ref<[Rule]>;
+pub type Rules = Box<[Rule]>;
 pub type RuleMap = IndexMap<RuleName, RuleRef>;
 
 #[derive(Debug, Clone)]
 pub struct Rule {
     pub name: RuleName,
-    pub params: Ref<[Str]>,
+    pub params: Box<[Str]>,
     pub flags: FlagMap,
     pub exp: Exp,
 }

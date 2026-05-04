@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::map::TreeMap;
-use crate::cfg::types::{Define, Ref, Str};
+use crate::cfg::types::{Define, Str};
 use std::rc::Rc;
 
-pub type TreeRef = Ref<Tree>;
+pub type TreeRef = Rc<Tree>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValue(pub Str, pub Rc<Tree>);
@@ -249,7 +249,7 @@ impl Tree {
         }
     }
 
-    pub fn str_list_value(&self) -> Ref<[Str]> {
+    pub fn str_list_value(&self) -> Rc<[Str]> {
         self.list_value().iter().map(|t| t.value()).collect()
     }
 
@@ -279,7 +279,7 @@ impl Tree {
             .unwrap_or_else(|| [].into())
     }
 
-    pub fn get_str_list(&self, key: &str) -> Ref<[Str]> {
+    pub fn get_str_list(&self, key: &str) -> Rc<[Str]> {
         self.get_list(key).iter().map(|t| t.value()).collect()
     }
 }

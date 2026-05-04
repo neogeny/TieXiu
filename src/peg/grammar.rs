@@ -9,13 +9,13 @@ use crate::cfg::*;
 use crate::engine::Ctx;
 use crate::peg::ParseFailure::RuleNotFound;
 use crate::rule::RuleName;
-use crate::types::{Ref, Str};
+use crate::types::Str;
 use crate::{StrCursor, Tree, new_ctx};
 use std::rc::Rc;
 use std::sync::Arc;
 
 pub type KeywordRef = Str;
-pub type GrammarKeywords = Ref<[KeywordRef]>;
+pub type GrammarKeywords = Box<[KeywordRef]>;
 pub type GrammarDirectives = Cfg;
 
 #[derive(Debug, Clone)]

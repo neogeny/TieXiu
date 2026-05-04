@@ -3,13 +3,12 @@
 
 use super::rule::RuleRef;
 use crate::cfg::types::{Define, Str};
-use crate::types::Ref;
 use derivative::Derivative;
 use std::fmt;
 use std::sync::Arc;
 
-pub type ERef = Ref<Exp>;
-pub type ERefArr = Ref<[Exp]>;
+pub type ERef = Box<Exp>;
+pub type ERefArr = Box<[Exp]>;
 
 #[derive(Derivative)]
 #[derivative(Clone, Debug, Default)]

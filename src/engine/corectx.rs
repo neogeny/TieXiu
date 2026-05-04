@@ -9,7 +9,7 @@ use crate::cfg::*;
 use crate::input::Cursor;
 use crate::peg::error::DisasterReport;
 use crate::trees::Tree;
-use crate::types::{Ref, Str};
+use crate::types::Str;
 use crate::util::pyre::Pattern;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -20,7 +20,7 @@ pub struct CoreCtx<'c, U>
 where
     U: Cursor + Clone,
 {
-    pub state: Cow<'c, Ref<ParseState<U>>>,
+    pub state: Cow<'c, Box<ParseState<U>>>,
     pub heavy: Rc<RefCell<HeavyState<'c>>>,
 }
 

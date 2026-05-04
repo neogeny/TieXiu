@@ -3,7 +3,7 @@
 use indexmap::{IndexMap, IndexSet};
 use std::rc::Rc;
 
-pub type Ref<T> = Box<T>;
+pub type Ref<T> = Rc<T>;
 pub type Str = Rc<str>;
 pub type StrSet = IndexSet<Str>;
 pub type FlagMap = IndexMap<Str, bool>;

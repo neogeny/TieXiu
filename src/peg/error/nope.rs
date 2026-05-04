@@ -3,7 +3,7 @@
 
 use super::failure::ParseFailure;
 use crate::Tree;
-use crate::cfg::types::{Ref, Str};
+use crate::cfg::types::Str;
 use crate::engine::{Ctx, CtxI};
 use crate::input::memento::Memento;
 use std::fmt::Debug;
@@ -21,7 +21,7 @@ pub struct DisasterReport {
     pub mark: usize,
     pub pos: (usize, usize),
     pub la: Str,
-    pub error: Ref<ParseFailure>,
+    pub error: Box<ParseFailure>,
     pub location: &'static Location<'static>,
     pub memento: Box<Memento>,
 }
