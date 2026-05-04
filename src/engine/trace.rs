@@ -18,7 +18,8 @@ pub struct ConsoleTracer {}
 impl Tracer for NullTracer {}
 
 impl Tracer for ConsoleTracer {
-    fn trace(&self, msg: &str) {
+    fn trace(&self, ctx: &dyn CtxI, msg: &str) {
+        let _ = ctx;
         let term = console::Term::stderr();
         term.write_line(msg).ok();
     }
@@ -34,7 +35,8 @@ pub enum Event {
 }
 
 pub trait Tracer: Debug {
-    fn trace(&self, msg: &str) {
+    fn trace(&self, ctx: &dyn CtxI, msg: &str) {
+        let _ = ctx;
         let _ = msg;
     }
 
@@ -78,7 +80,7 @@ pub trait Tracer: Debug {
         let pos = style(format!("[{line}:{col}]→")).black().bright();
 
         let msg = format!("{event_symbol}{msg} {callstack} •\n{pos}{lookahead}");
-        self.trace(msg.as_str());
+        self.trace(ctx, msg.as_str());
     }
 
     fn trace_entry(&self, ctx: &dyn CtxI) {

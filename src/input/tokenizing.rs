@@ -4,8 +4,8 @@
 use crate::cfg::constants::*;
 use crate::cfg::*;
 use crate::input::Error;
-use crate::util::pyre::traits::Pattern as _;
 use crate::util::pyre::Pattern;
+use crate::util::pyre::traits::Pattern as _;
 
 #[derive(Clone, Debug)]
 pub struct TokenizingPatterns {
@@ -78,13 +78,8 @@ impl TokenizingPatterns {
 
         let mut skip_all = None;
         if !parts.is_empty() {
-            let non_empty = parts.into_iter()
-                .filter(|p| !p.is_empty())
-                .collect::<Vec<_>>(); 
-            if !non_empty.is_empty() {
-                let combined = format!(r"(?:{})+", non_empty.join("|"));
-                skip_all = Some(Self::compile("skip_all", &combined)?);
-            }
+            let combined = format!(r"(?:{})+", parts.join("|"));
+            skip_all = Some(Self::compile("skip_all", &combined)?);
         };
 
         Ok(Self {
