@@ -50,6 +50,7 @@ cli = [
     "dep:syntect",
 ]
 pyo3 = ["dep:pyo3", "serde"]
+dhat = ["dep:dhat"]
 
 #interpolation = ["dep:strfmt", "dep:evalexpr"]
 
@@ -59,6 +60,8 @@ thiserror = "2.0.18"
 fancy-regex = "0.18"
 console = "0.16.3"
 json = "0.12.4"
+
+dhat = { version = "0.3.3", optional = true }
 
 pyo3 = {
     version = "0.28",
