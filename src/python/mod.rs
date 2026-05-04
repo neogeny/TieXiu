@@ -1,8 +1,9 @@
-pub mod grammar;
-pub mod pyfnapi;
-pub mod pyooapi;
-pub mod tree;
+mod grammar;
+mod pyfnapi;
+mod pymodule;
+mod pyooapi;
+mod tree;
 mod util;
 
-pub use grammar::GrammarPy;
-pub use util::pythonize;
+use grammar::GrammarPy;
+use util::pythonize;
