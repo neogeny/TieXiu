@@ -22,36 +22,36 @@ pub trait ToInternalStr {
 impl IntoStr for String {
     #[inline]
     fn into_str(self) -> Str {
-        self.into_boxed_str()
+        self.into()
     }
 }
 
 impl IntoStr for &str {
     #[inline]
     fn into_str(self) -> Str {
-        Box::from(self)
+        self.into()
     }
 }
 
 impl ToInternalStr for String {
     #[inline]
     fn to_internal(self) -> Str {
-        self.into_boxed_str()
+        self.into()
     }
     #[inline]
     fn to_rc(self) -> Rc<str> {
-        Rc::from(self.into_boxed_str())
+        self.into()
     }
 }
 
 impl ToInternalStr for &str {
     #[inline]
     fn to_internal(self) -> Str {
-        Box::from(self)
+        self.into()
     }
     #[inline]
     fn to_rc(self) -> Rc<str> {
-        Rc::from(self)
+        self.into()
     }
 }
 
@@ -62,7 +62,7 @@ impl ToInternalStr for Str {
     }
     #[inline]
     fn to_rc(self) -> Rc<str> {
-        Rc::from(self)
+        self
     }
 }
 
@@ -72,12 +72,12 @@ pub struct RuleName(pub Str);
 
 impl From<String> for RuleName {
     fn from(s: String) -> Self {
-        RuleName(s.into_boxed_str())
+        RuleName(s.into())
     }
 }
 
 impl From<&str> for RuleName {
     fn from(s: &str) -> Self {
-        RuleName(Box::from(s))
+        RuleName(s.into())
     }
 }

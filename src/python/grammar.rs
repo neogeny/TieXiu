@@ -8,7 +8,7 @@ use crate::peg::pretty::PrettyPrint;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-#[pyclass(module = "_tiexiu")]
+#[pyclass(module = "_tiexiu", unsendable)]
 pub struct GrammarPy(crate::peg::Grammar);
 
 impl GrammarPy {

@@ -7,11 +7,15 @@ use crate::peg::error::ParseFailure::*;
 use crate::peg::error::ParseResult;
 use crate::peg::error::Yeap;
 use crate::trees::Tree;
-use crate::types::Ref;
+use crate::types::Str;
 
 impl Exp {
-    pub fn la_boxed(&self) -> Box<[Ref<str>]> {
-        self.la.as_ref().map(|la| la.as_ref()).unwrap_or(&[]).into()
+    pub fn la_boxed(&self) -> Box<[Str]> {
+        self.la
+            .as_ref()
+            .map(|la| la.iter().cloned().collect::<Vec<_>>())
+            .unwrap_or_default()
+            .into_boxed_slice()
     }
 
     pub fn parse_choice<C: Ctx>(&self, mut ctx: C, options: &[Exp]) -> ParseResult<C> {

@@ -25,7 +25,7 @@ impl Grammar {
         let mut obj = JsonValue::new_object();
 
         obj["__class__"] = JsonValue::String("Grammar".into());
-        obj["name"] = JsonValue::String(self.name.clone().into());
+        obj["name"] = JsonValue::String(self.name.to_string());
         obj["analyzed"] = JsonValue::Boolean(self.analyzed);
 
         let mut directives = JsonValue::new_object();
