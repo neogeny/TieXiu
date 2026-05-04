@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::Parser;
 use super::exp::Exp;
+use super::Parser;
 use crate::cfg::types::FlagMap;
 use crate::engine::Ctx;
 use crate::peg::error::{ParseResult, Yeap};
@@ -101,7 +101,6 @@ impl Rule {
     }
 
     pub fn parse<C: Ctx>(&self, mut ctx: C) -> ParseResult<C> {
-        let _text = ctx.cursor().as_str();
         match self.exp.parse(ctx.push()) {
             Err(nope) => Err(nope),
             Ok(Yeap(ok_ctx, tree)) => {

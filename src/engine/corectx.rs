@@ -26,7 +26,7 @@ where
 
 impl<'c, U> CoreCtx<'c, U>
 where
-    U: Cursor + Clone,
+    U: Cursor + Clone + 'c,
 {
     pub fn new(cursor: U, cfga: &CfgA) -> Self {
         let mut ctx = Self {

@@ -52,7 +52,7 @@ impl std::error::Error for DisasterReport {
 impl DisasterReport {
     #[track_caller]
     pub fn new(start: usize, ctx: &dyn CtxI, error: &ParseFailure) -> Self {
-        let memento = Self::new_memento(start, ctx, error);
+        let memento = Memento::new(start, ctx, error.to_string().as_str());
         Self {
             start,
             mark: ctx.mark(),
@@ -61,17 +61,6 @@ impl DisasterReport {
             la: ctx.cursor().lookahead(start).into(),
             error: error.clone().into(),
             location: Location::caller(),
-        }
-    }
-
-    pub fn new_memento(start: usize, ctx: &dyn CtxI, error: &ParseFailure) -> Memento {
-        Memento {
-            input_source: ctx.cursor().input_source().into(),
-            start,
-            mark: ctx.mark(),
-            msg: error.to_string().into(),
-            text: ctx.cursor().as_str().into(),
-            callstack: ctx.callstack(),
         }
     }
 }

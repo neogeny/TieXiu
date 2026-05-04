@@ -126,8 +126,7 @@ impl TieXiu {
     where
         U: Cursor + Clone,
     {
-        let text = cursor.as_str().to_string();
-        self.compile(&text)
+        self.compile(cursor.as_str())
     }
 
     pub fn compile_to_json_with<U>(&mut self, cursor: U) -> Result<JsonValue>
