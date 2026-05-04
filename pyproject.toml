@@ -37,10 +37,29 @@ Issues = "https://github.com/neogeny/tiexiu/issues"
 features = ["pyo3", "pyo3/abi3-py312", "pyo3/generate-import-lib"]
 module-name = "tiexiu._tiexiu"
 python-source = "python"
-
 bindings = "pyo3"
+#compatibility = "manylinux_2_28"
+
+# Specify the Cargo profile (e.g., "release", "dev", or a custom one)
 profile = "release"
-compatibility = "manylinux_2_28"
+
+# For 'maturin develop' specifically
+editable-profile = "dev"
+
+# List of Cargo features to activate
+#features = ["simd", "parallel"]
+
+# Equivalent to --all-features
+all-features = true
+
+# Equivalent to --no-default-features
+no-default-features = false
+
+# Pass raw arguments to cargo (rarely needed with the above)
+#cargo-extra-args = ["--jobs", "8"]
+
+# Pass raw arguments to rustc
+rustc-extra-args = ["-C", "target-cpu=native"]
 
 # include = ["grammars/**/*.ebnf", "assets/*.png"]
 #compatibility = "abi3"
