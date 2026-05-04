@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 pub mod constants;
+pub mod heartbeat;
 pub mod keys;
 pub mod types;
 
 pub use constants::*;
+pub use heartbeat::*;
 pub use keys::*;

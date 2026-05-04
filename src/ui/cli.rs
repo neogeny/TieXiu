@@ -6,13 +6,110 @@ use clap::builder::styling::{AnsiColor, Styles};
 use clap::{Parser, Subcommand};
 use std::fmt::Write;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tiexiu::api::{
     boot_grammar_pretty, boot_grammar_to_json_string, compile, load_grammar_from_json, parse_input,
 };
-use tiexiu::cfg::CfgA;
+use tiexiu::cfg::{CfgA, Heartbeat, HeartbeatRef};
 use tiexiu::peg::pretty::*;
 use tiexiu::tools::rails::*;
-use tiexiu::{CfgKey, Grammar, Result, boot_grammar, config};
+use tiexiu::{boot_grammar, config, CfgKey, Grammar, Result};
+
+#[derive(Debug)]
+struct CliHeartbeat {
+    pb: indicatif::ProgressBar,
+    last_mark: AtomicUsize,
+}
+
+impl CliHeartbeat {
+    fn new(pb: indicatif::ProgressBar) -> Self {
+        Self {
+            pb,
+            last_mark: AtomicUsize::new(0),
+        }
+    }
+}
+
+impl Heartbeat for CliHeartbeat {
+    fn tick(&self, mark: usize, _total: usize) {
+        let prev = self.last_mark.swap(mark, Ordering::Relaxed);
+        if mark > prev {
+            self.pb.set_position(mark as u64);
+        }
+    }
+}
+
+struct FileProgress {
+    pb: indicatif::ProgressBar,
+    heartbeat: HeartbeatRef,
+}
+
+impl FileProgress {
+    fn new(pb: indicatif::ProgressBar) -> Self {
+        Self {
+            heartbeat: std::sync::Arc::new(CliHeartbeat::new(pb.clone())),
+            pb,
+        }
+    }
+
+    fn heartbeat(&self) -> &HeartbeatRef {
+        &self.heartbeat
+    }
+
+    fn set_length(&self, len: usize) {
+        self.pb.set_length(len as u64);
+    }
+
+    fn success(self) {
+        self.pb.finish_with_message("done");
+    }
+
+    fn fail(self) {
+        self.pb.finish_with_message("failed");
+    }
+}
+
+struct ProgressUI {
+    mp: indicatif::MultiProgress,
+    files: indicatif::ProgressBar,
+}
+
+impl ProgressUI {
+    fn new(total: u64) -> Self {
+        let mp = indicatif::MultiProgress::new();
+        let files = mp.add(indicatif::ProgressBar::new(total)
+            .with_style(
+                indicatif::ProgressStyle::with_template(
+                    "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} files",
+                )
+                .unwrap()
+                .progress_chars("#>-"),
+        ));
+        Self { mp, files }
+    }
+
+    fn add_file(&self, name: &str) -> FileProgress {
+        let pb = self.mp.add(indicatif::ProgressBar::new(0)
+            .with_style(
+                indicatif::ProgressStyle::with_template(
+                    "  {prefix:.bold} [{wide_bar:.green/black}] {pos}/{len} bytes",
+                )
+                .unwrap()
+                .progress_chars("▓▒░"),
+            )
+            .with_prefix(name.to_string()),
+        );
+        FileProgress::new(pb)
+    }
+
+    fn inc_files(&self) {
+        self.files.inc(1);
+    }
+
+    fn finish(self) {
+        self.files.finish_with_message("done");
+    }
+}
 
 fn cli_styles() -> Styles {
     Styles::styled()
@@ -174,22 +271,43 @@ pub fn cli(out: &mut std::io::StdoutLock) -> Result<()> {
             let parser = load_grammar_from_path(&grammar, cfga)?;
             let mut format = "rust";
             let mut output = String::new();
-            for input in inputs {
-                cfg = cfg.add(CfgKey::Source(input.as_path().to_string_lossy().into()));
-                let text = std::fs::read_to_string(&input)?;
-                let tree = parse_input(&parser, &text, &cfg)?;
-                let this_output = if model {
-                    format!("{:#?}", tree).to_string()
-                } else if short {
-                    format!("{:#}", tree.fold()).to_string()
-                } else {
-                    format = "json";
-                    tree.to_json_string_pretty()
-                };
 
-                output.push_str(&this_output);
-                output.push('\n');
+            let progress = ProgressUI::new(inputs.len() as u64);
+
+            for input in &inputs {
+                let name = input.file_name().unwrap_or_default().to_string_lossy();
+                let file_prog = progress.add_file(&name);
+
+                let text = std::fs::read_to_string(input)?;
+                file_prog.set_length(text.len());
+
+                let file_cfg = cfg
+                    .add(CfgKey::Source(input.as_path().to_string_lossy().into()))
+                    .add(CfgKey::Heartbeat(file_prog.heartbeat().clone()));
+
+                match parse_input(&parser, &text, &file_cfg) {
+                    Ok(tree) => {
+                        file_prog.success();
+                        let this_output = if model {
+                            format!("{:#?}", tree).to_string()
+                        } else if short {
+                            format!("{:#}", tree.fold()).to_string()
+                        } else {
+                            format = "json";
+                            tree.to_json_string_pretty()
+                        };
+
+                        output.push_str(&this_output);
+                        output.push('\n');
+                    }
+                    Err(err) => {
+                        file_prog.fail();
+                        eprintln!("{:#?}", err)
+                    }
+                }
+                progress.inc_files();
             }
+            progress.finish();
             (output, format)
         }
         Commands::Grammar {
@@ -266,7 +384,7 @@ pub fn pygmentize(content: &str, extension: &str, use_color: bool) -> Result<Str
     use syntect::easy::HighlightLines;
     use syntect::highlighting::ThemeSet;
     use syntect::parsing::SyntaxSet;
-    use syntect::util::{LinesWithEndings, as_24_bit_terminal_escaped};
+    use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();

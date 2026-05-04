@@ -88,12 +88,18 @@ impl<'c, U> Configurable for StackCtx<'c, U>
 where
     U: Cursor + Clone,
 {
-    fn configure(&mut self, cfg: &CfgBox) {
+    fn configure(&mut self, cfg: &Cfg) {
         self.cursor_mut().configure(cfg);
 
-        if cfg.contains(&Cfg::Trace) {
+        if cfg.contains(&CfgKey::Trace) {
             self.set_trace(true);
         }
+
+        if let Some(hb) = cfg.heartbeat() {
+            self.heavy.heartbeat = Some(hb.clone());
+        }
+    }
+}
     }
 }
 
@@ -141,6 +147,14 @@ where
     fn prune_cache(&mut self) {
         let cutpoint = self.cursor().mark();
         self.heavy.memos.prune(cutpoint);
+    }
+
+    fn heartbeat_tick(&mut self) {
+        let mark = self.cursor().mark();
+        if let Some(hb) = self.heavy.heartbeat.clone() {
+            let total = self.cursor().as_str().len();
+            hb.tick(mark, total);
+        }
     }
 
     fn is_keyword(&self, name: &str) -> bool {

@@ -4,7 +4,7 @@
 pub use super::ctx::{Ctx, CtxI};
 use super::memo::{Memo, MemoKey};
 use super::state::{CallStack, HeavyState, ParseState};
-use super::trace::{CONSOLE_TRACER, NULL_TRACER, Tracer};
+use super::trace::{Tracer, CONSOLE_TRACER, NULL_TRACER};
 use crate::cfg::*;
 use crate::input::Cursor;
 use crate::peg::error::DisasterReport;
@@ -94,6 +94,10 @@ where
         if cfg.contains(&CfgKey::Trace) {
             self.set_trace(true);
         }
+
+        if let Some(hb) = cfg.heartbeat() {
+            self.heavy.borrow_mut().heartbeat = Some(hb.clone());
+        }
     }
 }
 
@@ -141,6 +145,14 @@ where
 
     fn get_pattern(&mut self, pattern: &str) -> Pattern {
         self.with_heavy_mut(|heavy| heavy.get_pattern(pattern))
+    }
+
+    fn heartbeat_tick(&mut self) {
+        let mark = self.mark();
+        if let Some(hb) = self.heavy.borrow().heartbeat.clone() {
+            let total = self.cursor().as_str().len();
+            hb.tick(mark, total);
+        }
     }
 
     fn memo(&mut self, key: &MemoKey) -> Option<Memo> {

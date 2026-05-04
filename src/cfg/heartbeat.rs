@@ -1,0 +1,18 @@
+// Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
+use std::fmt::Debug;
+use std::sync::Arc;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct NullHeartbeat;
+
+pub trait Heartbeat: Debug {
+    fn tick(&self, _mark: usize, _total: usize) {}
+}
+
+impl Heartbeat for NullHeartbeat {}
+
+impl Heartbeat for () {}
+
+pub type HeartbeatRef = Arc<dyn Heartbeat>;

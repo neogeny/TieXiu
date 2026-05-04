@@ -1,6 +1,9 @@
 // Copyright (c) 2026 Juancarlo Añez (apalala@gmail.com)
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use crate::cfg::heartbeat::HeartbeatRef;
+use std::sync::Arc;
+
 use super::ENV_PREFIX;
 pub use crate::util::cfg;
 pub use cfg::*;
@@ -23,15 +26,23 @@ pub fn config(cfga: &CfgA) -> Cfg {
 
 pub trait CfgBoxWrapper {
     fn trace(&self) -> bool;
+    fn heartbeat(&self) -> Option<&HeartbeatRef>;
 }
 
 impl CfgBoxWrapper for Cfg {
     fn trace(&self) -> bool {
         self.contains(&CfgKey::Trace)
     }
+
+    fn heartbeat(&self) -> Option<&HeartbeatRef> {
+        self.iter().find_map(|k| match k {
+            CfgKey::Heartbeat(h) => Some(h),
+            _ => None,
+        })
+    }
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Default)]
 pub enum CfgKey {
     #[default]
     None,
@@ -56,6 +67,55 @@ pub enum CfgKey {
     // Cursor
     /// The source of the input
     Source(String),
+
+    /// Heartbeat callback for progress reporting
+    Heartbeat(HeartbeatRef),
+}
+
+impl PartialEq for CfgKey {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::None, Self::None) => true,
+            (Self::Debug, Self::Debug) => true,
+            (Self::Verbose, Self::Verbose) => true,
+            (Self::Trace, Self::Trace) => true,
+            (Self::Grammar(a), Self::Grammar(b)) => a == b,
+            (Self::Wsp(a), Self::Wsp(b)) => a == b,
+            (Self::Cmt(a), Self::Cmt(b)) => a == b,
+            (Self::Eol(a), Self::Eol(b)) => a == b,
+            (Self::NameChars(a), Self::NameChars(b)) => a == b,
+            (Self::IgnoreCase, Self::IgnoreCase) => true,
+            (Self::NameGuard, Self::NameGuard) => true,
+            (Self::NoLeftRecursion, Self::NoLeftRecursion) => true,
+            (Self::NoParseInfo, Self::NoParseInfo) => true,
+            (Self::NoMemoization, Self::NoMemoization) => true,
+            (Self::Source(a), Self::Source(b)) => a == b,
+            (Self::Heartbeat(a), Self::Heartbeat(b)) => Arc::ptr_eq(a, b),
+            _ => false,
+        }
+    }
+}
+
+impl Eq for CfgKey {}
+
+impl std::hash::Hash for CfgKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            CfgKey::Grammar(s)
+            | CfgKey::Wsp(s)
+            | CfgKey::Cmt(s)
+            | CfgKey::Eol(s)
+            | CfgKey::NameChars(s)
+            | CfgKey::Source(s) => {
+                s.hash(state);
+            }
+            CfgKey::Heartbeat(h) => {
+                std::ptr::hash(Arc::as_ptr(h), state);
+            }
+            _ => {}
+        }
+    }
 }
 
 unsafe impl Send for CfgKey {}
@@ -118,6 +178,7 @@ impl Cfg {
             CfgKey::NoParseInfo => 12,
             CfgKey::NoMemoization => 13,
             CfgKey::Source(_) => 14,
+            CfgKey::Heartbeat(_) => 15,
         }
     }
 }

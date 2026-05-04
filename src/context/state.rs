@@ -5,6 +5,7 @@
 
 use super::memo::{KeyTrack, MemoCache};
 use super::trace::{NULL_TRACER, Tracer};
+use crate::cfg::HeartbeatRef;
 use crate::input::Cursor;
 use crate::parser::TokenStack;
 use crate::peg::error::DisasterReport;
@@ -42,6 +43,8 @@ pub struct HeavyState<'t> {
     pub strings: StrSet,
     pub furthest_failure: Option<DisasterReport>,
     pub tracer: &'t dyn Tracer,
+    pub heartbeat: Option<HeartbeatRef>,
+    pub input_len: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -72,6 +75,8 @@ impl<'t> HeavyState<'t> {
             strings: StrSet::new(),
             furthest_failure: None,
             tracer: &NULL_TRACER,
+            heartbeat: None,
+            input_len: 0,
         }
     }
 

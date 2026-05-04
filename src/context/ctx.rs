@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::memo::{Memo, MemoCache, MemoKey};
-use crate::SYM_ETX;
 use crate::cfg::Configurable;
 use crate::context::state::CallStack;
 use crate::context::trace::Tracer;
 use crate::input::Cursor;
-use crate::peg::Rule;
 use crate::peg::error::{DisasterReport, ParseFailure};
 use crate::peg::error::{Nope, ParseResult, Yeap};
+use crate::peg::Rule;
 use crate::trees::tree::Tree;
 use crate::types::Str;
-use crate::util::pyre::{Pattern, escape};
+use crate::util::pyre::{escape, Pattern};
+use crate::SYM_ETX;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -131,7 +131,12 @@ pub trait Ctx: CtxI + Clone + Debug {
     }
 
     fn next_token(&mut self) {
-        self.cursor_mut().next_token();
+    self.cursor_mut().next_token();
+        self.heartbeat_tick();
+    }
+
+    fn heartbeat_tick(&mut self) {
+        let _ = self;
     }
 
     fn key(&mut self, name: &str, memo: bool) -> MemoKey {
@@ -400,6 +405,11 @@ impl<C: Ctx> Ctx for Box<C> {
     #[inline]
     fn prune_cache(&mut self) {
         (**self).prune_cache()
+    }
+
+    #[inline]
+    fn heartbeat_tick(&mut self) {
+        (**self).heartbeat_tick()
     }
 
     #[inline]
