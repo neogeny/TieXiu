@@ -26,13 +26,16 @@ fmt:
     cargo fmt --all --check
 
 test: fix fmt clippy
-    cargo nextest run --lib --no-fail-fast --all-features
+    cargo nextest run --lib --all-features
+
+test-all: fix fmt clippy
+    cargo nextest run --all --all-features
 
 build: fix fmt clippy
     cargo build
     maturin build
 
-build_release:
+build-release:
     cargo build --release
 
 book:
@@ -58,17 +61,17 @@ run:
 pyo3: build
     maturin build --features pyo3
 
-pyo3_develop:
+pyo3-develop:
     maturin develop --features pyo3
 
-pytest: pyo3_develop
+pytest: pyo3-develop
     uv run pytest -vv
 
-pyo3_release:
+pyo3-release:
     uv run maturin build --release --features pyo3
 
-release: pyo3_release
+release: pyo3-release
     gh workflow run release.yml -f publish=false
 
-publish: pyo3_release
+publish: pyo3-release
     gh workflow run release.yml -f publish=true
