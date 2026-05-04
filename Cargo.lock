@@ -3,26 +3,6 @@
 version = 4
 
 [[package]]
-name = "TieXiu"
-version = "0.1.1-alpha.14"
-dependencies = [
- "clap",
- "codspeed-criterion-compat",
- "console",
- "derivative",
- "dhat",
- "fancy-regex",
- "indexmap",
- "json",
- "pyo3",
- "serde",
- "serde_json",
- "syntect",
- "thiserror",
- "unicode-width",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1153,6 +1133,26 @@ name = "thousands"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bf63baf9f5039dadc247375c29eb13706706cfde997d0330d05aa63a77d8820"
+
+[[package]]
+name = "tiexiu"
+version = "0.1.1-alpha.14"
+dependencies = [
+ "clap",
+ "codspeed-criterion-compat",
+ "console",
+ "derivative",
+ "dhat",
+ "fancy-regex",
+ "indexmap",
+ "json",
+ "pyo3",
+ "serde",
+ "serde_json",
+ "syntect",
+ "thiserror",
+ "unicode-width",
+]
 
 [[package]]
 name = "time"
