@@ -181,9 +181,9 @@ impl Tree {
         match self {
             Tree::Seq(elements) => {
                 let mut out = Tree::Nil;
-                elements
-                    .iter()
-                    .for_each(|s| out = out.clone().append(s.as_ref().clean_and_fold(gather)));
+                for elem in elements.iter() {
+                    out = out.clone().merge(elem.as_ref().clean_and_fold(gather));
+                }
                 out
             }
             Tree::List(elements) => {

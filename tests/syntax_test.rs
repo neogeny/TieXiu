@@ -117,7 +117,8 @@ fn test_optional_sequence() -> Result<()> {
     let mut ast;
 
     ast = parse_input(&model, "1 2 3 4")?;
-    assert_eq!(ast, l(&[t("1"), s(&[t("2"), t("3")]), t("4")]));
+    assert_eq!(ast.to_json(), value!(["1", "2", "3", "4"]));
+    assert_eq!(ast, l(&[t("1"), t("2"), t("3"), t("4")]));
 
     ast = parse_input(&model, "1     4")?;
     assert_eq!(ast, l(&[t("1"), t("4")]));
@@ -133,7 +134,8 @@ fn test_group_ast() -> Result<()> {
 
     let model = compile(grammar, &[])?;
     let ast = parse_input(&model, "1 2 3 4")?;
-    assert_eq!(ast, l(&[t("1"), s(&[t("2"), t("3")]), t("4")]));
+    assert_eq!(ast.to_json(), value!(["1", "2", "3", "4"]));
+    assert_eq!(ast, l(&[t("1"), t("2"), t("3"), t("4")]));
     Ok(())
 }
 
