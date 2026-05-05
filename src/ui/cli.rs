@@ -79,7 +79,7 @@ impl FileProgress {
                 .with_style(
                     indicatif::ProgressStyle::with_template(
                         // "  {prefix:>40.bold} [{wide_bar:.cyan/black}] {pos:>8}/{len:<8} bytes",
-                        "  {prefix:>40.bold} [{wide_bar:.cyan/black}] {percent:>4}% ",
+                        "  {prefix:>40.bold} [{wide_bar:.cyan/black}] {percent:>4}% {duration_precise}  ",
                     )
                     .unwrap()
                     .progress_chars("▓▒░"),
